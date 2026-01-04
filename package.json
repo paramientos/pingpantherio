@@ -7,12 +7,34 @@
         "dev": "vite"
     },
     "devDependencies": {
+        "@headlessui/react": "^2.0.0",
+        "@inertiajs/react": "^2.0.0",
+        "@tailwindcss/forms": "^0.5.3",
         "@tailwindcss/vite": "^4.1.18",
+        "@vitejs/plugin-react": "^4.2.0",
+        "autoprefixer": "^10.4.23",
         "axios": "^1.11.0",
         "concurrently": "^9.0.1",
         "daisyui": "^5.5.14",
         "laravel-vite-plugin": "^2.0.0",
-        "tailwindcss": "^4.1.18",
+        "postcss": "^8.4.31",
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0",
+        "tailwindcss": "^3.2.1",
         "vite": "^7.0.7"
+    },
+    "dependencies": {
+        "@inertiajs/react": "^2.3.6",
+        "@mantine/core": "^8.3.10",
+        "@mantine/dates": "^8.3.10",
+        "@mantine/form": "^8.3.10",
+        "@mantine/hooks": "^8.3.10",
+        "@mantine/notifications": "^8.3.10",
+        "@tabler/icons-react": "^3.36.1",
+        "@vitejs/plugin-react": "^5.1.2",
+        "@vitejs/plugin-react-swc": "^4.2.2",
+        "dayjs": "^1.11.19",
+        "react": "^19.2.3",
+        "react-dom": "^19.2.3"
     }
 }

@@ -1,8 +1,12 @@
 <?php
 
-use Livewire\Volt\Volt;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\MonitorController;
+use Illuminate\Support\Facades\Route;
 
-Volt::route('/', 'dashboard');
-Volt::route('/monitors', 'monitors.index');
-Volt::route('/monitors/{monitor}', 'monitors.show')->name('monitors.show');
-Volt::route('/users', 'users.index');
+Route::middleware(['auth'])->group(function (): void {
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    Route::resource('monitors', MonitorController::class)->except(['show', 'create', 'edit']);
+});
+
+require __DIR__.'/auth.php';
