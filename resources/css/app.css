@@ -1,0 +1,210 @@
+@import "tailwindcss";
+
+@source "../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php";
+@source "../../storage/framework/views/*.php";
+@source "../**/*.blade.php";
+@source "../**/*.js";
+@source "../../vendor/robsontenorio/mary/src/View/Components/**/*.php";
+
+@theme {
+    --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+@plugin "daisyui" {
+    themes: light, dark, pingpanther;
+}
+
+[data-theme="pingpanther"] {
+    color-scheme: light;
+
+    --color-primary: #6366f1;
+    --color-primary-content: #ffffff;
+
+    --color-secondary: #0ea5e9;
+    --color-secondary-content: #ffffff;
+
+    --color-accent: #f43f5e;
+    --color-accent-content: #ffffff;
+
+    --color-base-100: #ffffff;
+    --color-base-200: #f8fafc;
+    --color-base-300: #e2e8f0;
+    --color-base-content: #0f172a;
+
+    --color-neutral: #1e293b;
+    --color-neutral-content: #ffffff;
+
+    --color-info: #0ea5e9;
+    --color-success: #10b981;
+    --color-warning: #f59e0b;
+    --color-error: #ef4444;
+
+    --rounded-box: 0.75rem;
+    --rounded-btn: 0.5rem;
+}
+
+@layer base {
+    body {
+        @apply bg-base-200 text-base-content antialiased;
+    }
+}
+
+@layer components {
+    .card {
+        @apply border border-base-300/50 shadow-sm bg-base-100 rounded-xl transition-shadow duration-200;
+    }
+
+    .card:hover {
+        @apply shadow-md;
+    }
+
+    .table {
+        @apply text-sm;
+    }
+
+    .table thead th {
+        @apply bg-base-200/80 text-slate-600 font-semibold py-4 px-6 border-b border-base-300 text-xs uppercase tracking-wider;
+    }
+
+    .table tbody td {
+        @apply py-4 px-6 border-b border-base-300/30;
+    }
+
+    .table tbody tr {
+        @apply transition-colors duration-150;
+    }
+
+    .table tbody tr:hover {
+        @apply bg-base-200/40;
+    }
+
+    .status-dot {
+        @apply w-2.5 h-2.5 rounded-full inline-block;
+    }
+
+    .status-dot-up {
+        @apply bg-success;
+        box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+    }
+
+    .status-dot-down {
+        @apply bg-error;
+        box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+    }
+
+    .status-dot-paused {
+        @apply bg-slate-400;
+    }
+
+    .navbar {
+        @apply min-h-[65px];
+    }
+
+    .navbar .menu a {
+        @apply rounded-lg transition-all duration-200;
+    }
+
+    .dropdown-content {
+        @apply mt-2;
+    }
+
+    /* Modern Button Styles - Cronitor Inspired */
+    .btn {
+        @apply font-semibold transition-all duration-200 border-none shadow-sm;
+    }
+
+    .btn-primary {
+        @apply bg-primary hover:bg-primary/90 text-white;
+        box-shadow: 0 1px 2px 0 rgba(99, 102, 241, 0.2), 0 0 0 1px rgba(99, 102, 241, 0.1);
+    }
+
+    .btn-primary:hover {
+        box-shadow: 0 4px 12px 0 rgba(99, 102, 241, 0.3), 0 0 0 1px rgba(99, 102, 241, 0.2);
+        transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+        @apply bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200;
+    }
+
+    .btn-ghost {
+        @apply bg-transparent hover:bg-white/10 text-slate-400 hover:text-white shadow-none;
+    }
+
+    .btn-outline {
+        @apply bg-transparent border border-base-300 hover:border-primary hover:bg-primary/5 text-base-content hover:text-primary;
+    }
+
+    .btn-success {
+        @apply bg-success hover:bg-success/90 text-white;
+        box-shadow: 0 1px 2px 0 rgba(16, 185, 129, 0.2);
+    }
+
+    .btn-error {
+        @apply bg-error hover:bg-error/90 text-white;
+        box-shadow: 0 1px 2px 0 rgba(239, 68, 68, 0.2);
+    }
+
+    .btn-warning {
+        @apply bg-warning hover:bg-warning/90 text-white;
+        box-shadow: 0 1px 2px 0 rgba(245, 158, 11, 0.2);
+    }
+
+    .btn-sm {
+        @apply text-xs px-3 py-1.5 h-auto min-h-0;
+    }
+
+    .btn-xs {
+        @apply text-xs px-2 py-1 h-auto min-h-0;
+    }
+
+    /* Badge Styles */
+    .badge {
+        @apply font-bold text-xs px-2.5 py-1 rounded-md border;
+    }
+
+    .badge-success {
+        @apply bg-success/10 text-success border-success/20;
+    }
+
+    .badge-error {
+        @apply bg-error/10 text-error border-error/20;
+    }
+
+    .badge-warning {
+        @apply bg-warning/10 text-warning border-warning/20;
+    }
+
+    .badge-info {
+        @apply bg-info/10 text-info border-info/20;
+    }
+
+    /* Input Styles */
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="number"],
+    input[type="url"],
+    textarea,
+    select {
+        @apply bg-base-100 border-base-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200;
+    }
+}
+
+@keyframes status-pulse {
+
+    0%,
+    100% {
+        transform: scale(0.95);
+        opacity: 0.5;
+    }
+
+    50% {
+        transform: scale(1.05);
+        opacity: 1;
+    }
+}
+
+.animate-status-pulse {
+    animation: status-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
