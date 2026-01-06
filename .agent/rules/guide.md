@@ -2,8 +2,6 @@
 trigger: always_on
 ---
 
-süper şimdi bu bir uptime monitoring ancak daha niş alanlara odaklanan bir proje olacak iu anda opensource olacak
-
 proje laravel 12 ile yazıldı postgres ve redis kullanıyor tasarım modern olsun betteruptime gibi 
 
 

@@ -89,6 +89,12 @@ function MonitorForm({ form, onSubmit, submitLabel }) {
                             description="Enable SSL certificate verification"
                             {...form.getInputProps('verify_ssl', { type: 'checkbox' })}
                         />
+
+                        <Switch
+                            label="Monitor SSL Certificate"
+                            description="Track SSL certificate expiry and get alerts"
+                            {...form.getInputProps('check_ssl', { type: 'checkbox' })}
+                        />
                     </>
                 )}
 

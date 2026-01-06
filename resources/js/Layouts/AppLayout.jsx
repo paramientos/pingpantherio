@@ -18,11 +18,13 @@ function AppLayout({ children }) {
     const [opened, { toggle }] = useDisclosure();
     const { auth, url } = usePage().props;
 
+
     const navItems = [
         { label: 'Dashboard', icon: IconChartPie, href: '/' },
         { label: 'Monitors', icon: IconDeviceDesktop, href: '/monitors' },
         { label: 'Incidents', icon: IconAlertTriangle, href: '/incidents' },
         { label: 'Status Pages', icon: IconBroadcast, href: '/status-pages' },
+        { label: 'Alert Channels', icon: IconBolt, href: '/alert-channels' },
     ];
 
     const settingsItems = [

@@ -35,6 +35,7 @@
         "@vitejs/plugin-react-swc": "^4.2.2",
         "dayjs": "^1.11.19",
         "react": "^19.2.3",
-        "react-dom": "^19.2.3"
+        "react-dom": "^19.2.3",
+        "recharts": "^3.6.0"
     }
 }

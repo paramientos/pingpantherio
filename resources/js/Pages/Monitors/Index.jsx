@@ -20,7 +20,7 @@ import {
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useDisclosure } from '@mantine/hooks';
-import { router } from '@inertiajs/react';
+import { router, Link } from '@inertiajs/react';
 import { IconPlus, IconDots, IconEdit, IconTrash, IconCircleCheck, IconCircleX, IconClock } from '@tabler/icons-react';
 import { notifications } from '@mantine/notifications';
 import MonitorForm from '@/Components/MonitorForm';
@@ -39,6 +39,7 @@ function MonitorsIndex({ monitors }) {
             timeout: 30,
             method: 'GET',
             verify_ssl: true,
+            check_ssl: false,
             headers: '',
             keyword: '',
             port: 80,
@@ -54,6 +55,7 @@ function MonitorsIndex({ monitors }) {
             timeout: 30,
             method: 'GET',
             verify_ssl: true,
+            check_ssl: false,
             headers: '',
             keyword: '',
             port: 80,
@@ -83,6 +85,7 @@ function MonitorsIndex({ monitors }) {
 
     const handleEdit = (monitor) => {
         setSelectedMonitor(monitor);
+
         editForm.setValues({
             name: monitor.name,
             url: monitor.url,
@@ -94,7 +97,9 @@ function MonitorsIndex({ monitors }) {
             headers: monitor.headers ? JSON.stringify(monitor.headers) : '',
             keyword: monitor.keyword || '',
             port: monitor.port || 80,
+            check_ssl : monitor.check_ssl || false,
         });
+
         openEdit();
     };
 
@@ -230,6 +235,13 @@ function MonitorsIndex({ monitors }) {
                                                 </Menu.Target>
 
                                                 <Menu.Dropdown>
+                                                    <Menu.Item
+                                                        leftSection={<IconEdit style={{ width: rem(14), height: rem(14) }} />}
+                                                        component={Link}
+                                                        href={`/monitors/${monitor.id}`}
+                                                    >
+                                                        View Details
+                                                    </Menu.Item>
                                                     <Menu.Item
                                                         leftSection={<IconEdit style={{ width: rem(14), height: rem(14) }} />}
                                                         onClick={() => handleEdit(monitor)}
