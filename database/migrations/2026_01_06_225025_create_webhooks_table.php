@@ -10,11 +10,11 @@ return new class extends Migration
     {
         Schema::create('webhooks', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignUuid('user_id')->constrained()->cascadeOnDelete();
             $table->string('name');
             $table->string('url');
-            $table->string('secret_token')->nullable(); // Payloadi imzalamak için
-            $table->json('events'); // ['incident.started', 'incident.resolved']
+            $table->string('secret_token')->nullable();
+            $table->json('events'); 
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });

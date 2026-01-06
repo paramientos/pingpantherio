@@ -2,7 +2,6 @@
 
 namespace App\Jobs;
 
-
 use App\Models\Heartbeat;
 use App\Models\Incident;
 use App\Models\Monitor;
@@ -93,7 +92,7 @@ class CheckMonitors implements ShouldQueue
 
         $wasDown = $monitor->status === 'paused';
 
-        if (! $isUp && ($monitor->status === 'active' || $monitor->status ===null)) {
+        if (! $isUp && ($monitor->status === 'active' || $monitor->status === null)) {
             $this->createIncident($monitor, $errorMessage);
         } elseif ($isUp && $wasDown) {
             $this->resolveIncident($monitor);
@@ -103,11 +102,12 @@ class CheckMonitors implements ShouldQueue
     protected function checkPush(Monitor $monitor): array
     {
         // Eğer hiç ping gelmemişse ve monitor yeni oluşturulmuşsa
-        if (!$monitor->last_ping_at) {
+        if (! $monitor->last_ping_at) {
             $isUp = $monitor->created_at->diffInMinutes(now()) <= $monitor->grace_period;
+
             return [
                 'is_up' => $isUp,
-                'error' => !$isUp ? 'Heartbeat never received' : null
+                'error' => ! $isUp ? 'Heartbeat never received' : null,
             ];
         }
 
@@ -115,7 +115,7 @@ class CheckMonitors implements ShouldQueue
 
         return [
             'is_up' => $isUp,
-            'error' => !$isUp ? "No heartbeat received in the last {$monitor->grace_period} minutes" : null
+            'error' => ! $isUp ? "No heartbeat received in the last {$monitor->grace_period} minutes" : null,
         ];
     }
 
@@ -224,6 +224,25 @@ class CheckMonitors implements ShouldQueue
             ]);
 
             $monitor->user->notify(new IncidentAlert($monitor, $incident, 'started'));
+
+            // Webhook Tetikle
+            $this->triggerWebhooks($monitor->user, 'incident.started', [
+                'monitor' => $monitor->only(['id', 'name', 'url', 'type']),
+                'incident' => $incident->only(['id', 'started_at', 'error_message']),
+            ]);
+        }
+    }
+
+    protected function triggerWebhooks($user, string $event, array $payload): void
+    {
+        $webhooks = \App\Models\Webhook::where('user_id', $user->id)
+            ->where('is_active', true)
+            ->get();
+
+        foreach ($webhooks as $webhook) {
+            if (in_array($event, $webhook->events)) {
+                dispatch(new \App\Jobs\DispatchWebhook($webhook, $event, $payload));
+            }
         }
     }
 
@@ -240,6 +259,12 @@ class CheckMonitors implements ShouldQueue
             ]);
 
             $monitor->user->notify(new IncidentAlert($monitor, $incident, 'resolved'));
+
+            // Webhook Tetikle
+            $this->triggerWebhooks($monitor->user, 'incident.resolved', [
+                'monitor' => $monitor->only(['id', 'name', 'url', 'type']),
+                'incident' => $incident->only(['id', 'started_at', 'resolved_at']),
+            ]);
         }
     }
 }

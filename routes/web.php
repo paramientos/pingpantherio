@@ -32,9 +32,12 @@ Route::middleware(['auth'])->group(function (): void {
     Route::resource('alert-rules', AlertRuleController::class);
     Route::resource('custom-dashboards', CustomDashboardController::class);
     Route::resource('domains', DomainMonitorController::class)->only(['index', 'store', 'destroy']);
+    Route::resource('webhooks', \App\Http\Controllers\WebhookController::class);
     Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
     Route::resource('teams', TeamController::class)->only(['index', 'store']);
     Route::post('/teams/{team}/invite', [TeamController::class, 'invite'])->name('teams.invite');
+    Route::delete('/teams/{team}/members/{user}', [TeamController::class, 'removeMember'])->name('teams.members.destroy');
+    Route::get('/invitations/{token}/accept', [TeamController::class, 'acceptInvite'])->name('invitations.accept');
 });
 
 require __DIR__.'/auth.php';

@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import AppLayout from '@/Layouts/AppLayout';
-import { useForm } from '@inertiajs/react';
 import {
     Title,
     Text,
@@ -9,45 +8,75 @@ import {
     Badge,
     Group,
     ActionIcon,
-    Stack,
-    Card,
     Modal,
     TextInput,
     Select,
-    Tabs,
+    Stack,
+    Paper,
     Avatar,
+    Tabs,
+    rem,
 } from '@mantine/core';
-import { IconPlus, IconUserPlus, IconMail, IconUsers, IconShieldCheck } from '@tabler/icons-react';
+import { useForm } from '@mantine/form';
+import { useDisclosure } from '@mantine/hooks';
+import { router } from '@inertiajs/react';
+import { IconPlus, IconTrash, IconMailForward, IconUsers, IconUserShield, IconShieldCheck } from '@tabler/icons-react';
 import { notifications } from '@mantine/notifications';
 
 function TeamsIndex({ teams }) {
-    const [createModalOpened, setCreateModalOpened] = useState(false);
-    const [inviteModalOpened, setInviteModalOpened] = useState(false);
-    const [activeTeam, setActiveTeam] = useState(teams[0]);
+    const [createOpened, { open: openCreate, close: closeCreate }] = useDisclosure(false);
+    const [inviteOpened, { open: openInvite, close: closeInvite }] = useDisclosure(false);
+    const [selectedTeam, setSelectedTeam] = useState(null);
 
-    const teamForm = useForm({ name: '' });
-    const inviteForm = useForm({ email: '', role: 'member' });
+    const createForm = useForm({
+        initialValues: { name: '' },
+    });
 
-    const handleCreateTeam = (e) => {
-        e.preventDefault();
-        teamForm.post('/teams', {
+    const inviteForm = useForm({
+        initialValues: { email: '', role: 'member' },
+    });
+
+    const handleCreateTeam = (values) => {
+        router.post('/teams', values, {
             onSuccess: () => {
-                setCreateModalOpened(false);
-                teamForm.reset();
                 notifications.show({ title: 'Success', message: 'Team created', color: 'green' });
-            },
+                closeCreate();
+                createForm.reset();
+            }
         });
     };
 
-    const handleInviteMember = (e) => {
-        e.preventDefault();
-        inviteForm.post(`/teams/${activeTeam.id}/invite`, {
+    const handleInvite = (values) => {
+        router.post(`/teams/${selectedTeam.id}/invite`, values, {
             onSuccess: () => {
-                setInviteModalOpened(false);
+                notifications.show({ title: 'Sent', message: 'Invitation sent to ' + values.email, color: 'blue' });
+                closeInvite();
                 inviteForm.reset();
-                notifications.show({ title: 'Sent', message: 'Invitation sent successfully', color: 'blue' });
-            },
+            }
         });
+    };
+
+    const handleRemoveMember = (teamId, userId) => {
+        if (confirm('Are you sure you want to remove this member?')) {
+            router.delete(`/teams/${teamId}/members/${userId}`, {
+                onSuccess: () => notifications.show({ title: 'Removed', message: 'Member removed from team', color: 'red' })
+            });
+        }
+    };
+
+    const getRoleBadge = (role) => {
+        const config = {
+            owner: { color: 'violet', icon: IconShieldCheck, label: 'Owner' },
+            admin: { color: 'blue', icon: IconUserShield, label: 'Admin' },
+            member: { color: 'teal', icon: IconUsers, label: 'Member' },
+            viewer: { color: 'gray', icon: IconUsers, label: 'Viewer' },
+        };
+        const { color, icon: Icon, label } = config[role] || config.member;
+        return (
+            <Badge color={color} variant="light" leftSection={<Icon size={12} />}>
+                {label}
+            </Badge>
+        );
     };
 
     return (
@@ -55,106 +84,132 @@ function TeamsIndex({ teams }) {
             <Stack gap="xl">
                 <Group justify="space-between">
                     <div>
-                        <Title order={2} fw={900} style={{ letterSpacing: '-0.5px' }}>
-                            Team Management
-                        </Title>
-                        <Text c="dimmed" size="sm" mt={4}>
-                            Manage team members, roles and pending invitations
-                        </Text>
+                        <Title order={2} fw={900}>Team Management</Title>
+                        <Text c="dimmed" size="sm">Manage your organizations and collaborate with your team</Text>
                     </div>
-                    <Button
-                        leftSection={<IconPlus size={16} />}
-                        onClick={() => setCreateModalOpened(true)}
-                    >
-                        Create Team
+                    <Button leftSection={<IconPlus size={16} />} onClick={openCreate}>
+                        Create New Team
                     </Button>
                 </Group>
 
                 {teams.length === 0 ? (
-                    <Card padding="xl" radius="md" withBorder style={{ textAlign: 'center' }}>
-                        <Stack align="center" gap="md">
-                            <IconUsers size={48} stroke={1.5} color="gray" />
-                            <Text size="lg" fw={500}>No teams found</Text>
-                            <Button variant="light" onClick={() => setCreateModalOpened(true)}>Create Your First Team</Button>
-                        </Stack>
-                    </Card>
+                    <Paper p="xl" withBorder style={{ textAlign: 'center' }}>
+                        <Text c="dimmed">You are not part of any team yet.</Text>
+                    </Paper>
                 ) : (
-                    <Tabs value={activeTeam?.id} onChange={(id) => setActiveTeam(teams.find(t => t.id === id))}>
-                        <Tabs.List mb="md">
-                            {teams.map(team => (
-                                <Tabs.Tab key={team.id} value={team.id}>{team.name}</Tabs.Tab>
-                            ))}
-                        </Tabs.List>
+                    teams.map((team) => (
+                        <Paper key={team.id} shadow="sm" radius="md" withBorder p="md">
+                            <Group justify="space-between" mb="md">
+                                <Group>
+                                    <Avatar color="indigo" radius="md">{team.name.substring(0, 2).toUpperCase()}</Avatar>
+                                    <div>
+                                        <Text fw={700} size="lg">{team.name}</Text>
+                                        <Text size="xs" c="dimmed">Owned by {team.owner}</Text>
+                                    </div>
+                                </Group>
+                                {team.is_owner && (
+                                    <Button
+                                        variant="light"
+                                        size="xs"
+                                        leftSection={<IconMailForward size={14} />}
+                                        onClick={() => { setSelectedTeam(team); openInvite(); }}
+                                    >
+                                        Invite Member
+                                    </Button>
+                                )}
+                            </Group>
 
-                        {teams.map(team => (
-                            <Tabs.Panel key={team.id} value={team.id}>
-                                <Stack gap="md">
-                                    <Group justify="space-between">
-                                        <Text fw={700} size="xl">{team.name} Members</Text>
-                                        <Button
-                                            variant="light"
-                                            leftSection={<IconUserPlus size={16} />}
-                                            onClick={() => setInviteModalOpened(true)}
-                                        >
-                                            Invite Member
-                                        </Button>
-                                    </Group>
+                            <Tabs defaultValue="members">
+                                <Tabs.List>
+                                    <Tabs.Tab value="members" leftSection={<IconUsers style={{ width: rem(14), height: rem(14) }} />}>
+                                        Members ({team.members.length})
+                                    </Tabs.Tab>
+                                    <Tabs.Tab value="invitations" leftSection={<IconMailForward style={{ width: rem(14), height: rem(14) }} />}>
+                                        Pending Invitations ({team.invitations.length})
+                                    </Tabs.Tab>
+                                </Tabs.List>
 
-                                    <Card padding="0" radius="md">
-                                        <Table striped verticalSpacing="md">
-                                            <Table.Thead>
-                                                <Table.Tr>
-                                                    <Table.Th>User</Table.Th>
-                                                    <Table.Th>Email</Table.Th>
-                                                    <Table.Th>Role</Table.Th>
-                                                    <Table.Th>Status</Table.Th>
+                                <Tabs.Panel value="members" pt="xs">
+                                    <Table verticalSpacing="sm">
+                                        <Table.Tbody>
+                                            {team.members.map((member) => (
+                                                <Table.Tr key={member.id}>
+                                                    <Table.Td>
+                                                        <Group gap="sm">
+                                                            <Avatar size="sm" radius="xl" color="gray">
+                                                                {member.name.substring(0, 2).toUpperCase()}
+                                                            </Avatar>
+                                                            <div>
+                                                                <Text size="sm" fw={500}>{member.name}</Text>
+                                                                <Text size="xs" c="dimmed">{member.email}</Text>
+                                                            </div>
+                                                        </Group>
+                                                    </Table.Td>
+                                                    <Table.Td>{getRoleBadge(member.role)}</Table.Td>
+                                                    <Table.Td style={{ textAlign: 'right' }}>
+                                                        {team.is_owner && member.role !== 'owner' && (
+                                                            <ActionIcon color="red" variant="subtle" onClick={() => handleRemoveMember(team.id, member.id)}>
+                                                                <IconTrash size={16} />
+                                                            </ActionIcon>
+                                                        )}
+                                                    </Table.Td>
                                                 </Table.Tr>
-                                            </Table.Thead>
-                                            <Table.Tbody>
-                                                {team.members.map(member => (
-                                                    <Table.Tr key={member.id}>
+                                            ))}
+                                        </Table.Tbody>
+                                    </Table>
+                                </Tabs.Panel>
+
+                                <Tabs.Panel value="invitations" pt="xs">
+                                    <Table verticalSpacing="sm">
+                                        <Table.Tbody>
+                                            {team.invitations.length === 0 ? (
+                                                <Table.Tr><Table.Td><Text size="xs" c="dimmed" ta="center" py="md">No pending invitations.</Text></Table.Td></Table.Tr>
+                                            ) : (
+                                                team.invitations.map((inv) => (
+                                                    <Table.Tr key={inv.id}>
                                                         <Table.Td>
-                                                            <Group gap="sm">
-                                                                <Avatar radius="xl" size="sm" color="blue">
-                                                                    {member.name.charAt(0)}
-                                                                </Avatar>
-                                                                <Text size="sm" fw={600}>{member.name}</Text>
-                                                            </Group>
+                                                            <Text size="sm" fw={500}>{inv.email}</Text>
+                                                            <Text size="xs" c="dimmed">Expires {inv.expires_at}</Text>
                                                         </Table.Td>
-                                                        <Table.Td><Text size="sm" c="dimmed">{member.email}</Text></Table.Td>
-                                                        <Table.Td>
-                                                            <Badge variant="dot" color={member.role === 'owner' ? 'red' : 'blue'}>
-                                                                {member.role.toUpperCase()}
-                                                            </Badge>
+                                                        <Table.Td>{getRoleBadge(inv.role)}</Table.Td>
+                                                        <Table.Td style={{ textAlign: 'right' }}>
+                                                            {/* Cancel invitation could be added here */}
                                                         </Table.Td>
-                                                        <Table.Td><Badge color="green" variant="light">Active</Badge></Table.Td>
                                                     </Table.Tr>
-                                                ))}
-                                            </Table.Tbody>
-                                        </Table>
-                                    </Card>
-                                </Stack>
-                            </Tabs.Panel>
-                        ))}
-                    </Tabs>
+                                                ))
+                                            )}
+                                        </Table.Tbody>
+                                    </Table>
+                                </Tabs.Panel>
+                            </Tabs>
+                        </Paper>
+                    ))
                 )}
             </Stack>
 
-            <Modal opened={createModalOpened} onClose={() => setCreateModalOpened(false)} title="Create New Team">
-                <form onSubmit={handleCreateTeam}>
-                    <Stack gap="md">
-                        <TextInput label="Team Name" placeholder="e.g. Engineering Team" required value={teamForm.data.name} onChange={e => teamForm.setData('name', e.target.value)} />
-                        <Button type="submit" fullWidth loading={teamForm.processing}>Create Team</Button>
-                    </Stack>
+            {/* Create Team Modal */}
+            <Modal opened={createOpened} onClose={closeCreate} title="Create New Team">
+                <form onSubmit={createForm.onSubmit(handleCreateTeam)}>
+                    <TextInput label="Team Name" placeholder="Digital Panthers Inc." required {...createForm.getInputProps('name')} />
+                    <Button type="submit" fullWidth mt="xl">Create Team</Button>
                 </form>
             </Modal>
 
-            <Modal opened={inviteModalOpened} onClose={() => setInviteModalOpened(false)} title={`Invite to ${activeTeam?.name}`}>
-                <form onSubmit={handleInviteMember}>
+            {/* Invite Modal */}
+            <Modal opened={inviteOpened} onClose={closeInvite} title={`Invite to ${selectedTeam?.name}`}>
+                <form onSubmit={inviteForm.onSubmit(handleInvite)}>
                     <Stack gap="md">
-                        <TextInput label="Email Address" placeholder="colleague@company.com" required value={inviteForm.data.email} onChange={e => inviteForm.setData('email', e.target.value)} />
-                        <Select label="Role" data={[{ value: 'admin', label: 'Admin' }, { value: 'member', label: 'Member' }, { value: 'viewer', label: 'Viewer' }]} value={inviteForm.data.role} onChange={val => inviteForm.setData('role', val)} />
-                        <Button type="submit" fullWidth loading={inviteForm.processing}>Send Invitation</Button>
+                        <TextInput label="Email Address" placeholder="colleague@company.com" required {...inviteForm.getInputProps('email')} />
+                        <Select
+                            label="Role"
+                            data={[
+                                { value: 'admin', label: 'Admin - Full access to all monitors' },
+                                { value: 'member', label: 'Member - Can edit monitors' },
+                                { value: 'viewer', label: 'Viewer - Read-only' },
+                            ]}
+                            {...inviteForm.getInputProps('role')}
+                        />
+                        <Button type="submit" fullWidth mt="md">Send Invitation</Button>
                     </Stack>
                 </form>
             </Modal>

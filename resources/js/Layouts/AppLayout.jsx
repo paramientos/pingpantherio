@@ -18,6 +18,7 @@ import {
     IconLayoutDashboard,
     IconWorld,
     IconHistory,
+    IconWebhook,
 } from '@tabler/icons-react';
 
 function AppLayout({ children }) {
@@ -40,6 +41,7 @@ function AppLayout({ children }) {
 
     const settingsItems = [
         { label: 'Settings', icon: IconSettings, href: '/settings/notifications' },
+        { label: 'Webhooks', icon: IconWebhook, href: '/webhooks' },
         { label: 'Team', icon: IconUsers, href: '/teams' },
         { label: 'API Keys', icon: IconKey, href: '/api-keys' },
         { label: 'Audit Logs', icon: IconHistory, href: '/audit-logs' },
