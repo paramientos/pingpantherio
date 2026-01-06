@@ -7,6 +7,7 @@ import {
     Stack,
     Group,
     Button,
+    TagsInput,
 } from '@mantine/core';
 import { IconPlus } from '@tabler/icons-react';
 
@@ -119,6 +120,20 @@ function MonitorForm({ form, onSubmit, submitLabel }) {
                         {...form.getInputProps('port')}
                     />
                 )}
+
+                <TextInput
+                    label="Group"
+                    placeholder="Production"
+                    description="Organize monitors into groups"
+                    {...form.getInputProps('group')}
+                />
+
+                <TagsInput
+                    label="Tags"
+                    placeholder="Enter tags"
+                    description="Add tags for better organization"
+                    {...form.getInputProps('tags')}
+                />
 
                 <Group justify="flex-end" mt="md">
                     <Button type="submit" leftSection={<IconPlus size={16} />}>

@@ -101,6 +101,8 @@ class MonitorController extends Controller
             'keyword' => 'nullable|string|max:255',
             'port' => 'nullable|integer|min:1|max:65535',
             'check_ssl' => 'nullable|boolean',
+            'tags' => 'nullable|array',
+            'group' => 'nullable|string|max:255',
         ]);
 
         if (isset($validated['headers']) && ! empty($validated['headers'])) {
@@ -130,6 +132,8 @@ class MonitorController extends Controller
             'keyword' => 'nullable|string|max:255',
             'port' => 'nullable|integer|min:1|max:65535',
             'check_ssl' => 'nullable|boolean',
+            'tags' => 'nullable|array',
+            'group' => 'nullable|string|max:255',
         ]);
 
         if (isset($validated['headers']) && ! empty($validated['headers'])) {

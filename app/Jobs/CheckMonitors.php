@@ -25,11 +25,25 @@ class CheckMonitors implements ShouldQueue
     {
         $monitors = Monitor::where('status', 'active')
             ->orWhere('status', 'pending')
+            ->with('maintenanceWindows')
             ->get();
 
         foreach ($monitors as $monitor) {
+            if ($this->isInMaintenanceWindow($monitor)) {
+                continue;
+            }
+
             $this->checkMonitor($monitor);
         }
+    }
+
+    protected function isInMaintenanceWindow(Monitor $monitor): bool
+    {
+        return $monitor->maintenanceWindows()
+            ->where('is_active', true)
+            ->where('starts_at', '<=', now())
+            ->where('ends_at', '>=', now())
+            ->exists();
     }
 
     protected function checkMonitor(Monitor $monitor): void

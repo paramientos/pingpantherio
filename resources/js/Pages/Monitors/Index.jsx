@@ -43,6 +43,8 @@ function MonitorsIndex({ monitors }) {
             headers: '',
             keyword: '',
             port: 80,
+            tags: [],
+            group: '',
         },
     });
 
@@ -59,6 +61,8 @@ function MonitorsIndex({ monitors }) {
             headers: '',
             keyword: '',
             port: 80,
+            tags: [],
+            group: '',
         },
     });
 
@@ -97,7 +101,7 @@ function MonitorsIndex({ monitors }) {
             headers: monitor.headers ? JSON.stringify(monitor.headers) : '',
             keyword: monitor.keyword || '',
             port: monitor.port || 80,
-            check_ssl : monitor.check_ssl || false,
+            check_ssl: monitor.check_ssl || false,
         });
 
         openEdit();

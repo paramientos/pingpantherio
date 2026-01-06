@@ -18,19 +18,27 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Illuminate\Support\Carbon|null $checked_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property array<array-key, mixed>|null $metadata
+ * @property float|null $dns_time
+ * @property float|null $connect_time
+ * @property float|null $ttfb
  * @property-read \App\Models\Monitor $monitor
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Heartbeat newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Heartbeat newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Heartbeat query()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Heartbeat whereCheckedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Heartbeat whereConnectTime($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Heartbeat whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Heartbeat whereDnsTime($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Heartbeat whereError($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Heartbeat whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Heartbeat whereIsUp($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Heartbeat whereMetadata($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Heartbeat whereMonitorId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Heartbeat whereResponseTime($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Heartbeat whereStatus($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Heartbeat whereStatusCode($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Heartbeat whereTtfb($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Heartbeat whereUpdatedAt($value)
  * @mixin \Eloquent
  */

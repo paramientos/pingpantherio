@@ -12,6 +12,10 @@ import {
     IconKey,
     IconLogout,
     IconBolt,
+    IconClock,
+    IconFileAnalytics,
+    IconSettingsAutomation,
+    IconLayoutDashboard,
 } from '@tabler/icons-react';
 
 function AppLayout({ children }) {
@@ -20,17 +24,21 @@ function AppLayout({ children }) {
 
 
     const navItems = [
-        { label: 'Dashboard', icon: IconChartPie, href: '/' },
+        { label: 'Overview', icon: IconChartPie, href: '/' },
+        { label: 'Custom Dashboards', icon: IconLayoutDashboard, href: '/custom-dashboards' },
         { label: 'Monitors', icon: IconDeviceDesktop, href: '/monitors' },
         { label: 'Incidents', icon: IconAlertTriangle, href: '/incidents' },
         { label: 'Status Pages', icon: IconBroadcast, href: '/status-pages' },
+        { label: 'Reports', icon: IconFileAnalytics, href: '/reports' },
+        { label: 'Alert Rules', icon: IconSettingsAutomation, href: '/alert-rules' },
         { label: 'Alert Channels', icon: IconBolt, href: '/alert-channels' },
+        { label: 'Maintenance', icon: IconClock, href: '/maintenance-windows' },
     ];
 
     const settingsItems = [
         { label: 'Settings', icon: IconSettings, href: '/settings/notifications' },
         { label: 'Team', icon: IconUsers, href: '/settings/team' },
-        { label: 'API Keys', icon: IconKey, href: '/settings/api' },
+        { label: 'API Keys', icon: IconKey, href: '/api-keys' },
     ];
 
     return (

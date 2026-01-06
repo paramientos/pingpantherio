@@ -2,9 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -30,23 +29,30 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property \Illuminate\Support\Carbon|null $ssl_expires_at
  * @property int|null $ssl_days_until_expiry
  * @property string|null $ssl_issuer
+ * @property array<array-key, mixed>|null $metadata
+ * @property array<array-key, mixed>|null $tags
+ * @property string|null $group
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\AlertChannel> $alertChannels
  * @property-read int|null $alert_channels_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Heartbeat> $heartbeats
  * @property-read int|null $heartbeats_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Incident> $incidents
  * @property-read int|null $incidents_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\MaintenanceWindow> $maintenanceWindows
+ * @property-read int|null $maintenance_windows_count
  * @property-read \App\Models\User $user
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor query()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor whereCheckSsl($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor whereGroup($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor whereHeaders($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor whereInterval($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor whereKeyword($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor whereLastCheckedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor whereMetadata($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor whereMethod($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor whereName($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor wherePort($value)
@@ -54,6 +60,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor whereSslExpiresAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor whereSslIssuer($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor whereStatus($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor whereTags($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor whereTimeout($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor whereType($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor whereUpdatedAt($value)
@@ -85,11 +92,14 @@ class Monitor extends Model
         'ssl_issuer',
         'check_ssl',
         'metadata',
+        'tags',
+        'group',
     ];
 
     protected $casts = [
         'headers' => 'array',
         'metadata' => 'array',
+        'tags' => 'array',
         'last_checked_at' => 'datetime',
         'verify_ssl' => 'boolean',
         'check_ssl' => 'boolean',
@@ -114,5 +124,10 @@ class Monitor extends Model
     public function alertChannels(): BelongsToMany
     {
         return $this->belongsToMany(AlertChannel::class);
+    }
+
+    public function maintenanceWindows(): HasMany
+    {
+        return $this->hasMany(MaintenanceWindow::class);
     }
 }
