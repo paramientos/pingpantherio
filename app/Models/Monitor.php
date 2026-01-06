@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Traits\Auditable;
 
 /**
  * @property string $id
@@ -71,7 +72,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class Monitor extends Model
 {
-    use HasUuids;
+    use HasUuids, Auditable;
 
     protected $fillable = [
         'user_id',
@@ -94,6 +95,7 @@ class Monitor extends Model
         'metadata',
         'tags',
         'group',
+        'uuid',
     ];
 
     protected $casts = [

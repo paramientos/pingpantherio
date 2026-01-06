@@ -2,6 +2,7 @@
 
 use App\Console\Commands\CheckMonitorsCommand;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Jobs\CheckDomainExpirations;
 use App\Jobs\CheckMonitors;
 use App\Jobs\CheckSslCertificates;
 use Illuminate\Console\Scheduling\Schedule;
@@ -18,14 +19,12 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withSchedule(function (Schedule $schedule): void {
         $schedule->job(new CheckMonitors())->everyMinute();
-        $schedule->job(new CheckSslCertificates())->everyFourHours();
+        $schedule->job(new CheckSslCertificates())->daily();
+        $schedule->job(new CheckDomainExpirations())->daily();
     })
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
             AddLinkHeadersForPreloadedAssets::class,
-        ]);
-
-        $middleware->web(append: [
             HandleInertiaRequests::class,
         ]);
     })

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\CheckSslCertificates;
 use App\Models\Monitor;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -14,7 +15,7 @@ class MonitorController extends Controller
         $monitors = Monitor::with('user')
             ->latest()
             ->get()
-            ->map(fn ($monitor) => [
+            ->map(fn($monitor) => [
                 'id' => $monitor->getKey(),
                 'name' => $monitor->name,
                 'url' => $monitor->url,
@@ -25,6 +26,8 @@ class MonitorController extends Controller
                 'ssl_expires_at' => $monitor->ssl_expires_at?->format('Y-m-d'),
                 'ssl_days_until_expiry' => $monitor->ssl_days_until_expiry,
                 'ssl_issuer' => $monitor->ssl_issuer,
+                'uuid' => $monitor->uuid,
+                'last_ping_at' => $monitor->last_ping_at?->diffForHumans(),
                 'last_checked_at' => $monitor->last_checked_at?->diffForHumans(),
                 'created_at' => $monitor->created_at->format('M d, Y'),
             ]);
@@ -54,14 +57,17 @@ class MonitorController extends Controller
                 'method' => $monitor->method,
                 'verify_ssl' => $monitor->verify_ssl,
                 'check_ssl' => $monitor->check_ssl,
+                'uuid' => $monitor->uuid,
+                'grace_period' => $monitor->grace_period,
                 'ssl_expires_at' => $monitor->ssl_expires_at?->format('Y-m-d H:i:s'),
                 'ssl_days_until_expiry' => $monitor->ssl_days_until_expiry,
                 'ssl_issuer' => $monitor->ssl_issuer,
                 'metadata' => $monitor->metadata,
                 'last_checked_at' => $monitor->last_checked_at?->format('Y-m-d H:i:s'),
+                'last_ping_at' => $monitor->last_ping_at?->format('Y-m-d H:i:s'),
                 'created_at' => $monitor->created_at->format('M d, Y'),
             ],
-            'heartbeats' => $monitor->heartbeats->map(fn ($h) => [
+            'heartbeats' => $monitor->heartbeats->map(fn($h) => [
                 'id' => $h->getKey(),
                 'is_up' => $h->is_up,
                 'status_code' => $h->status_code,
@@ -69,7 +75,7 @@ class MonitorController extends Controller
                 'error' => $h->error,
                 'checked_at' => $h->checked_at?->format('Y-m-d H:i:s'),
             ]),
-            'incidents' => $monitor->incidents->map(fn ($i) => [
+            'incidents' => $monitor->incidents->map(fn($i) => [
                 'id' => $i->getKey(),
                 'started_at' => $i->started_at->format('Y-m-d H:i:s'),
                 'resolved_at' => $i->resolved_at?->format('Y-m-d H:i:s'),
@@ -91,10 +97,11 @@ class MonitorController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'url' => 'required|url|max:500',
-            'type' => 'required|in:http,ping,port,keyword',
+            'url' => 'nullable|url|max:500',
+            'type' => 'required|in:http,ping,port,keyword,push',
             'interval' => 'required|integer|min:60|max:3600',
             'timeout' => 'nullable|integer|min:5|max:60',
+            'grace_period' => 'nullable|integer|min:1|max:1440',
             'method' => 'nullable|in:GET,POST,PUT,DELETE,PATCH',
             'verify_ssl' => 'nullable|boolean',
             'headers' => 'nullable|string',
@@ -105,15 +112,18 @@ class MonitorController extends Controller
             'group' => 'nullable|string|max:255',
         ]);
 
-        if (isset($validated['headers']) && ! empty($validated['headers'])) {
+        if (isset($validated['headers']) && !empty($validated['headers'])) {
             $validated['headers'] = json_decode($validated['headers'], true);
         }
 
         $monitor = Monitor::create([
             ...$validated,
             'user_id' => auth()->id(),
+            'uuid' => $validated['type'] === 'push' ? (string)\Illuminate\Support\Str::uuid() : null,
             'status' => 'pending',
         ]);
+
+        dispatch(new CheckSslCertificates($monitor));
 
         return redirect()->back();
     }
@@ -122,10 +132,11 @@ class MonitorController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'url' => 'required|url|max:500',
-            'type' => 'required|in:http,ping,port,keyword',
+            'url' => 'nullable|url|max:500',
+            'type' => 'required|in:http,ping,port,keyword,push',
             'interval' => 'required|integer|min:60|max:3600',
             'timeout' => 'nullable|integer|min:5|max:60',
+            'grace_period' => 'nullable|integer|min:1|max:1440',
             'method' => 'nullable|in:GET,POST,PUT,DELETE,PATCH',
             'verify_ssl' => 'nullable|boolean',
             'headers' => 'nullable|string',
@@ -136,8 +147,12 @@ class MonitorController extends Controller
             'group' => 'nullable|string|max:255',
         ]);
 
-        if (isset($validated['headers']) && ! empty($validated['headers'])) {
+        if (isset($validated['headers']) && !empty($validated['headers'])) {
             $validated['headers'] = json_decode($validated['headers'], true);
+        }
+
+        if ($monitor->type !== 'push' && $validated['type'] === 'push' && !$monitor->uuid) {
+            $validated['uuid'] = (string)\Illuminate\Support\Str::uuid();
         }
 
         $monitor->update($validated);

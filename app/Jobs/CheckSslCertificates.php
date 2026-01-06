@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Models\DomainMonitor;
 use App\Models\Monitor;
 use App\Notifications\SslExpiryAlert;
 use Illuminate\Bus\Queueable;
@@ -17,8 +18,19 @@ class CheckSslCertificates implements ShouldQueue
     use Queueable;
     use SerializesModels;
 
+    public function __construct(private ?Monitor $monitor = null)
+    {
+        //
+    }
+
     public function handle(): void
     {
+        if ($this->monitor) {
+            $this->checkSslCertificate($this->monitor);
+
+            return;
+        }
+
         $monitors = Monitor::where('check_ssl', true)
             ->where('type', 'http')
             ->get();
@@ -52,7 +64,7 @@ class CheckSslCertificates implements ShouldQueue
                 $context
             );
 
-            if (! $stream) {
+            if (!$stream) {
                 return;
             }
 
@@ -65,7 +77,7 @@ class CheckSslCertificates implements ShouldQueue
 
                 $monitor->update([
                     'ssl_expires_at' => $expiryDate,
-                    'ssl_days_until_expiry' => (int) $daysUntilExpiry,
+                    'ssl_days_until_expiry' => (int)$daysUntilExpiry,
                     'ssl_issuer' => $cert['issuer']['O'] ?? $cert['issuer']['CN'] ?? 'Unknown',
                 ]);
 

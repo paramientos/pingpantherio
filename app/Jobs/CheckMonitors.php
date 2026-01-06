@@ -23,9 +23,8 @@ class CheckMonitors implements ShouldQueue
 
     public function handle(): void
     {
-        $monitors = Monitor::where('status', 'active')
-            ->orWhere('status', 'pending')
-            ->with('maintenanceWindows')
+        $monitors = Monitor::whereIn('status', ['active', 'pending'])
+            ->with(['maintenanceWindows', 'user'])
             ->get();
 
         foreach ($monitors as $monitor) {
@@ -60,6 +59,7 @@ class CheckMonitors implements ShouldQueue
                 'ping' => $this->checkPing($monitor),
                 'port' => $this->checkPort($monitor),
                 'keyword' => $this->checkKeyword($monitor),
+                'push' => $this->checkPush($monitor),
 
                 default => ['is_up' => false, 'error' => 'Unknown monitor type'],
             };
@@ -98,6 +98,25 @@ class CheckMonitors implements ShouldQueue
         } elseif ($isUp && $wasDown) {
             $this->resolveIncident($monitor);
         }
+    }
+
+    protected function checkPush(Monitor $monitor): array
+    {
+        // Eğer hiç ping gelmemişse ve monitor yeni oluşturulmuşsa
+        if (!$monitor->last_ping_at) {
+            $isUp = $monitor->created_at->diffInMinutes(now()) <= $monitor->grace_period;
+            return [
+                'is_up' => $isUp,
+                'error' => !$isUp ? 'Heartbeat never received' : null
+            ];
+        }
+
+        $isUp = $monitor->last_ping_at->diffInMinutes(now()) <= $monitor->grace_period;
+
+        return [
+            'is_up' => $isUp,
+            'error' => !$isUp ? "No heartbeat received in the last {$monitor->grace_period} minutes" : null
+        ];
     }
 
     protected function checkHttp(Monitor $monitor): array

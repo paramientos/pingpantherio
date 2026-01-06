@@ -24,9 +24,12 @@ function StatusPagesCreate({ monitors }) {
             slug: '',
             description: '',
             logo_url: '',
+            favicon_url: '',
+            custom_domain: '',
             is_public: true,
             show_uptime: true,
             show_incidents: true,
+            hide_branding: false,
             monitor_ids: [],
         },
     });
@@ -113,6 +116,19 @@ function StatusPagesCreate({ monitors }) {
                                     placeholder="https://example.com/logo.png"
                                     {...form.getInputProps('logo_url')}
                                 />
+
+                                <TextInput
+                                    label="Favicon URL"
+                                    placeholder="https://example.com/favicon.ico"
+                                    {...form.getInputProps('favicon_url')}
+                                />
+
+                                <TextInput
+                                    label="Custom Domain"
+                                    placeholder="status.yourdomain.com"
+                                    description="Points your status page to a custom domain (CNAME record required)"
+                                    {...form.getInputProps('custom_domain')}
+                                />
                             </Stack>
                         </Card>
 
@@ -154,6 +170,12 @@ function StatusPagesCreate({ monitors }) {
                                     label="Show incident history"
                                     description="Display recent incidents timeline"
                                     {...form.getInputProps('show_incidents', { type: 'checkbox' })}
+                                />
+
+                                <Switch
+                                    label="Enterprise Whitelabel"
+                                    description='Remove "Powered by PingPanther" branding'
+                                    {...form.getInputProps('hide_branding', { type: 'checkbox' })}
                                 />
                             </Stack>
                         </Card>

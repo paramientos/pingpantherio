@@ -24,9 +24,12 @@ function StatusPagesEdit({ statusPage, monitors }) {
             slug: statusPage.slug,
             description: statusPage.description || '',
             logo_url: statusPage.logo_url || '',
+            favicon_url: statusPage.favicon_url || '',
+            custom_domain: statusPage.custom_domain || '',
             is_public: statusPage.is_public,
             show_uptime: statusPage.show_uptime,
             show_incidents: statusPage.show_incidents,
+            hide_branding: statusPage.hide_branding || false,
             monitor_ids: statusPage.monitor_ids || [],
         },
     });
@@ -105,6 +108,18 @@ function StatusPagesEdit({ statusPage, monitors }) {
                                     placeholder="https://example.com/logo.png"
                                     {...form.getInputProps('logo_url')}
                                 />
+
+                                <TextInput
+                                    label="Favicon URL"
+                                    placeholder="https://example.com/favicon.ico"
+                                    {...form.getInputProps('favicon_url')}
+                                />
+
+                                <TextInput
+                                    label="Custom Domain"
+                                    placeholder="status.yourdomain.com"
+                                    {...form.getInputProps('custom_domain')}
+                                />
                             </Stack>
                         </Card>
 
@@ -146,6 +161,12 @@ function StatusPagesEdit({ statusPage, monitors }) {
                                     label="Show incident history"
                                     description="Display recent incidents timeline"
                                     {...form.getInputProps('show_incidents', { type: 'checkbox' })}
+                                />
+
+                                <Switch
+                                    label="Enterprise Whitelabel"
+                                    description='Remove "Powered by PingPanther" branding'
+                                    {...form.getInputProps('hide_branding', { type: 'checkbox' })}
                                 />
                             </Stack>
                         </Card>

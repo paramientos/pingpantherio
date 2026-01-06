@@ -23,13 +23,15 @@ function MonitorForm({ form, onSubmit, submitLabel }) {
                     {...form.getInputProps('name')}
                 />
 
-                <TextInput
-                    label="URL"
-                    placeholder="https://example.com"
-                    description="The URL or IP address to monitor"
-                    required
-                    {...form.getInputProps('url')}
-                />
+                {form.values.type !== 'push' && (
+                    <TextInput
+                        label="URL"
+                        placeholder="https://example.com"
+                        description="The URL or IP address to monitor"
+                        required
+                        {...form.getInputProps('url')}
+                    />
+                )}
 
                 <Select
                     label="Monitor Type"
@@ -39,6 +41,7 @@ function MonitorForm({ form, onSubmit, submitLabel }) {
                         { value: 'ping', label: 'Ping - Check server reachability' },
                         { value: 'port', label: 'Port - Monitor specific port' },
                         { value: 'keyword', label: 'Keyword - Check for specific content' },
+                        { value: 'push', label: 'Heartbeat (Push) - For cron jobs & scripts' },
                     ]}
                     {...form.getInputProps('type')}
                 />
@@ -53,14 +56,25 @@ function MonitorForm({ form, onSubmit, submitLabel }) {
                         {...form.getInputProps('interval')}
                     />
 
-                    <NumberInput
-                        label="Timeout"
-                        description="Request timeout (seconds)"
-                        min={5}
-                        max={60}
-                        suffix=" seconds"
-                        {...form.getInputProps('timeout')}
-                    />
+                    {form.values.type !== 'push' ? (
+                        <NumberInput
+                            label="Timeout"
+                            description="Request timeout (seconds)"
+                            min={5}
+                            max={60}
+                            suffix=" seconds"
+                            {...form.getInputProps('timeout')}
+                        />
+                    ) : (
+                        <NumberInput
+                            label="Grace Period"
+                            description="Wait time before marking as down"
+                            min={1}
+                            max={1440}
+                            suffix=" minutes"
+                            {...form.getInputProps('grace_period')}
+                        />
+                    )}
                 </Group>
 
                 {form.values.type === 'http' && (

@@ -3,17 +3,22 @@
 use App\Http\Controllers\AlertChannelController;
 use App\Http\Controllers\AlertRuleController;
 use App\Http\Controllers\ApiKeyController;
+use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\CustomDashboardController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DomainMonitorController;
 use App\Http\Controllers\IncidentController;
 use App\Http\Controllers\MaintenanceWindowController;
 use App\Http\Controllers\MonitorController;
+use App\Http\Controllers\PushMonitorController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\StatusPageController;
 use App\Http\Controllers\StatusPageManagementController;
+use App\Http\Controllers\TeamController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/status/{slug}', [StatusPageController::class, 'show'])->name('status-page.show');
+Route::get('/ping/{uuid}', [PushMonitorController::class, 'ping'])->name('push.ping');
 
 Route::middleware(['auth'])->group(function (): void {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
@@ -26,6 +31,10 @@ Route::middleware(['auth'])->group(function (): void {
     Route::resource('reports', ReportController::class);
     Route::resource('alert-rules', AlertRuleController::class);
     Route::resource('custom-dashboards', CustomDashboardController::class);
+    Route::resource('domains', DomainMonitorController::class)->only(['index', 'store', 'destroy']);
+    Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
+    Route::resource('teams', TeamController::class)->only(['index', 'store']);
+    Route::post('/teams/{team}/invite', [TeamController::class, 'invite'])->name('teams.invite');
 });
 
 require __DIR__.'/auth.php';

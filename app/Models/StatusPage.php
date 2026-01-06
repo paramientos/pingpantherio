@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Str;
+use App\Traits\Auditable;
 
 /**
  * @property string $id
@@ -22,15 +23,21 @@ use Illuminate\Support\Str;
  * @property array<array-key, mixed>|null $theme_colors
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property string|null $favicon_url
+ * @property string|null $branding
+ * @property bool $hide_branding
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Monitor> $monitors
  * @property-read int|null $monitors_count
  * @property-read \App\Models\User $user
  * @method static \Illuminate\Database\Eloquent\Builder<static>|StatusPage newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|StatusPage newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|StatusPage query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|StatusPage whereBranding($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|StatusPage whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|StatusPage whereCustomDomain($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|StatusPage whereDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|StatusPage whereFaviconUrl($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|StatusPage whereHideBranding($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|StatusPage whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|StatusPage whereIsPublic($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|StatusPage whereLogoUrl($value)
@@ -45,7 +52,7 @@ use Illuminate\Support\Str;
  */
 class StatusPage extends Model
 {
-    use HasUuids;
+    use HasUuids, Auditable;
 
     protected $fillable = [
         'user_id',
@@ -54,9 +61,11 @@ class StatusPage extends Model
         'logo_url',
         'description',
         'custom_domain',
+        'favicon_url',
         'is_public',
         'show_uptime',
         'show_incidents',
+        'hide_branding',
         'theme_colors',
     ];
 
@@ -64,6 +73,7 @@ class StatusPage extends Model
         'is_public' => 'boolean',
         'show_uptime' => 'boolean',
         'show_incidents' => 'boolean',
+        'hide_branding' => 'boolean',
         'theme_colors' => 'array',
     ];
 

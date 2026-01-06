@@ -16,6 +16,8 @@ import {
     IconFileAnalytics,
     IconSettingsAutomation,
     IconLayoutDashboard,
+    IconWorld,
+    IconHistory,
 } from '@tabler/icons-react';
 
 function AppLayout({ children }) {
@@ -29,6 +31,7 @@ function AppLayout({ children }) {
         { label: 'Monitors', icon: IconDeviceDesktop, href: '/monitors' },
         { label: 'Incidents', icon: IconAlertTriangle, href: '/incidents' },
         { label: 'Status Pages', icon: IconBroadcast, href: '/status-pages' },
+        { label: 'Domains', icon: IconWorld, href: '/domains' },
         { label: 'Reports', icon: IconFileAnalytics, href: '/reports' },
         { label: 'Alert Rules', icon: IconSettingsAutomation, href: '/alert-rules' },
         { label: 'Alert Channels', icon: IconBolt, href: '/alert-channels' },
@@ -37,8 +40,9 @@ function AppLayout({ children }) {
 
     const settingsItems = [
         { label: 'Settings', icon: IconSettings, href: '/settings/notifications' },
-        { label: 'Team', icon: IconUsers, href: '/settings/team' },
+        { label: 'Team', icon: IconUsers, href: '/teams' },
         { label: 'API Keys', icon: IconKey, href: '/api-keys' },
+        { label: 'Audit Logs', icon: IconHistory, href: '/audit-logs' },
     ];
 
     return (

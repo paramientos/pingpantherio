@@ -10,7 +10,9 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
+        "ext-openssl": "*",
         "inertiajs/inertia-laravel": "^2.0",
+        "io-developer/php-whois": "^4.1",
         "laravel/framework": "^12.0",
         "laravel/horizon": "^5.41",
         "laravel/sanctum": "^4.0",
@@ -19,8 +21,7 @@
         "livewire/volt": "^1.10",
         "owenvoke/blade-fontawesome": "^3.0",
         "robsontenorio/mary": "^2.5",
-        "tightenco/ziggy": "^2.0",
-        "ext-openssl": "*"
+        "tightenco/ziggy": "^2.0"
     },
     "require-dev": {
         "barryvdh/laravel-ide-helper": "^3.6",
