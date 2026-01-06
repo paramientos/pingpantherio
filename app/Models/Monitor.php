@@ -2,12 +2,12 @@
 
 namespace App\Models;
 
+use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Traits\Auditable;
 
 /**
  * @property string $id
@@ -42,6 +42,7 @@ use App\Traits\Auditable;
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\MaintenanceWindow> $maintenanceWindows
  * @property-read int|null $maintenance_windows_count
  * @property-read \App\Models\User $user
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor query()
@@ -68,11 +69,12 @@ use App\Traits\Auditable;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor whereUrl($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor whereUserId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor whereVerifySsl($value)
+ *
  * @mixin \Eloquent
  */
 class Monitor extends Model
 {
-    use HasUuids, Auditable;
+    use Auditable, HasUuids;
 
     protected $fillable = [
         'user_id',
@@ -131,5 +133,10 @@ class Monitor extends Model
     public function maintenanceWindows(): HasMany
     {
         return $this->hasMany(MaintenanceWindow::class);
+    }
+
+    public function recoveryActions(): HasMany
+    {
+        return $this->hasMany(RecoveryAction::class);
     }
 }

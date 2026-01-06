@@ -15,7 +15,7 @@ class MonitorController extends Controller
         $monitors = Monitor::with('user')
             ->latest()
             ->get()
-            ->map(fn($monitor) => [
+            ->map(fn ($monitor) => [
                 'id' => $monitor->getKey(),
                 'name' => $monitor->name,
                 'url' => $monitor->url,
@@ -67,7 +67,7 @@ class MonitorController extends Controller
                 'last_ping_at' => $monitor->last_ping_at?->format('Y-m-d H:i:s'),
                 'created_at' => $monitor->created_at->format('M d, Y'),
             ],
-            'heartbeats' => $monitor->heartbeats->map(fn($h) => [
+            'heartbeats' => $monitor->heartbeats->map(fn ($h) => [
                 'id' => $h->getKey(),
                 'is_up' => $h->is_up,
                 'status_code' => $h->status_code,
@@ -75,7 +75,7 @@ class MonitorController extends Controller
                 'error' => $h->error,
                 'checked_at' => $h->checked_at?->format('Y-m-d H:i:s'),
             ]),
-            'incidents' => $monitor->incidents->map(fn($i) => [
+            'incidents' => $monitor->incidents->map(fn ($i) => [
                 'id' => $i->getKey(),
                 'started_at' => $i->started_at->format('Y-m-d H:i:s'),
                 'resolved_at' => $i->resolved_at?->format('Y-m-d H:i:s'),
@@ -90,6 +90,14 @@ class MonitorController extends Controller
                 'total_incidents' => $monitor->incidents()->count(),
                 'active_incidents' => $monitor->incidents()->whereNull('resolved_at')->count(),
             ],
+            'recovery_actions' => $monitor->recoveryActions->map(fn($ra) => [
+                'id' => $ra->id,
+                'name' => $ra->name,
+                'type' => $ra->type,
+                'config' => $ra->config,
+                'delay_seconds' => $ra->delay_seconds,
+                'is_active' => $ra->is_active,
+            ]),
         ]);
     }
 
@@ -112,14 +120,14 @@ class MonitorController extends Controller
             'group' => 'nullable|string|max:255',
         ]);
 
-        if (isset($validated['headers']) && !empty($validated['headers'])) {
+        if (isset($validated['headers']) && ! empty($validated['headers'])) {
             $validated['headers'] = json_decode($validated['headers'], true);
         }
 
         $monitor = Monitor::create([
             ...$validated,
             'user_id' => auth()->id(),
-            'uuid' => $validated['type'] === 'push' ? (string)\Illuminate\Support\Str::uuid() : null,
+            'uuid' => $validated['type'] === 'push' ? (string) \Illuminate\Support\Str::uuid() : null,
             'status' => 'pending',
         ]);
 
@@ -147,12 +155,12 @@ class MonitorController extends Controller
             'group' => 'nullable|string|max:255',
         ]);
 
-        if (isset($validated['headers']) && !empty($validated['headers'])) {
+        if (isset($validated['headers']) && ! empty($validated['headers'])) {
             $validated['headers'] = json_decode($validated['headers'], true);
         }
 
-        if ($monitor->type !== 'push' && $validated['type'] === 'push' && !$monitor->uuid) {
-            $validated['uuid'] = (string)\Illuminate\Support\Str::uuid();
+        if ($monitor->type !== 'push' && $validated['type'] === 'push' && ! $monitor->uuid) {
+            $validated['uuid'] = (string) \Illuminate\Support\Str::uuid();
         }
 
         $monitor->update($validated);

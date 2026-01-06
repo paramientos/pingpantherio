@@ -23,6 +23,8 @@ Route::get('/ping/{uuid}', [PushMonitorController::class, 'ping'])->name('push.p
 Route::middleware(['auth'])->group(function (): void {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     Route::resource('monitors', MonitorController::class)->except(['create', 'edit']);
+    Route::post('/monitors/{monitor}/recovery-actions', [\App\Http\Controllers\RecoveryActionController::class, 'store'])->name('monitors.recovery-actions.store');
+    Route::delete('/recovery-actions/{recoveryAction}', [\App\Http\Controllers\RecoveryActionController::class, 'destroy'])->name('recovery-actions.destroy');
     Route::resource('status-pages', StatusPageManagementController::class);
     Route::resource('alert-channels', AlertChannelController::class);
     Route::get('/incidents', [IncidentController::class, 'index'])->name('incidents.index');

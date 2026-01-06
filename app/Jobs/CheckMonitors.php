@@ -230,6 +230,21 @@ class CheckMonitors implements ShouldQueue
                 'monitor' => $monitor->only(['id', 'name', 'url', 'type']),
                 'incident' => $incident->only(['id', 'started_at', 'error_message']),
             ]);
+
+            // Self-healing: Otomatik Kurtarma Eylemlerini Tetikle
+            $this->triggerRecoveryActions($monitor, $incident);
+        }
+    }
+
+    protected function triggerRecoveryActions($monitor, $incident): void
+    {
+        $actions = \App\Models\RecoveryAction::where('monitor_id', $monitor->id)
+            ->where('is_active', true)
+            ->get();
+
+        foreach ($actions as $action) {
+            dispatch(new \App\Jobs\ExecuteRecoveryAction($action, $incident->id))
+                ->delay(now()->addSeconds($action->delay_seconds));
         }
     }
 

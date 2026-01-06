@@ -24,9 +24,57 @@ import {
     IconClock,
     IconAlertTriangle,
     IconActivity,
+    IconBolt,
+    IconTrash,
+    IconPlayerPlay,
+    IconPlus,
 } from '@tabler/icons-react';
+import { useForm } from '@mantine/form';
+import { useDisclosure } from '@mantine/hooks';
+import { router } from '@inertiajs/react';
+import { notifications } from '@mantine/notifications';
+import { TextInput, Modal, Select, ActionIcon, Code } from '@mantine/core';
 
-function MonitorShow({ monitor, heartbeats, incidents, stats }) {
+function MonitorShow({ monitor, heartbeats, incidents, stats, recovery_actions }) {
+    const [opened, { open, close }] = useDisclosure(false);
+
+    const form = useForm({
+        initialValues: {
+            name: '',
+            type: 'webhook',
+            config: { url: '', payload: '{}' },
+            delay_seconds: 0,
+        },
+    });
+
+    const handleAddRecovery = (values) => {
+        const payload = {
+            ...values,
+            config: {
+                ...values.config,
+                payload: values.type === 'webhook' ? JSON.parse(values.config.payload || '{}') : {}
+            }
+        };
+
+        router.post(`/monitors/${monitor.id}/recovery-actions`, payload, {
+            onSuccess: () => {
+                notifications.show({ title: 'Success', message: 'Recovery action added', color: 'green' });
+                close();
+                form.reset();
+            },
+            onError: (errors) => {
+                notifications.show({ title: 'Error', message: Object.values(errors)[0], color: 'red' });
+            }
+        });
+    };
+
+    const handleDeleteRecovery = (id) => {
+        if (confirm('Delete this automated recovery action?')) {
+            router.delete(`/recovery-actions/${id}`, {
+                onSuccess: () => notifications.show({ title: 'Deleted', message: 'Recovery action removed', color: 'red' })
+            });
+        }
+    };
     const getStatusColor = (status) => {
         const colors = {
             active: 'green',
@@ -251,6 +299,9 @@ function MonitorShow({ monitor, heartbeats, incidents, stats }) {
                         <Tabs.Tab value="incidents" leftSection={<IconAlertTriangle size={16} />}>
                             Incidents
                         </Tabs.Tab>
+                        <Tabs.Tab value="recovery" leftSection={<IconBolt size={16} />}>
+                            Self-Healing
+                        </Tabs.Tab>
                     </Tabs.List>
 
                     <Tabs.Panel value="heartbeats" pt="md">
@@ -355,7 +406,83 @@ function MonitorShow({ monitor, heartbeats, incidents, stats }) {
                             )}
                         </Card>
                     </Tabs.Panel>
+
+                    <Tabs.Panel value="recovery" pt="md">
+                        <Stack gap="md">
+                            <Group justify="space-between">
+                                <div>
+                                    <Title order={4} fw={700}>Automated Recovery Actions</Title>
+                                    <Text size="xs" c="dimmed">Executed automatically when an incident begins</Text>
+                                </div>
+                                <Button size="xs" leftSection={<IconPlus size={14} />} onClick={open}>
+                                    Add Action
+                                </Button>
+                            </Group>
+
+                            {recovery_actions.length === 0 ? (
+                                <Paper p="xl" withBorder style={{ textAlign: 'center' }} bg="gray.0">
+                                    <IconBolt size={48} color="gray" opacity={0.3} />
+                                    <Text c="dimmed" mt="sm">No automated recovery actions configured.</Text>
+                                    <Button variant="subtle" size="xs" mt="md" onClick={open}>Configure Now</Button>
+                                </Paper>
+                            ) : (
+                                <Grid>
+                                    {recovery_actions.map((action) => (
+                                        <Grid.Col key={action.id} span={{ base: 12, md: 6 }}>
+                                            <Card withBorder>
+                                                <Group justify="space-between" mb="xs">
+                                                    <Group gap="sm">
+                                                        <ThemeIcon color="yellow" variant="light">
+                                                            <IconPlayerPlay size={16} />
+                                                        </ThemeIcon>
+                                                        <Text fw={700}>{action.name}</Text>
+                                                    </Group>
+                                                    <ActionIcon color="red" variant="subtle" onClick={() => handleDeleteRecovery(action.id)}>
+                                                        <IconTrash size={16} />
+                                                    </ActionIcon>
+                                                </Group>
+                                                <Stack gap={4}>
+                                                    <Text size="xs" c="dimmed">TYPE: <Badge size="xs" variant="outline">{action.type.toUpperCase()}</Badge></Text>
+                                                    <Text size="xs" c="dimmed">DELAY: <b>{action.delay_seconds} seconds</b></Text>
+                                                    {action.type === 'webhook' && (
+                                                        <Code block mt="xs" size="xs">{action.config.url}</Code>
+                                                    )}
+                                                </Stack>
+                                            </Card>
+                                        </Grid.Col>
+                                    ))}
+                                </Grid>
+                            )}
+                        </Stack>
+                    </Tabs.Panel>
                 </Tabs>
+
+                <Modal opened={opened} onClose={close} title="Add Automated Recovery Action" size="lg">
+                    <form onSubmit={form.onSubmit(handleAddRecovery)}>
+                        <Stack gap="md">
+                            <TextInput label="Action Name" placeholder="Restart API Gateway" required {...form.getInputProps('name')} />
+                            <Select
+                                label="Action Type"
+                                data={[
+                                    { value: 'webhook', label: 'HTTP Webhook (POST Request)' },
+                                    { value: 'ssh', label: 'Remote SSH Command (Coming Soon)', disabled: true },
+                                ]}
+                                {...form.getInputProps('type')}
+                            />
+
+                            {form.values.type === 'webhook' && (
+                                <>
+                                    <TextInput label="Target URL" placeholder="https://api.cloud.com/v1/restart" required {...form.getInputProps('config.url')} />
+                                    <TextInput label="JSON Payload (Optional)" placeholder='{"service": "web"}' {...form.getInputProps('config.payload')} />
+                                </>
+                            )}
+
+                            <TextInput label="Delay (Seconds)" type="number" description="Execute after X seconds of downtime" {...form.getInputProps('delay_seconds')} />
+
+                            <Button type="submit" fullWidth mt="md">Save Action</Button>
+                        </Stack>
+                    </form>
+                </Modal>
             </Stack>
         </AppLayout>
     );
