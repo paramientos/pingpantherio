@@ -67,7 +67,7 @@ function AppLayout({ children }) {
         { label: 'Analytics', icon: IconFileAnalytics, href: '/reports-analytics' },
         { label: 'SLA Tracking', icon: IconTarget, href: '/sla' },
         { label: 'Dependency Map', icon: IconHierarchy2, href: '/dependencies' },
-        { label: 'Competitor Watch', icon: IconSwords, href: '/competitors' },
+        //{ label: 'Competitor Watch', icon: IconSwords, href: '/competitors' },
         { label: 'Post-Mortems', icon: IconFileText, href: '/post-mortems' },
         { label: 'Incident Playbooks', icon: IconBook, href: '/playbooks' },
     ];

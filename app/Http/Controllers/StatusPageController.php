@@ -16,7 +16,9 @@ class StatusPageController extends Controller
                 $query->with(['heartbeats' => function ($q) {
                     $q->latest()->limit(90);
                 }, 'incidents' => function ($q) {
-                    $q->latest()->limit(10);
+                    $q->with(['updates' => function ($qu) {
+                        $qu->where('is_public', true)->latest();
+                    }])->latest()->limit(10);
                 }]);
             }])
             ->firstOrFail();
@@ -39,13 +41,19 @@ class StatusPageController extends Controller
             ];
         });
 
-        $incidents = $statusPage->monitors->flatMap->incidents->take(10)->map(fn ($i) => [
-            'id' => $i->getKey(),
+        $incidents = $statusPage->monitors->flatMap->incidents->sortByDesc('started_at')->take(10)->map(fn ($i) => [
+            'id' => $i->id,
             'monitor_name' => $i->monitor->name,
             'started_at' => $i->started_at->format('Y-m-d H:i:s'),
             'resolved_at' => $i->resolved_at?->format('Y-m-d H:i:s'),
             'error_message' => $i->error_message,
             'duration' => $i->resolved_at ? $i->started_at->diffForHumans($i->resolved_at, true) : null,
+            'updates' => $i->updates->map(fn ($u) => [
+                'id' => $u->id,
+                'message' => $u->message,
+                'type' => $u->type,
+                'created_at' => $u->created_at->format('Y-m-d H:i:s'),
+            ]),
         ]);
 
         return Inertia::render('StatusPage/Show', [

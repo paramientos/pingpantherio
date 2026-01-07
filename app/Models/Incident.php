@@ -47,16 +47,25 @@ class Incident extends Model
         'started_at',
         'resolved_at',
         'error_message',
+        'screenshot_path',
+        'html_snapshot',
+        'response_headers',
     ];
 
     protected $casts = [
         'started_at' => 'datetime',
         'resolved_at' => 'datetime',
         'status' => IncidentStatus::class,
+        'response_headers' => 'array',
     ];
 
     public function monitor(): BelongsTo
     {
         return $this->belongsTo(Monitor::class);
+    }
+
+    public function updates()
+    {
+        return $this->hasMany(IncidentUpdate::class)->latest();
     }
 }

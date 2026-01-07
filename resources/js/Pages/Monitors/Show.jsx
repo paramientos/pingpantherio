@@ -26,7 +26,9 @@ import {
     Code,
     Divider,
     Loader,
-    Center
+    Center,
+    Textarea,
+    Checkbox,
 } from '@mantine/core';
 import axios from 'axios';
 import {
@@ -45,6 +47,13 @@ import {
     IconShieldLock,
     IconCpu,
     IconTerminal2,
+    IconHistory,
+    IconCamera,
+    IconCode,
+    IconMessageDots,
+    IconSearch,
+    IconEye,
+    IconEyeOff,
 } from '@tabler/icons-react';
 import { useForm } from '@mantine/form';
 import { useDisclosure } from '@mantine/hooks';
@@ -100,6 +109,39 @@ function MonitorShow({ monitor, heartbeats, incidents, stats, recovery_actions, 
         } finally {
             setTesting(false);
         }
+    };
+
+    const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+    const initialTab = params?.get('tab') || 'heartbeats';
+    const initialIncidentId = params?.get('incident_id');
+
+    const [activeTab, setActiveTab] = React.useState(initialTab);
+    const [selectedIncident, setSelectedIncident] = React.useState(null);
+
+    React.useEffect(() => {
+        if (initialIncidentId && incidents.length > 0) {
+            const incident = incidents.find(i => i.id === initialIncidentId);
+            if (incident) {
+                setSelectedIncident(incident);
+            }
+        }
+    }, [initialIncidentId, incidents]);
+
+    const updateForm = useForm({
+        initialValues: {
+            message: '',
+            type: 'update',
+            is_public: false,
+        }
+    });
+
+    const handleAddUpdate = (values) => {
+        router.post(route('incidents.updates.store', selectedIncident.id), values, {
+            onSuccess: () => {
+                notifications.show({ title: 'Success', message: 'Update added', color: 'green' });
+                updateForm.reset();
+            }
+        });
     };
 
     const form = useForm({
@@ -458,7 +500,7 @@ function MonitorShow({ monitor, heartbeats, incidents, stats, recovery_actions, 
                     </Grid.Col>
                 </Grid>
 
-                <Tabs defaultValue="heartbeats">
+                <Tabs value={activeTab} onChange={setActiveTab}>
                     <Tabs.List>
                         <Tabs.Tab value="heartbeats" leftSection={<IconCheck size={16} />}>
                             Heartbeats
@@ -535,46 +577,187 @@ function MonitorShow({ monitor, heartbeats, incidents, stats, recovery_actions, 
                     </Tabs.Panel>
 
                     <Tabs.Panel value="incidents" pt="md">
-                        <Card padding="lg" radius="md">
-                            <Title order={4} fw={700} mb="md">
-                                Incident History
-                            </Title>
-                            {incidents.length === 0 ? (
-                                <Paper p="md" radius="sm" bg="gray.0">
-                                    <Group gap="xs">
-                                        <ThemeIcon color="green" variant="light" size="sm" radius="xl">
-                                            <IconCheck size={14} />
-                                        </ThemeIcon>
-                                        <Text size="sm" c="dimmed">
-                                            No incidents recorded
-                                        </Text>
-                                    </Group>
-                                </Paper>
-                            ) : (
-                                <Timeline active={incidents.length} bulletSize={24} lineWidth={2}>
-                                    {incidents.map((incident) => (
-                                        <Timeline.Item
-                                            key={incident.id}
-                                            bullet={incident.resolved_at ? <IconCheck size={12} /> : <IconX size={12} />}
-                                            title={incident.resolved_at ? 'Resolved' : 'Active Incident'}
-                                            color={incident.resolved_at ? 'green' : 'red'}
-                                        >
-                                            <Text c="dimmed" size="sm">
-                                                {incident.error_message}
-                                            </Text>
-                                            <Text size="xs" mt={4} c="dimmed">
-                                                Started: {incident.started_at}
-                                            </Text>
-                                            {incident.resolved_at && (
-                                                <Text size="xs" c="dimmed">
-                                                    Resolved: {incident.resolved_at} ({incident.duration})
-                                                </Text>
-                                            )}
-                                        </Timeline.Item>
-                                    ))}
-                                </Timeline>
-                            )}
-                        </Card>
+                        <Grid gutter="xl">
+                            <Grid.Col span={{ base: 12, md: 5 }}>
+                                <Card padding="lg" radius="md" withBorder>
+                                    <Title order={4} fw={700} mb="xl">Incident History</Title>
+                                    {incidents.length === 0 ? (
+                                        <Paper p="md" radius="sm" bg="gray.0">
+                                            <Text size="sm" c="dimmed">No incidents recorded</Text>
+                                        </Paper>
+                                    ) : (
+                                        <Stack gap="md">
+                                            {incidents.map((incident) => (
+                                                <Paper
+                                                    key={incident.id}
+                                                    withBorder
+                                                    p="md"
+                                                    radius="md"
+                                                    style={{
+                                                        cursor: 'pointer',
+                                                        borderColor: selectedIncident?.id === incident.id ? 'var(--mantine-color-blue-filled)' : undefined,
+                                                        background: selectedIncident?.id === incident.id ? 'var(--mantine-color-blue-0)' : undefined,
+                                                    }}
+                                                    onClick={() => setSelectedIncident(incident)}
+                                                >
+                                                    <Group justify="space-between" mb={4}>
+                                                        <Badge color={incident.resolved_at ? 'green' : 'red'} variant="light">
+                                                            {incident.resolved_at ? 'Resolved' : 'Active'}
+                                                        </Badge>
+                                                        <Text size="xs" c="dimmed">{incident.started_at}</Text>
+                                                    </Group>
+                                                    <Text fw={700} size="sm" lineClamp={1}>{incident.error_message}</Text>
+                                                    {incident.resolved_at && (
+                                                        <Text size="xs" c="dimmed" mt={4}>Downtime: {incident.duration}</Text>
+                                                    )}
+                                                </Paper>
+                                            ))}
+                                        </Stack>
+                                    )}
+                                </Card>
+                            </Grid.Col>
+
+                            <Grid.Col span={{ base: 12, md: 7 }}>
+                                {selectedIncident ? (
+                                    <Stack gap="lg">
+                                        <Card padding="xl" radius="md" withBorder>
+                                            <Title order={3} fw={900} mb="xs">Incident Details</Title>
+                                            <Text c="dimmed" size="sm" mb="xl">ID: {selectedIncident.id}</Text>
+
+                                            <SimpleGrid cols={2} mb="xl">
+                                                <Paper p="md" radius="md" bg="gray.0">
+                                                    <Text size="xs" c="dimmed" fw={700} tt="uppercase">Started At</Text>
+                                                    <Text fw={700}>{selectedIncident.started_at}</Text>
+                                                </Paper>
+                                                <Paper p="md" radius="md" bg={selectedIncident.resolved_at ? 'green.0' : 'red.0'}>
+                                                    <Text size="xs" c="dimmed" fw={700} tt="uppercase">Resolved At</Text>
+                                                    <Text fw={700}>{selectedIncident.resolved_at || 'Under investigation'}</Text>
+                                                </Paper>
+                                            </SimpleGrid>
+
+                                            <Tabs defaultValue="updates">
+                                                <Tabs.List mb="md">
+                                                    <Tabs.Tab value="updates" leftSection={<IconHistory size={16} />}>Journaling</Tabs.Tab>
+                                                    <Tabs.Tab value="snapshot" leftSection={<IconCamera size={16} />}>Screenshot</Tabs.Tab>
+                                                    <Tabs.Tab value="code" leftSection={<IconCode size={16} />}>HTML Snapshot</Tabs.Tab>
+                                                </Tabs.List>
+
+                                                <Tabs.Panel value="updates">
+                                                    <Stack gap="md">
+                                                        <form onSubmit={updateForm.onSubmit(handleAddUpdate)}>
+                                                            <Paper withBorder p="md" radius="md" bg="blue.0">
+                                                                <Stack gap="xs">
+                                                                    <Text size="xs" fw={700} c="blue">ADD PROGRESS UPDATE</Text>
+                                                                    <Select
+                                                                        size="xs"
+                                                                        data={[
+                                                                            { value: 'update', label: 'General Update' },
+                                                                            { value: 'investigating', label: 'Investigating' },
+                                                                            { value: 'identified', label: 'Identified Issue' },
+                                                                            { value: 'resolved', label: 'Resolved' },
+                                                                        ]}
+                                                                        {...updateForm.getInputProps('type')}
+                                                                    />
+                                                                    <Textarea
+                                                                        placeholder="What happened? What are the next steps?"
+                                                                        minRows={2}
+                                                                        {...updateForm.getInputProps('message')}
+                                                                    />
+                                                                    <Group justify="space-between">
+                                                                        <Checkbox
+                                                                            size="xs"
+                                                                            label="Show on Status Page"
+                                                                            {...updateForm.getInputProps('is_public', { type: 'checkbox' })}
+                                                                        />
+                                                                        <Button type="submit" size="xs" leftSection={<IconPlus size={14} />}>Add Update</Button>
+                                                                    </Group>
+                                                                </Stack>
+                                                            </Paper>
+                                                        </form>
+
+                                                        <Timeline active={selectedIncident.updates.length} bulletSize={20} lineWidth={2}>
+                                                            {selectedIncident.updates.map((update) => (
+                                                                <Timeline.Item
+                                                                    key={update.id}
+                                                                    title={
+                                                                        <Group gap="xs">
+                                                                            <Text size="sm" fw={500}>{update.message}</Text>
+                                                                            {update.is_public ? (
+                                                                                <Badge size="xs" color="green" variant="light" leftSection={<IconEye size={10} />}>Public</Badge>
+                                                                            ) : (
+                                                                                <Badge size="xs" color="gray" variant="light" leftSection={<IconEyeOff size={10} />}>Internal Only</Badge>
+                                                                            )}
+                                                                        </Group>
+                                                                    }
+                                                                    bullet={<IconMessageDots size={12} />}
+                                                                >
+                                                                    <Text size="xs" c="dimmed">{update.created_at} • <Badge size="xs" variant="outline">{update.type}</Badge></Text>
+                                                                </Timeline.Item>
+                                                            ))}
+                                                            <Timeline.Item
+                                                                bullet={<IconAlertTriangle size={12} />}
+                                                                lineVariant="dashed"
+                                                                title="Incident Started"
+                                                            >
+                                                                <Text size="xs" c="dimmed">{selectedIncident.started_at}</Text>
+                                                            </Timeline.Item>
+                                                        </Timeline>
+                                                    </Stack>
+                                                </Tabs.Panel>
+
+                                                <Tabs.Panel value="snapshot">
+                                                    {selectedIncident.screenshot_path ? (
+                                                        <Paper withBorder radius="md" style={{ overflow: 'hidden' }}>
+                                                            <img
+                                                                src={selectedIncident.screenshot_path}
+                                                                alt="Incident Screenshot"
+                                                                style={{ width: '100%', display: 'block' }}
+                                                            />
+                                                        </Paper>
+                                                    ) : (
+                                                        <Center py="xl">
+                                                            <Stack align="center" gap="xs">
+                                                                <IconCamera size={48} color="var(--mantine-color-gray-4)" />
+                                                                <Text c="dimmed">No screenshot available for this incident</Text>
+                                                            </Stack>
+                                                        </Center>
+                                                    )}
+                                                </Tabs.Panel>
+
+                                                <Tabs.Panel value="code">
+                                                    {selectedIncident.html_snapshot ? (
+                                                        <Paper withBorder radius="md" p="md" bg="gray.9">
+                                                            <Code block color="gray.0" ff="monospace" style={{ maxHeight: 400, overflow: 'auto' }}>
+                                                                {selectedIncident.html_snapshot}
+                                                            </Code>
+                                                        </Paper>
+                                                    ) : (
+                                                        <Center py="xl">
+                                                            <Stack align="center" gap="xs">
+                                                                <IconCode size={48} color="var(--mantine-color-gray-4)" />
+                                                                <Text c="dimmed">No HTML snapshot captured</Text>
+                                                            </Stack>
+                                                        </Center>
+                                                    )}
+                                                </Tabs.Panel>
+                                            </Tabs>
+                                        </Card>
+                                    </Stack>
+                                ) : (
+                                    <Card withBorder h="100%" radius="md">
+                                        <Center h="100%">
+                                            <Stack align="center" gap="xs">
+                                                <ThemeIcon size={64} radius={64} variant="light" color="gray">
+                                                    <IconSearch size={32} />
+                                                </ThemeIcon>
+                                                <Text fw={700}>Select an incident to see details</Text>
+                                                <Text size="sm" c="dimmed">Detailed snapshots and journals will appear here</Text>
+                                            </Stack>
+                                        </Center>
+                                    </Card>
+                                )}
+                            </Grid.Col>
+                        </Grid>
                     </Tabs.Panel>
 
                     <Tabs.Panel value="recovery" pt="md">

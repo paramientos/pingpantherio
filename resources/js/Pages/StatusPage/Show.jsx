@@ -16,7 +16,7 @@ import {
 import { IconCheck, IconX, IconAlertTriangle } from '@tabler/icons-react';
 
 function StatusPageShow({ statusPage, monitors, incidents }) {
-    const allOperational = monitors.every(m => m.status === 'active');
+    const allOperational = monitors.every(m => m.status === 'up');
 
     return (
         <>
@@ -77,12 +77,12 @@ function StatusPageShow({ statusPage, monitors, incidents }) {
                                             </div>
                                             <div style={{ textAlign: 'right' }}>
                                                 <Badge
-                                                    color={monitor.status === 'active' ? 'green' : 'red'}
+                                                    color={monitor.status === 'up' ? 'green' : 'red'}
                                                     variant="light"
                                                     size="lg"
                                                     mb="xs"
                                                 >
-                                                    {monitor.status === 'active' ? 'Operational' : 'Down'}
+                                                    {monitor.status === 'up' ? 'Operational' : 'Down'}
                                                 </Badge>
                                                 <Text size="xs" c="dimmed">
                                                     {monitor.uptime_24h}% uptime
@@ -123,7 +123,7 @@ function StatusPageShow({ statusPage, monitors, incidents }) {
                                     Recent Incidents
                                 </Title>
                                 <Card padding="lg" radius="md" withBorder>
-                                    <Timeline active={incidents.length} bulletSize={24} lineWidth={2}>
+                                    <Timeline up={incidents.length} bulletSize={24} lineWidth={2}>
                                         {incidents.map((incident) => (
                                             <Timeline.Item
                                                 key={incident.id}
@@ -131,17 +131,34 @@ function StatusPageShow({ statusPage, monitors, incidents }) {
                                                 title={incident.monitor_name}
                                                 color={incident.resolved_at ? 'green' : 'red'}
                                             >
-                                                <Text c="dimmed" size="sm">
+                                                <Text c="dimmed" size="sm" mb="md">
                                                     {incident.error_message}
                                                 </Text>
-                                                <Text size="xs" mt={4} c="dimmed">
-                                                    Started: {incident.started_at}
-                                                </Text>
-                                                {incident.resolved_at && (
-                                                    <Text size="xs" c="dimmed">
-                                                        Resolved: {incident.resolved_at} ({incident.duration})
-                                                    </Text>
+
+                                                {incident.updates && incident.updates.length > 0 && (
+                                                    <Stack gap="xs" mb="md" pl="md" style={{ borderLeft: '2px solid var(--mantine-color-gray-2)' }}>
+                                                        {incident.updates.map((update) => (
+                                                            <div key={update.id}>
+                                                                <Group gap="xs">
+                                                                    <Badge size="xs" variant="outline" color="blue">{update.type}</Badge>
+                                                                    <Text size="xs" c="dimmed">{update.created_at}</Text>
+                                                                </Group>
+                                                                <Text size="sm" mt={2}>{update.message}</Text>
+                                                            </div>
+                                                        ))}
+                                                    </Stack>
                                                 )}
+
+                                                <Group gap="xl">
+                                                    <Text size="xs" c="dimmed">
+                                                        Started: {incident.started_at}
+                                                    </Text>
+                                                    {incident.resolved_at && (
+                                                        <Text size="xs" c="dimmed">
+                                                            Resolved: {incident.resolved_at} ({incident.duration})
+                                                        </Text>
+                                                    )}
+                                                </Group>
                                             </Timeline.Item>
                                         ))}
                                     </Timeline>

@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Jobs\CheckDomainExpirations;
-use App\Jobs\CheckSslCertificates;
 use App\Models\DomainMonitor;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -16,7 +15,7 @@ class DomainMonitorController extends Controller
         $domains = DomainMonitor::where('user_id', auth()->id())
             ->latest()
             ->get()
-            ->map(fn($domain) => [
+            ->map(fn ($domain) => [
                 'id' => $domain->getKey(),
                 'domain' => $domain->domain,
                 'expires_at' => $domain->expires_at?->format('M d, Y'),

@@ -86,10 +86,14 @@ class CheckMonitors implements ShouldQueue
             $statusCode = $result['status_code'] ?? null;
             $errorMessage = $result['error'] ?? null;
             $metadata = $result['metadata'] ?? null;
+            $htmlSnapshot = $result['html_snapshot'] ?? null;
+            $responseHeaders = $result['response_headers'] ?? null;
         } catch (\Exception $e) {
             $isUp = false;
             $errorMessage = $e->getMessage();
             $metadata = null;
+            $htmlSnapshot = null;
+            $responseHeaders = null;
         }
 
         $responseTime = (microtime(true) - $startTime) * 1000;
@@ -115,7 +119,10 @@ class CheckMonitors implements ShouldQueue
 
         if (! $isUp && ($statusValue === MonitorStatus::UP->value || $statusValue === MonitorStatus::PENDING->value || $statusValue === null)) {
             Log::info("Monitor {$monitor->name} is DOWN. Creating incident.");
-            $this->createIncident($monitor, $errorMessage);
+            $this->createIncident($monitor, $errorMessage, [
+                'html_snapshot' => $htmlSnapshot,
+                'response_headers' => $responseHeaders,
+            ]);
         } elseif ($isUp && $statusValue === MonitorStatus::DOWN->value) {
             Log::info("Monitor {$monitor->name} is UP. Resolving incident.");
             $this->resolveIncident($monitor);
@@ -166,6 +173,8 @@ class CheckMonitors implements ShouldQueue
             'status_code' => $response->status(),
             'error' => $response->failed() ? "HTTP {$response->status()}" : null,
             'metadata' => $metadata,
+            'html_snapshot' => $response->failed() ? $response->body() : null,
+            'response_headers' => $response->headers(),
         ];
     }
 
@@ -229,10 +238,12 @@ class CheckMonitors implements ShouldQueue
             'is_up' => $containsKeyword,
             'status_code' => $response->status(),
             'error' => ! $containsKeyword ? "Keyword '{$keyword}' not found" : null,
+            'html_snapshot' => ! $containsKeyword ? $response->body() : null,
+            'response_headers' => $response->headers(),
         ];
     }
 
-    protected function createIncident(Monitor $monitor, ?string $errorMessage): void
+    protected function createIncident(Monitor $monitor, ?string $errorMessage, array $snapshot = []): void
     {
         $lastIncident = Incident::where('monitor_id', $monitor->getKey())
             ->whereNull('resolved_at')
@@ -246,6 +257,9 @@ class CheckMonitors implements ShouldQueue
                 'started_at' => now(),
                 'status' => IncidentStatus::OPEN,
                 'error_message' => $errorMessage,
+                'html_snapshot' => $snapshot['html_snapshot'] ?? null,
+                'response_headers' => $snapshot['response_headers'] ?? null,
+                'screenshot_path' => $this->takeScreenshot($monitor->url),
             ]);
 
             if ($monitor->escalation_policy_id) {
@@ -325,5 +339,22 @@ class CheckMonitors implements ShouldQueue
     protected function notifyChannelResolved($channel, $monitor, $incident): void
     {
         $this->sendAlertToChannel($channel, $monitor, $incident, 'resolved');
+    }
+
+    protected function takeScreenshot(string $url): ?string
+    {
+        try {
+            // Using a free screenshot API for demo purposes
+            // In a real production environment, you would use spatie/browsershot (Puppeteer)
+            $apiUrl = 'https://api.screenshotmachine.com/?key=FREE&url='.urlencode($url).'&dimension=1024x768';
+
+            // We return the external URL as the screenshot path for now.
+            // In production, we would download it to storage/private and return the local path.
+            return $apiUrl;
+        } catch (\Exception $e) {
+            Log::error('Failed to take screenshot: '.$e->getMessage());
+
+            return null;
+        }
     }
 }

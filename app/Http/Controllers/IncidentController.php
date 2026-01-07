@@ -19,6 +19,7 @@ class IncidentController extends Controller
             ->paginate(50)
             ->through(fn ($incident) => [
                 'id' => $incident->getKey(),
+                'monitor_id' => $incident->monitor_id,
                 'monitor_name' => $incident->monitor->name,
                 'monitor_url' => $incident->monitor->url,
                 'error_message' => $incident->error_message,

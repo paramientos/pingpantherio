@@ -47,7 +47,7 @@ class MonitorController extends Controller
         $monitor->load(['heartbeats' => function ($query) {
             $query->latest()->limit(100);
         }, 'incidents' => function ($query) {
-            $query->latest()->limit(20);
+            $query->with('updates')->latest()->limit(20);
         }, 'playbook']);
 
         return Inertia::render('Monitors/Show', [
@@ -88,6 +88,16 @@ class MonitorController extends Controller
                 'resolved_at' => $i->resolved_at?->format('Y-m-d H:i:s'),
                 'error_message' => $i->error_message,
                 'duration' => $i->resolved_at ? $i->started_at->diffForHumans($i->resolved_at, true) : null,
+                'screenshot_path' => $i->screenshot_path,
+                'html_snapshot' => $i->html_snapshot,
+                'response_headers' => $i->response_headers,
+                'updates' => $i->updates->map(fn($u) => [
+                    'id' => $u->id,
+                    'message' => $u->message,
+                    'type' => $u->type,
+                    'is_public' => $u->is_public,
+                    'created_at' => $u->created_at->format('Y-m-d H:i:s'),
+                ]),
             ]),
             'stats' => [
                 'uptime_24h' => $this->calculateUptime($monitor, 24),

@@ -14,7 +14,7 @@ import {
     Pagination,
     Button,
 } from '@mantine/core';
-import { IconAlertTriangle, IconCheck, IconClock, IconActivity, IconFilePlus } from '@tabler/icons-react';
+import { IconAlertTriangle, IconCheck, IconClock, IconActivity, IconFilePlus, IconHistory } from '@tabler/icons-react';
 import { Link, router } from '@inertiajs/react';
 
 function IncidentsIndex({ incidents, stats }) {
@@ -171,17 +171,28 @@ function IncidentsIndex({ incidents, stats }) {
                                             </Text>
                                         </Table.Td>
                                         <Table.Td>
-                                            {!incident.is_active && (
+                                            <Group gap="xs">
                                                 <Button
-                                                    variant="subtle"
+                                                    variant="light"
                                                     size="xs"
-                                                    leftSection={<IconFilePlus size={14} />}
+                                                    leftSection={<IconHistory size={14} />}
                                                     component={Link}
-                                                    href={route('post-mortems.create-for-incident', incident.id)}
+                                                    href={`${route('monitors.show', incident.monitor_id)}?tab=incidents&incident_id=${incident.id}`}
                                                 >
-                                                    Post-Mortem
+                                                    View Log
                                                 </Button>
-                                            )}
+                                                {!incident.is_active && (
+                                                    <Button
+                                                        variant="subtle"
+                                                        size="xs"
+                                                        leftSection={<IconFilePlus size={14} />}
+                                                        component={Link}
+                                                        href={route('post-mortems.create-for-incident', incident.id)}
+                                                    >
+                                                        Post-Mortem
+                                                    </Button>
+                                                )}
+                                            </Group>
                                         </Table.Td>
                                     </Table.Tr>
                                 ))
