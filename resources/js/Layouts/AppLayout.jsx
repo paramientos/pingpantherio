@@ -27,6 +27,8 @@ import {
     IconHierarchy2,
     IconSwords,
     IconFileText,
+    IconBook,
+    IconCalendarStats,
 } from '@tabler/icons-react';
 import { Spotlight, spotlight } from '@mantine/spotlight';
 import '@mantine/spotlight/styles.css';
@@ -67,10 +69,12 @@ function AppLayout({ children }) {
         { label: 'Dependency Map', icon: IconHierarchy2, href: '/dependencies' },
         { label: 'Competitor Watch', icon: IconSwords, href: '/competitors' },
         { label: 'Post-Mortems', icon: IconFileText, href: '/post-mortems' },
+        { label: 'Incident Playbooks', icon: IconBook, href: '/playbooks' },
     ];
 
     const configurationItems = [
         { label: 'Alert Rules', icon: IconSettingsAutomation, href: '/alert-rules' },
+        { label: 'On-Call Schedules', icon: IconCalendarStats, href: '/on-call' },
         { label: 'Escalation Policies', icon: IconSettingsAutomation, href: '/escalation-policies' },
         { label: 'Alert Channels', icon: IconBolt, href: '/alert-channels' },
     ];

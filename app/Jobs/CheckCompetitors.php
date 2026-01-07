@@ -25,7 +25,7 @@ class CheckCompetitors implements ShouldQueue
             return;
         }
 
-        $competitors = CompetitorMonitor::where('status', 'active')
+        $competitors = CompetitorMonitor::where('status', 'up')
             ->where(function ($query) {
                 $query->whereNull('last_checked_at')
                     ->orWhere('last_checked_at', '<=', now()->subSeconds(60)); // Check every minute if possible

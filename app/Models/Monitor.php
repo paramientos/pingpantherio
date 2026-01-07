@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\MonitorStatus;
 use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
@@ -15,7 +16,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $name
  * @property string|null $url
  * @property string $type
- * @property string $status
+ * @property MonitorStatus $status
  * @property int $interval
  * @property int $timeout
  * @property string $method
@@ -33,30 +34,47 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property array<array-key, mixed>|null $metadata
  * @property array<array-key, mixed>|null $tags
  * @property string|null $group
+ * @property string|null $uuid
+ * @property int $grace_period
+ * @property \Illuminate\Support\Carbon|null $last_ping_at
+ * @property string|null $escalation_policy_id
+ * @property string|null $playbook_id
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\AlertChannel> $alertChannels
  * @property-read int|null $alert_channels_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\MonitorDependency> $dependencies
+ * @property-read int|null $dependencies_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\MonitorDependency> $dependents
+ * @property-read int|null $dependents_count
+ * @property-read \App\Models\EscalationPolicy|null $escalationPolicy
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Heartbeat> $heartbeats
  * @property-read int|null $heartbeats_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Incident> $incidents
  * @property-read int|null $incidents_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\MaintenanceWindow> $maintenanceWindows
  * @property-read int|null $maintenance_windows_count
+ * @property-read \App\Models\Playbook|null $playbook
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\RecoveryAction> $recoveryActions
+ * @property-read int|null $recovery_actions_count
+ * @property-read \App\Models\SlaConfig|null $slaConfig
  * @property-read \App\Models\User $user
- *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor query()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor whereCheckSsl($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor whereEscalationPolicyId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor whereGracePeriod($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor whereGroup($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor whereHeaders($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor whereInterval($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor whereKeyword($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor whereLastCheckedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor whereLastPingAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor whereMetadata($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor whereMethod($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor wherePlaybookId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor wherePort($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor whereSslDaysUntilExpiry($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor whereSslExpiresAt($value)
@@ -68,8 +86,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor whereUrl($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor whereUserId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor whereUuid($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor whereVerifySsl($value)
- *
  * @mixin \Eloquent
  */
 class Monitor extends Model
@@ -98,7 +116,10 @@ class Monitor extends Model
         'tags',
         'group',
         'uuid',
+        'grace_period',
+        'last_ping_at',
         'escalation_policy_id',
+        'playbook_id',
     ];
 
     protected $casts = [
@@ -106,9 +127,11 @@ class Monitor extends Model
         'metadata' => 'array',
         'tags' => 'array',
         'last_checked_at' => 'datetime',
+        'last_ping_at' => 'datetime',
         'verify_ssl' => 'boolean',
         'check_ssl' => 'boolean',
         'ssl_expires_at' => 'datetime',
+        'status' => MonitorStatus::class,
     ];
 
     public function user(): BelongsTo
@@ -144,6 +167,11 @@ class Monitor extends Model
     public function escalationPolicy(): BelongsTo
     {
         return $this->belongsTo(EscalationPolicy::class);
+    }
+
+    public function playbook(): BelongsTo
+    {
+        return $this->belongsTo(Playbook::class);
     }
 
     public function slaConfig(): \Illuminate\Database\Eloquent\Relations\HasOne

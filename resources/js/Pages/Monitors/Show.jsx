@@ -28,15 +28,26 @@ import {
     IconTrash,
     IconPlayerPlay,
     IconPlus,
+    IconBook,
 } from '@tabler/icons-react';
 import { useForm } from '@mantine/form';
 import { useDisclosure } from '@mantine/hooks';
 import { router } from '@inertiajs/react';
 import { notifications } from '@mantine/notifications';
-import { TextInput, Modal, Select, ActionIcon, Code } from '@mantine/core';
+import { TextInput, Modal, Select, ActionIcon, Code, Divider } from '@mantine/core';
+import {
+    AreaChart,
+    Area,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+    ResponsiveContainer
+} from 'recharts';
 
-function MonitorShow({ monitor, heartbeats, incidents, stats, recovery_actions }) {
+function MonitorShow({ monitor, heartbeats, incidents, stats, recovery_actions, playbooks }) {
     const [opened, { open, close }] = useDisclosure(false);
+    const [playbookModalOpened, { open: openPlaybookModal, close: closePlaybookModal }] = useDisclosure(false);
 
     const form = useForm({
         initialValues: {
@@ -75,11 +86,18 @@ function MonitorShow({ monitor, heartbeats, incidents, stats, recovery_actions }
             });
         }
     };
+    const chartData = [...heartbeats].reverse().map(h => ({
+        time: h.checked_at_human || new Date(h.checked_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        responseTime: Math.round(h.response_time),
+        status: h.is_up ? 'UP' : 'DOWN'
+    }));
+
     const getStatusColor = (status) => {
         const colors = {
-            active: 'green',
-            paused: 'red',
+            up: 'green',
+            disabled: 'gray',
             pending: 'orange',
+            down: 'red',
         };
         return colors[status] || 'gray';
     };
@@ -187,6 +205,48 @@ function MonitorShow({ monitor, heartbeats, incidents, stats, recovery_actions }
                         </Card>
                     </Grid.Col>
                 </Grid>
+
+                <Card padding="lg" radius="md" withBorder>
+                    <Title order={4} fw={700} mb="xl">Response Time (Last 100 Checks)</Title>
+                    <div style={{ height: 300, width: '100%' }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={chartData}>
+                                <defs>
+                                    <linearGradient id="colorRes" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#228be6" stopOpacity={0.1} />
+                                        <stop offset="95%" stopColor="#228be6" stopOpacity={0} />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f3f5" />
+                                <XAxis
+                                    dataKey="time"
+                                    hide
+                                />
+                                <YAxis
+                                    unit="ms"
+                                    fontSize={12}
+                                    tickLine={false}
+                                    axisLine={false}
+                                    tick={{ fill: '#adb5bd' }}
+                                />
+                                <Tooltip
+                                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                                    itemStyle={{ color: '#228be6', fontWeight: 600 }}
+                                />
+                                <Area
+                                    type="monotone"
+                                    dataKey="responseTime"
+                                    name="Response Time"
+                                    stroke="#228be6"
+                                    strokeWidth={2}
+                                    fillOpacity={1}
+                                    fill="url(#colorRes)"
+                                    animationDuration={1500}
+                                />
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    </div>
+                </Card>
 
                 {monitor.check_ssl && monitor.ssl_expires_at && (
                     <Card padding="lg" radius="md" withBorder>
@@ -301,6 +361,9 @@ function MonitorShow({ monitor, heartbeats, incidents, stats, recovery_actions }
                         </Tabs.Tab>
                         <Tabs.Tab value="recovery" leftSection={<IconBolt size={16} />}>
                             Self-Healing
+                        </Tabs.Tab>
+                        <Tabs.Tab value="playbook" leftSection={<IconBook size={16} />}>
+                            Playbook
                         </Tabs.Tab>
                     </Tabs.List>
 
@@ -455,7 +518,68 @@ function MonitorShow({ monitor, heartbeats, incidents, stats, recovery_actions }
                             )}
                         </Stack>
                     </Tabs.Panel>
+
+                    <Tabs.Panel value="playbook" pt="md">
+                        <Stack gap="md">
+                            <Group justify="space-between">
+                                <div>
+                                    <Title order={4} fw={700}>Incident Playbook</Title>
+                                    <Text size="xs" c="dimmed">Guidance for resolving incidents on this monitor</Text>
+                                </div>
+                                <Button size="xs" variant="light" leftSection={<IconPlus size={14} />} onClick={openPlaybookModal}>
+                                    Assign Playbook
+                                </Button>
+                            </Group>
+
+                            {monitor.playbook ? (
+                                <Card padding="xl" withBorder radius="md">
+                                    <Group justify="space-between" mb="md">
+                                        <Title order={5}>{monitor.playbook.name}</Title>
+                                        <Badge variant="dot">Markdown Enabled</Badge>
+                                    </Group>
+                                    <Divider mb="xl" />
+                                    <Paper bg="gray.0" p="xl" radius="md">
+                                        <div
+                                            className="markdown-content"
+                                            style={{ whiteSpace: 'pre-wrap', fontFamily: 'Inter, sans-serif', fontSize: '14px', lineHeight: '1.6' }}
+                                        >
+                                            {monitor.playbook.content}
+                                        </div>
+                                    </Paper>
+                                </Card>
+                            ) : (
+                                <Paper p="xl" withBorder style={{ textAlign: 'center' }} bg="gray.0">
+                                    <IconBook size={48} color="gray" opacity={0.3} />
+                                    <Text c="dimmed" mt="sm">No playbook assigned to this monitor.</Text>
+                                    <Button variant="subtle" size="xs" mt="md" onClick={openPlaybookModal}>Select a Playbook</Button>
+                                </Paper>
+                            )}
+                        </Stack>
+                    </Tabs.Panel>
                 </Tabs>
+
+                <Modal opened={playbookModalOpened} onClose={closePlaybookModal} title="Assign Incident Playbook" size="sm">
+                    <Stack gap="md">
+                        <Select
+                            label="Select Playbook"
+                            placeholder="Choose a guide"
+                            data={playbooks}
+                            defaultValue={monitor.playbook_id}
+                            onChange={(val) => {
+                                router.put(route('monitors.update', monitor.id), {
+                                    ...monitor,
+                                    playbook_id: val
+                                }, {
+                                    onSuccess: () => {
+                                        notifications.show({ title: 'Success', message: 'Playbook updated', color: 'green' });
+                                        closePlaybookModal();
+                                    }
+                                });
+                            }}
+                        />
+                        <Button variant="light" component={Link} href={route('playbooks.index')} size="xs">Create New Playbook</Button>
+                    </Stack>
+                </Modal>
 
                 <Modal opened={opened} onClose={close} title="Add Automated Recovery Action" size="lg">
                     <form onSubmit={form.onSubmit(handleAddRecovery)}>

@@ -19,6 +19,8 @@ use App\Http\Controllers\SlaController;
 use App\Http\Controllers\DependencyController;
 use App\Http\Controllers\CompetitorController;
 use App\Http\Controllers\PostMortemController;
+use App\Http\Controllers\PlaybookController;
+use App\Http\Controllers\OnCallController;
 use App\Http\Controllers\StatusPageController;
 use App\Http\Controllers\StatusPageManagementController;
 use App\Http\Controllers\TeamController;
@@ -39,6 +41,8 @@ Route::middleware(['auth'])->group(function (): void {
     Route::resource('dependencies', DependencyController::class)->only(['index', 'store', 'destroy']);
     Route::resource('competitors', CompetitorController::class)->only(['index', 'store', 'destroy']);
     Route::resource('post-mortems', PostMortemController::class);
+    Route::resource('playbooks', PlaybookController::class);
+    Route::resource('on-call', OnCallController::class);
     Route::get('/incidents/{incident}/post-mortem/create', [PostMortemController::class, 'create'])->name('post-mortems.create-for-incident');
     Route::resource('monitors', MonitorController::class)->except(['create', 'edit']);
     Route::post('/monitors/{monitor}/recovery-actions', [\App\Http\Controllers\RecoveryActionController::class, 'store'])->name('monitors.recovery-actions.store');

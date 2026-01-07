@@ -27,6 +27,15 @@ trait SendsAlerts
         }
     }
 
+    protected function sendAlertToUser($user, $monitor, $incident, string $type = 'started'): void
+    {
+        try {
+            $user->notify(new IncidentAlert($monitor, $incident, $type));
+        } catch (\Exception $e) {
+            Log::error("Failed to send alert to user {$user->id}: " . $e->getMessage());
+        }
+    }
+
     protected function sendToSlack(string $url, $monitor, $incident, string $type): void
     {
         if (empty($url)) return;

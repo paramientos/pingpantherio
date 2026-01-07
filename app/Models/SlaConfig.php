@@ -6,6 +6,33 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property string $id
+ * @property string $monitor_id
+ * @property string $name
+ * @property numeric $uptime_target
+ * @property int|null $max_downtime_minutes_monthly
+ * @property numeric|null $response_time_target
+ * @property string $period
+ * @property bool $is_active
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Monitor $monitor
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SlaConfig newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SlaConfig newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SlaConfig query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SlaConfig whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SlaConfig whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SlaConfig whereIsActive($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SlaConfig whereMaxDowntimeMinutesMonthly($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SlaConfig whereMonitorId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SlaConfig whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SlaConfig wherePeriod($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SlaConfig whereResponseTimeTarget($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SlaConfig whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SlaConfig whereUptimeTarget($value)
+ * @mixin \Eloquent
+ */
 class SlaConfig extends Model
 {
     use HasUuids;

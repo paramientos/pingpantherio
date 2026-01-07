@@ -24,16 +24,16 @@ import { IconPlus, IconTrash, IconChevronRight, IconClock, IconBell, IconSetting
 import { notifications } from '@mantine/notifications';
 import { router } from '@inertiajs/react';
 
-export default function EscalationPoliciesIndex({ policies, channels }) {
+export default function EscalationPoliciesIndex({ policies, channels, schedules }) {
     const [opened, setOpened] = useState(false);
     const { data, setData, post, processing, reset, errors } = useForm({
         name: '',
         description: '',
-        rules: [{ alert_channel_id: '', delay_minutes: 0 }],
+        rules: [{ alert_channel_id: '', on_call_schedule_id: '', delay_minutes: 0 }],
     });
 
     const addRule = () => {
-        setData('rules', [...data.rules, { alert_channel_id: '', delay_minutes: 5 }]);
+        setData('rules', [...data.rules, { alert_channel_id: '', on_call_schedule_id: '', delay_minutes: 5 }]);
     };
 
     const removeRule = (index) => {
@@ -201,10 +201,26 @@ export default function EscalationPoliciesIndex({ policies, channels }) {
                                             <div style={{ flex: 1 }}>
                                                 <Select
                                                     label={index === 0 ? "First Step" : `Step ${index + 1}`}
-                                                    placeholder="Select channel"
-                                                    data={channels}
-                                                    value={rule.alert_channel_id}
-                                                    onChange={(val) => updateRule(index, 'alert_channel_id', val)}
+                                                    placeholder="Channel or On-Call"
+                                                    data={[
+                                                        { group: 'Alert Channels', items: channels },
+                                                        { group: 'On-Call Schedules', items: schedules },
+                                                    ]}
+                                                    value={rule.alert_channel_id || rule.on_call_schedule_id}
+                                                    onChange={(val) => {
+                                                        const isSchedule = schedules.some(s => s.value === val);
+                                                        if (isSchedule) {
+                                                            const newRules = [...data.rules];
+                                                            newRules[index].alert_channel_id = null;
+                                                            newRules[index].on_call_schedule_id = val;
+                                                            setData('rules', newRules);
+                                                        } else {
+                                                            const newRules = [...data.rules];
+                                                            newRules[index].alert_channel_id = val;
+                                                            newRules[index].on_call_schedule_id = null;
+                                                            setData('rules', newRules);
+                                                        }
+                                                    }}
                                                     required
                                                 />
                                             </div>

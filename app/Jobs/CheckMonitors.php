@@ -2,29 +2,36 @@
 
 namespace App\Jobs;
 
+use App\Enums\IncidentStatus;
+use App\Enums\MonitorStatus;
 use App\Models\Heartbeat;
 use App\Models\Incident;
 use App\Models\Monitor;
 use App\Notifications\IncidentAlert;
+use App\Traits\SendsAlerts;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Http;
-use App\Traits\SendsAlerts;
+use Illuminate\Support\Facades\Log;
 
 class CheckMonitors implements ShouldQueue
 {
     use Dispatchable;
     use InteractsWithQueue;
     use Queueable;
-    use SerializesModels;
     use SendsAlerts;
+    use SerializesModels;
 
     public function handle(): void
     {
-        $monitors = Monitor::whereIn('status', ['active', 'pending'])
+        $monitors = Monitor::whereIn('status', [
+            MonitorStatus::UP,
+            MonitorStatus::PENDING,
+            MonitorStatus::DOWN,
+        ])
             ->with(['maintenanceWindows', 'user'])
             ->get();
 
@@ -86,17 +93,21 @@ class CheckMonitors implements ShouldQueue
             'checked_at' => now(),
         ]);
 
+        $previousStatus = $monitor->status;
+
         $monitor->update([
             'last_checked_at' => now(),
-            'status' => $isUp ? 'active' : 'paused',
+            'status' => $isUp ? MonitorStatus::UP : MonitorStatus::DOWN,
             'metadata' => $metadata,
         ]);
 
-        $wasDown = $monitor->status === 'paused';
+        $statusValue = $previousStatus instanceof MonitorStatus ? $previousStatus->value : $previousStatus;
 
-        if (! $isUp && ($monitor->status === 'active' || $monitor->status === null)) {
+        if (! $isUp && ($statusValue === MonitorStatus::UP->value || $statusValue === MonitorStatus::PENDING->value || $statusValue === null)) {
+            Log::info("Monitor {$monitor->name} is DOWN. Creating incident.");
             $this->createIncident($monitor, $errorMessage);
-        } elseif ($isUp && $wasDown) {
+        } elseif ($isUp && $statusValue === MonitorStatus::DOWN->value) {
+            Log::info("Monitor {$monitor->name} is UP. Resolving incident.");
             $this->resolveIncident($monitor);
         }
     }
@@ -221,13 +232,15 @@ class CheckMonitors implements ShouldQueue
         if (! $lastIncident) {
             $incident = Incident::create([
                 'monitor_id' => $monitor->getKey(),
+                'title' => 'Monitor Down: '.$monitor->name,
                 'started_at' => now(),
+                'status' => IncidentStatus::OPEN,
                 'error_message' => $errorMessage,
             ]);
 
             if ($monitor->escalation_policy_id) {
                 dispatch(new \App\Jobs\ProcessEscalationStep($incident, 0));
-            } else {
+            } elseif ($monitor->user) {
                 $monitor->user->notify(new IncidentAlert($monitor, $incident, 'started'));
             }
 
@@ -277,10 +290,11 @@ class CheckMonitors implements ShouldQueue
         if ($incident) {
             $incident->update([
                 'resolved_at' => now(),
+                'status' => IncidentStatus::RESOLVED,
             ]);
 
             if ($monitor->escalation_policy_id && $monitor->escalationPolicy) {
-                $channels = $monitor->escalationPolicy->rules->map(fn($r) => $r->channel)->unique('id');
+                $channels = $monitor->escalationPolicy->rules->map(fn ($r) => $r->channel)->unique('id');
                 foreach ($channels as $channel) {
                     if ($channel && $channel->is_active) {
                         $this->notifyChannelResolved($channel, $monitor, $incident);

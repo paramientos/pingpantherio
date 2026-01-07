@@ -43,10 +43,20 @@ class ProcessEscalationStep implements ShouldQueue
         }
 
         $rule = $rules[$this->stepIndex];
-        $channel = $rule->channel;
 
-        if ($channel && $channel->is_active) {
-            $this->sendAlertToChannel($channel, $monitor, $this->incident, 'started');
+        if ($rule->on_call_schedule_id) {
+            $schedule = $rule->onCallSchedule;
+            if ($schedule) {
+                $onCallUser = $schedule->getCurrentOnCallUser();
+                if ($onCallUser) {
+                    $this->sendAlertToUser($onCallUser, $monitor, $this->incident, 'started');
+                }
+            }
+        } elseif ($rule->alert_channel_id) {
+            $channel = $rule->channel;
+            if ($channel && $channel->is_active) {
+                $this->sendAlertToChannel($channel, $monitor, $this->incident, 'started');
+            }
         }
 
         // Schedule next step if exists

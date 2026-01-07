@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\MonitorStatus;
 use App\Jobs\CheckSslCertificates;
 use App\Models\Monitor;
 use Illuminate\Http\Request;
@@ -20,7 +21,7 @@ class MonitorController extends Controller
                 'name' => $monitor->name,
                 'url' => $monitor->url,
                 'type' => $monitor->type,
-                'status' => $monitor->status,
+                'status' => $monitor->status->value,
                 'interval' => $monitor->interval,
                 'check_ssl' => $monitor->check_ssl,
                 'ssl_expires_at' => $monitor->ssl_expires_at?->format('Y-m-d'),
@@ -47,7 +48,7 @@ class MonitorController extends Controller
             $query->latest()->limit(100);
         }, 'incidents' => function ($query) {
             $query->latest()->limit(20);
-        }]);
+        }, 'playbook']);
 
         return Inertia::render('Monitors/Show', [
             'monitor' => [
@@ -55,7 +56,7 @@ class MonitorController extends Controller
                 'name' => $monitor->name,
                 'url' => $monitor->url,
                 'type' => $monitor->type,
-                'status' => $monitor->status,
+                'status' => $monitor->status->value,
                 'interval' => $monitor->interval,
                 'timeout' => $monitor->timeout,
                 'method' => $monitor->method,
@@ -69,6 +70,8 @@ class MonitorController extends Controller
                 'metadata' => $monitor->metadata,
                 'last_checked_at' => $monitor->last_checked_at?->format('Y-m-d H:i:s'),
                 'last_ping_at' => $monitor->last_ping_at?->format('Y-m-d H:i:s'),
+                'playbook_id' => $monitor->playbook_id,
+                'playbook' => $monitor->playbook,
                 'created_at' => $monitor->created_at->format('M d, Y'),
             ],
             'heartbeats' => $monitor->heartbeats->map(fn ($h) => [
@@ -106,6 +109,10 @@ class MonitorController extends Controller
                 'value' => $p->id,
                 'label' => $p->name,
             ]),
+            'playbooks' => \App\Models\Playbook::where('user_id', auth()->id())->get()->map(fn ($p) => [
+                'value' => $p->id,
+                'label' => $p->name,
+            ]),
         ]);
     }
 
@@ -127,6 +134,7 @@ class MonitorController extends Controller
             'tags' => 'nullable|array',
             'group' => 'nullable|string|max:255',
             'escalation_policy_id' => 'nullable|exists:escalation_policies,id',
+            'playbook_id' => 'nullable|exists:playbooks,id',
         ]);
 
         if (isset($validated['headers']) && ! empty($validated['headers'])) {
@@ -137,7 +145,7 @@ class MonitorController extends Controller
             ...$validated,
             'user_id' => auth()->id(),
             'uuid' => $validated['type'] === 'push' ? (string) \Illuminate\Support\Str::uuid() : null,
-            'status' => 'pending',
+            'status' => MonitorStatus::PENDING,
         ]);
 
         dispatch(new CheckSslCertificates($monitor));
@@ -163,6 +171,7 @@ class MonitorController extends Controller
             'tags' => 'nullable|array',
             'group' => 'nullable|string|max:255',
             'escalation_policy_id' => 'nullable|exists:escalation_policies,id',
+            'playbook_id' => 'nullable|exists:playbooks,id',
         ]);
 
         if (isset($validated['headers']) && ! empty($validated['headers'])) {

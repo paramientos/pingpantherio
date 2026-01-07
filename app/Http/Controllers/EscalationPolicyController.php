@@ -29,8 +29,8 @@ class EscalationPolicyController extends Controller
                 'steps' => $policy->rules->map(fn ($rule) => [
                     'id' => $rule->id,
                     'delay' => $rule->delay_minutes,
-                    'channel_name' => $rule->channel->name,
-                    'channel_type' => $rule->channel->type,
+                    'channel_name' => $rule->channel?->name ?? $rule->onCallSchedule?->name . ' (On-Call)',
+                    'channel_type' => $rule->channel?->type ?? 'on_call',
                 ]),
             ]);
 
@@ -42,6 +42,10 @@ class EscalationPolicyController extends Controller
         return Inertia::render('EscalationPolicies/Index', [
             'policies' => $policies,
             'channels' => $channels,
+            'schedules' => \App\Models\OnCallSchedule::where('user_id', auth()->id())->get()->map(fn ($s) => [
+                'value' => $s->id,
+                'label' => $s->name . ' (On-Call Rotation)',
+            ]),
         ]);
     }
 
@@ -51,7 +55,8 @@ class EscalationPolicyController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'rules' => 'required|array|min:1',
-            'rules.*.alert_channel_id' => 'required|exists:alert_channels,id',
+            'rules.*.alert_channel_id' => 'nullable|required_without:rules.*.on_call_schedule_id|exists:alert_channels,id',
+            'rules.*.on_call_schedule_id' => 'nullable|required_without:rules.*.alert_channel_id|exists:on_call_schedules,id',
             'rules.*.delay_minutes' => 'required|integer|min:0',
         ]);
 
@@ -63,7 +68,8 @@ class EscalationPolicyController extends Controller
 
         foreach ($validated['rules'] as $index => $rule) {
             $policy->rules()->create([
-                'alert_channel_id' => $rule['alert_channel_id'],
+                'alert_channel_id' => $rule['alert_channel_id'] ?? null,
+                'on_call_schedule_id' => $rule['on_call_schedule_id'] ?? null,
                 'delay_minutes' => $rule['delay_minutes'],
                 'position' => $index,
             ]);
@@ -85,6 +91,11 @@ class EscalationPolicyController extends Controller
             'label' => $c->name . ' (' . ucfirst($c->type) . ')',
         ]);
 
+        $schedules = \App\Models\OnCallSchedule::where('user_id', auth()->user()->id)->get()->map(fn ($s) => [
+            'value' => $s->id,
+            'label' => $s->name . ' (On-Call Rotation)',
+        ]);
+
         return Inertia::render('EscalationPolicies/Edit', [
             'policy' => [
                 'id' => $escalationPolicy->id,
@@ -93,11 +104,13 @@ class EscalationPolicyController extends Controller
                 'rules' => $escalationPolicy->rules->map(fn ($rule) => [
                     'id' => $rule->id,
                     'alert_channel_id' => $rule->alert_channel_id,
+                    'on_call_schedule_id' => $rule->on_call_schedule_id,
                     'delay_minutes' => $rule->delay_minutes,
                     'position' => $rule->position,
                 ]),
             ],
             'channels' => $channels,
+            'schedules' => $schedules,
         ]);
     }
 
@@ -111,7 +124,8 @@ class EscalationPolicyController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'rules' => 'required|array|min:1',
-            'rules.*.alert_channel_id' => 'required|exists:alert_channels,id',
+            'rules.*.alert_channel_id' => 'nullable|required_without:rules.*.on_call_schedule_id|exists:alert_channels,id',
+            'rules.*.on_call_schedule_id' => 'nullable|required_without:rules.*.alert_channel_id|exists:on_call_schedules,id',
             'rules.*.delay_minutes' => 'required|integer|min:0',
         ]);
 
@@ -125,7 +139,8 @@ class EscalationPolicyController extends Controller
 
         foreach ($validated['rules'] as $index => $rule) {
             $escalationPolicy->rules()->create([
-                'alert_channel_id' => $rule['alert_channel_id'],
+                'alert_channel_id' => $rule['alert_channel_id'] ?? null,
+                'on_call_schedule_id' => $rule['on_call_schedule_id'] ?? null,
                 'delay_minutes' => $rule['delay_minutes'],
                 'position' => $index,
             ]);

@@ -146,9 +146,10 @@ function MonitorsIndex({ monitors, escalationPolicies }) {
 
     const getStatusBadge = (status) => {
         const config = {
-            active: { color: 'green', icon: IconCircleCheck, label: 'Active' },
-            paused: { color: 'gray', icon: IconClock, label: 'Paused' },
+            up: { color: 'green', icon: IconCircleCheck, label: 'Up' },
+            disabled: { color: 'gray', icon: IconClock, label: 'Disabled' },
             pending: { color: 'orange', icon: IconClock, label: 'Pending' },
+            down: { color: 'red', icon: IconCircleX, label: 'Down' },
         };
 
         const { color, icon: Icon, label } = config[status] || config.pending;
@@ -216,7 +217,11 @@ function MonitorsIndex({ monitors, escalationPolicies }) {
                                 monitors.map((monitor) => (
                                     <Table.Tr key={monitor.id}>
                                         <Table.Td>
-                                            <Text fw={600}>{monitor.name}</Text>
+                                            <Link href={`/monitors/${monitor.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                                                <Text fw={600} className="monitor-name-link" style={{ cursor: 'pointer' }}>
+                                                    {monitor.name}
+                                                </Text>
+                                            </Link>
                                         </Table.Td>
                                         <Table.Td>
                                             <Text size="sm" c="dimmed" style={{ maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis' }}>
