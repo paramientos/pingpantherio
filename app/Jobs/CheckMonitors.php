@@ -155,27 +155,98 @@ class CheckMonitors implements ShouldQueue
         $method = $monitor->method ?? 'GET';
         $headers = $monitor->headers ?? [];
 
-        $response = Http::timeout($timeout)
-            ->withHeaders($headers)
-            ->withOptions(['verify' => $monitor->verify_ssl ?? true])
-            ->{strtolower($method)}($monitor->url);
+        try {
+            $response = Http::timeout($timeout)
+                ->withHeaders($headers)
+                ->withOptions(['verify' => $monitor->verify_ssl ?? true])
+                ->{strtolower($method)}($monitor->url);
 
-        $metadata = [
-            'server' => $response->header('Server'),
-            'content_type' => $response->header('Content-Type'),
-            'content_length' => $response->header('Content-Length'),
-            'ip_address' => gethostbyname(parse_url($monitor->url, PHP_URL_HOST)),
-            'response_headers' => $response->headers(),
-        ];
+            $metadata = [
+                'server' => $response->header('Server'),
+                'content_type' => $response->header('Content-Type'),
+                'content_length' => $response->header('Content-Length'),
+                'ip_address' => gethostbyname(parse_url($monitor->url, PHP_URL_HOST)),
+                'response_headers' => $response->headers(),
+            ];
 
-        return [
-            'is_up' => $response->successful(),
-            'status_code' => $response->status(),
-            'error' => $response->failed() ? "HTTP {$response->status()}" : null,
-            'metadata' => $metadata,
-            'html_snapshot' => $response->failed() ? $response->body() : null,
-            'response_headers' => $response->headers(),
-        ];
+            $statusCode = $response->status();
+            $isUp = $response->successful(); // 2xx status codes
+            $errorMessage = null;
+
+            if (! $isUp) {
+                $errorMessage = $this->getHttpErrorMessage($statusCode, $response);
+            }
+
+            return [
+                'is_up' => $isUp,
+                'status_code' => $statusCode,
+                'error' => $errorMessage,
+                'metadata' => $metadata,
+                'html_snapshot' => ! $isUp ? $response->body() : null,
+                'response_headers' => $response->headers(),
+            ];
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            // Connection errors (DNS, timeout, SSL, etc.)
+            return [
+                'is_up' => false,
+                'status_code' => null,
+                'error' => $this->parseConnectionError($e->getMessage()),
+                'metadata' => null,
+                'html_snapshot' => null,
+                'response_headers' => null,
+            ];
+        } catch (\Exception $e) {
+            return [
+                'is_up' => false,
+                'status_code' => null,
+                'error' => 'Unexpected error: '.$e->getMessage(),
+                'metadata' => null,
+                'html_snapshot' => null,
+                'response_headers' => null,
+            ];
+        }
+    }
+
+    /**
+     * Get a user-friendly error message based on HTTP status code
+     */
+    protected function getHttpErrorMessage(int $statusCode, $response): string
+    {
+        return match (true) {
+            $statusCode === 400 => 'Bad Request (400) - The server cannot process the request',
+            $statusCode === 401 => 'Unauthorized (401) - Authentication required',
+            $statusCode === 403 => 'Forbidden (403) - Access denied to this resource',
+            $statusCode === 404 => 'Not Found (404) - The requested page does not exist',
+            $statusCode === 405 => 'Method Not Allowed (405) - HTTP method not supported',
+            $statusCode === 408 => 'Request Timeout (408) - Server took too long to respond',
+            $statusCode === 429 => 'Too Many Requests (429) - Rate limit exceeded',
+            $statusCode === 500 => 'Internal Server Error (500) - The server encountered an error',
+            $statusCode === 502 => 'Bad Gateway (502) - Invalid response from upstream server',
+            $statusCode === 503 => 'Service Unavailable (503) - Server is temporarily down',
+            $statusCode === 504 => 'Gateway Timeout (504) - Upstream server did not respond in time',
+            $statusCode >= 400 && $statusCode < 500 => "Client Error ({$statusCode}) - Request cannot be fulfilled",
+            $statusCode >= 500 => "Server Error ({$statusCode}) - The server is experiencing issues",
+            default => "HTTP {$statusCode} - Unexpected response code",
+        };
+    }
+
+    /**
+     * Parse cURL/connection errors into user-friendly messages
+     */
+    protected function parseConnectionError(string $error): string
+    {
+        return match (true) {
+            str_contains($error, 'Could not resolve host') => 'DNS Error - Domain name could not be resolved. The website may not exist or DNS is misconfigured.',
+            str_contains($error, 'Connection timed out') => 'Connection Timeout - Server did not respond within the timeout period. The server may be down or overloaded.',
+            str_contains($error, 'Connection refused') => 'Connection Refused - The server actively refused the connection. The service may be stopped or blocked.',
+            str_contains($error, 'SSL certificate problem') => 'SSL Certificate Error - The SSL/TLS certificate is invalid, expired, or untrusted.',
+            str_contains($error, 'SSL: certificate verification failed') => 'SSL Verification Failed - The SSL certificate could not be verified.',
+            str_contains($error, 'Operation timed out') => 'Operation Timeout - The request took too long to complete.',
+            str_contains($error, 'Failed to connect') => 'Connection Failed - Unable to establish a connection to the server.',
+            str_contains($error, 'Name or service not known') => 'DNS Error - The domain name is unknown or cannot be found.',
+            str_contains($error, 'No route to host') => 'Network Error - No network route to the host. The server may be unreachable.',
+            default => 'Connection Error - '.$error,
+        };
     }
 
     protected function checkPing(Monitor $monitor): array
