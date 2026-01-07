@@ -145,4 +145,19 @@ class Monitor extends Model
     {
         return $this->belongsTo(EscalationPolicy::class);
     }
+
+    public function slaConfig(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(SlaConfig::class);
+    }
+
+    public function dependencies(): HasMany
+    {
+        return $this->hasMany(MonitorDependency::class, 'monitor_id');
+    }
+
+    public function dependents(): HasMany
+    {
+        return $this->hasMany(MonitorDependency::class, 'depends_on_monitor_id');
+    }
 }

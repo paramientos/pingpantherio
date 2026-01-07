@@ -5,6 +5,7 @@ use App\Http\Middleware\HandleInertiaRequests;
 use App\Jobs\CheckDomainExpirations;
 use App\Jobs\CheckMonitors;
 use App\Jobs\CheckSslCertificates;
+use App\Jobs\CheckCompetitors;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -21,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->job(new CheckMonitors())->everyMinute();
         $schedule->job(new CheckSslCertificates())->daily();
         $schedule->job(new CheckDomainExpirations())->daily();
+        $schedule->job(new CheckCompetitors())->everyFiveMinutes();
     })
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [

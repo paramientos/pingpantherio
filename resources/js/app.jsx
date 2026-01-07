@@ -72,7 +72,7 @@ createInertiaApp({
         document.addEventListener('keydown', handleKeyDown);
 
         root.render(
-            <MantineProvider theme={theme} defaultColorScheme="light">
+            <MantineProvider theme={theme} forceColorScheme="light">
                 <Notifications position="top-right" zIndex={1000} />
                 <App {...props} />
             </MantineProvider>

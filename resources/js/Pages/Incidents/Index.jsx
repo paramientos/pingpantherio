@@ -12,8 +12,10 @@ import {
     ThemeIcon,
     Paper,
     Pagination,
+    Button,
 } from '@mantine/core';
-import { IconAlertTriangle, IconCheck, IconClock, IconActivity } from '@tabler/icons-react';
+import { IconAlertTriangle, IconCheck, IconClock, IconActivity, IconFilePlus } from '@tabler/icons-react';
+import { Link, router } from '@inertiajs/react';
 
 function IncidentsIndex({ incidents, stats }) {
     return (
@@ -104,6 +106,7 @@ function IncidentsIndex({ incidents, stats }) {
                                 <Table.Th>Started</Table.Th>
                                 <Table.Th>Duration</Table.Th>
                                 <Table.Th>Resolved</Table.Th>
+                                <Table.Th></Table.Th>
                             </Table.Tr>
                         </Table.Thead>
                         <Table.Tbody>
@@ -166,6 +169,19 @@ function IncidentsIndex({ incidents, stats }) {
                                             <Text size="sm" c="dimmed">
                                                 {incident.resolved_at || '-'}
                                             </Text>
+                                        </Table.Td>
+                                        <Table.Td>
+                                            {!incident.is_active && (
+                                                <Button
+                                                    variant="subtle"
+                                                    size="xs"
+                                                    leftSection={<IconFilePlus size={14} />}
+                                                    component={Link}
+                                                    href={route('post-mortems.create-for-incident', incident.id)}
+                                                >
+                                                    Post-Mortem
+                                                </Button>
+                                            )}
                                         </Table.Td>
                                     </Table.Tr>
                                 ))

@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { AppShell, Burger, Group, NavLink, Avatar, Menu, Text, rem, ActionIcon, useMantineColorScheme } from '@mantine/core';
+import { AppShell, Burger, Group, NavLink, Avatar, Menu, Text, rem, ActionIcon, ScrollArea, Divider } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { Link, usePage } from '@inertiajs/react';
 import {
@@ -23,12 +23,15 @@ import {
     IconMoon,
     IconSearch,
     IconShieldCheck,
+    IconTarget,
+    IconHierarchy2,
+    IconSwords,
+    IconFileText,
 } from '@tabler/icons-react';
 import { Spotlight, spotlight } from '@mantine/spotlight';
 import '@mantine/spotlight/styles.css';
 
 function AppLayout({ children }) {
-    const { colorScheme, toggleColorScheme } = useMantineColorScheme();
     const [opened, { toggle }] = useDisclosure();
     const { auth, url } = usePage().props;
 
@@ -45,19 +48,31 @@ function AppLayout({ children }) {
     }, []);
 
 
-    const navItems = [
+    const monitoringItems = [
         { label: 'Overview', icon: IconChartPie, href: '/' },
-        //{ label: 'Custom Dashboards', icon: IconLayoutDashboard, href: '/custom-dashboards' },
         { label: 'Monitors', icon: IconDeviceDesktop, href: '/monitors' },
         { label: 'Incidents', icon: IconAlertTriangle, href: '/incidents' },
         { label: 'Status Pages', icon: IconBroadcast, href: '/status-pages' },
+    ];
+
+    const infrastructureItems = [
         { label: 'SSL Certificates', icon: IconShieldCheck, href: '/ssl' },
         { label: 'Domains', icon: IconWorld, href: '/domains' },
+        { label: 'Maintenance', icon: IconClock, href: '/maintenance-windows' },
+    ];
+
+    const analysisItems = [
         { label: 'Analytics', icon: IconFileAnalytics, href: '/reports-analytics' },
+        { label: 'SLA Tracking', icon: IconTarget, href: '/sla' },
+        { label: 'Dependency Map', icon: IconHierarchy2, href: '/dependencies' },
+        { label: 'Competitor Watch', icon: IconSwords, href: '/competitors' },
+        { label: 'Post-Mortems', icon: IconFileText, href: '/post-mortems' },
+    ];
+
+    const configurationItems = [
         { label: 'Alert Rules', icon: IconSettingsAutomation, href: '/alert-rules' },
         { label: 'Escalation Policies', icon: IconSettingsAutomation, href: '/escalation-policies' },
         { label: 'Alert Channels', icon: IconBolt, href: '/alert-channels' },
-        { label: 'Maintenance', icon: IconClock, href: '/maintenance-windows' },
     ];
 
     const settingsItems = [
@@ -178,20 +193,6 @@ function AppLayout({ children }) {
                         >
                             <IconSearch size={20} stroke={1.5} />
                         </ActionIcon>
-
-                        <ActionIcon
-                            onClick={() => toggleColorScheme()}
-                            variant="default"
-                            size="lg"
-                            aria-label="Toggle color scheme"
-                        >
-                            {colorScheme === 'dark' ? (
-                                <IconSun size={20} stroke={1.5} />
-                            ) : (
-                                <IconMoon size={20} stroke={1.5} />
-                            )}
-                        </ActionIcon>
-
                         {auth.user && (
                             <Menu shadow="md" width={220} position="bottom-end">
                                 <Menu.Target>
@@ -238,11 +239,11 @@ function AppLayout({ children }) {
             </AppShell.Header>
 
             <AppShell.Navbar p="md">
-                <AppShell.Section grow>
+                <AppShell.Section grow component={ScrollArea}>
                     <Text size="xs" fw={700} c="dimmed" tt="uppercase" mb="xs" px="sm">
-                        Main
+                        Monitoring
                     </Text>
-                    {navItems.map((item) => (
+                    {monitoringItems.map((item) => (
                         <NavLink
                             key={item.href}
                             component={Link}
@@ -250,6 +251,54 @@ function AppLayout({ children }) {
                             label={item.label}
                             leftSection={<item.icon size={20} stroke={1.5} />}
                             active={url === item.href || (item.href !== '/' && url.startsWith(item.href))}
+                            variant="subtle"
+                            mb={4}
+                        />
+                    ))}
+
+                    <Text size="xs" fw={700} c="dimmed" tt="uppercase" mt="xl" mb="xs" px="sm">
+                        Infrastructure
+                    </Text>
+                    {infrastructureItems.map((item) => (
+                        <NavLink
+                            key={item.href}
+                            component={Link}
+                            href={item.href}
+                            label={item.label}
+                            leftSection={<item.icon size={20} stroke={1.5} />}
+                            active={url.startsWith(item.href)}
+                            variant="subtle"
+                            mb={4}
+                        />
+                    ))}
+
+                    <Text size="xs" fw={700} c="dimmed" tt="uppercase" mt="xl" mb="xs" px="sm">
+                        Analysis & Reports
+                    </Text>
+                    {analysisItems.map((item) => (
+                        <NavLink
+                            key={item.href}
+                            component={Link}
+                            href={item.href}
+                            label={item.label}
+                            leftSection={<item.icon size={20} stroke={1.5} />}
+                            active={url.startsWith(item.href)}
+                            variant="subtle"
+                            mb={4}
+                        />
+                    ))}
+
+                    <Text size="xs" fw={700} c="dimmed" tt="uppercase" mt="xl" mb="xs" px="sm">
+                        Alerting
+                    </Text>
+                    {configurationItems.map((item) => (
+                        <NavLink
+                            key={item.href}
+                            component={Link}
+                            href={item.href}
+                            label={item.label}
+                            leftSection={<item.icon size={20} stroke={1.5} />}
+                            active={url.startsWith(item.href)}
                             variant="subtle"
                             mb={4}
                         />
@@ -274,7 +323,8 @@ function AppLayout({ children }) {
                 </AppShell.Section>
 
                 <AppShell.Section>
-                    <Text size="xs" c="dimmed" ta="center" mt="md">
+                    <Divider my="md" />
+                    <Text size="xs" c="dimmed" ta="center">
                         PingPanther v1.0.0
                     </Text>
                 </AppShell.Section>
@@ -293,7 +343,7 @@ function AppLayout({ children }) {
                     placeholder: 'Search monitors, pages, settings...',
                 }}
             />
-        </AppShell>
+        </AppShell >
     );
 }
 
