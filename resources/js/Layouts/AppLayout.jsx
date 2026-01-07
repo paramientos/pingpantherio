@@ -29,6 +29,7 @@ import {
     IconFileText,
     IconBook,
     IconCalendarStats,
+    IconFocusCentered,
 } from '@tabler/icons-react';
 import { Spotlight, spotlight } from '@mantine/spotlight';
 import '@mantine/spotlight/styles.css';
@@ -53,6 +54,7 @@ function AppLayout({ children }) {
     const monitoringItems = [
         { label: 'Overview', icon: IconChartPie, href: '/' },
         { label: 'Monitors', icon: IconDeviceDesktop, href: '/monitors' },
+        { label: 'War Room', icon: IconFocusCentered, href: '/war-room' },
         { label: 'Incidents', icon: IconAlertTriangle, href: '/incidents' },
         { label: 'Status Pages', icon: IconBroadcast, href: '/status-pages' },
     ];
