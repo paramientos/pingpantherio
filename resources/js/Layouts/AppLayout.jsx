@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { AppShell, Burger, Group, NavLink, Avatar, Menu, Text, rem, ActionIcon, useMantineColorScheme } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { Link, usePage } from '@inertiajs/react';
@@ -32,16 +32,28 @@ function AppLayout({ children }) {
     const [opened, { toggle }] = useDisclosure();
     const { auth, url } = usePage().props;
 
+    useEffect(() => {
+        const handleOpenSpotlight = () => {
+            spotlight.open();
+        };
+
+        window.addEventListener('open-spotlight', handleOpenSpotlight);
+
+        return () => {
+            window.removeEventListener('open-spotlight', handleOpenSpotlight);
+        };
+    }, []);
+
 
     const navItems = [
         { label: 'Overview', icon: IconChartPie, href: '/' },
-        { label: 'Custom Dashboards', icon: IconLayoutDashboard, href: '/custom-dashboards' },
+        //{ label: 'Custom Dashboards', icon: IconLayoutDashboard, href: '/custom-dashboards' },
         { label: 'Monitors', icon: IconDeviceDesktop, href: '/monitors' },
         { label: 'Incidents', icon: IconAlertTriangle, href: '/incidents' },
         { label: 'Status Pages', icon: IconBroadcast, href: '/status-pages' },
         { label: 'SSL Certificates', icon: IconShieldCheck, href: '/ssl' },
         { label: 'Domains', icon: IconWorld, href: '/domains' },
-        { label: 'Reports', icon: IconFileAnalytics, href: '/reports' },
+        { label: 'Analytics', icon: IconFileAnalytics, href: '/reports-analytics' },
         { label: 'Alert Rules', icon: IconSettingsAutomation, href: '/alert-rules' },
         { label: 'Escalation Policies', icon: IconSettingsAutomation, href: '/escalation-policies' },
         { label: 'Alert Channels', icon: IconBolt, href: '/alert-channels' },

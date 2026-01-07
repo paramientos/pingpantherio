@@ -22,6 +22,7 @@ import {
 import { useForm } from '@inertiajs/react';
 import { IconPlus, IconTrash, IconChevronRight, IconClock, IconBell, IconSettingsAutomation } from '@tabler/icons-react';
 import { notifications } from '@mantine/notifications';
+import { router } from '@inertiajs/react';
 
 export default function EscalationPoliciesIndex({ policies, channels }) {
     const [opened, setOpened] = useState(false);
@@ -58,6 +59,20 @@ export default function EscalationPoliciesIndex({ policies, channels }) {
                 });
             },
         });
+    };
+
+    const handleDelete = (policyId) => {
+        if (confirm('Are you sure you want to delete this policy?')) {
+            router.delete(route('escalation-policies.destroy', policyId), {
+                onSuccess: () => {
+                    notifications.show({
+                        title: 'Success',
+                        message: 'Policy deleted successfully',
+                        color: 'green',
+                    });
+                },
+            });
+        }
     };
 
     return (
@@ -98,6 +113,7 @@ export default function EscalationPoliciesIndex({ policies, channels }) {
 
                                 <Divider mb="lg" />
 
+                                <Text size="xs" fw={600} c="dimmed" mb="xs">ESCALATION STEPS</Text>
                                 <Timeline bulletSize={24} lineWidth={2}>
                                     {policy.steps.map((step, index) => (
                                         <Timeline.Item
@@ -117,11 +133,40 @@ export default function EscalationPoliciesIndex({ policies, channels }) {
                                     ))}
                                 </Timeline>
 
+                                {policy.monitors && policy.monitors.length > 0 && (
+                                    <>
+                                        <Divider my="lg" />
+                                        <Text size="xs" fw={600} c="dimmed" mb="xs">ASSIGNED MONITORS</Text>
+                                        <Stack gap="xs">
+                                            {policy.monitors.slice(0, 3).map((monitor) => (
+                                                <Group key={monitor.id} gap="xs">
+                                                    <Badge size="xs" variant="dot" color="gray">{monitor.name}</Badge>
+                                                </Group>
+                                            ))}
+                                            {policy.monitors.length > 3 && (
+                                                <Text size="xs" c="dimmed">+{policy.monitors.length - 3} more</Text>
+                                            )}
+                                        </Stack>
+                                    </>
+                                )}
+
                                 <Group justify="flex-end" mt="xl">
-                                    <Button variant="subtle" color="red" size="xs" leftSection={<IconTrash size={14} />}>
+                                    <Button
+                                        variant="subtle"
+                                        color="red"
+                                        size="xs"
+                                        leftSection={<IconTrash size={14} />}
+                                        onClick={() => handleDelete(policy.id)}
+                                    >
                                         Delete
                                     </Button>
-                                    <Button variant="light" size="xs">Edit Policy</Button>
+                                    <Button
+                                        variant="light"
+                                        size="xs"
+                                        onClick={() => router.visit(route('escalation-policies.edit', policy.id))}
+                                    >
+                                        Edit Policy
+                                    </Button>
                                 </Group>
                             </Card>
                         ))

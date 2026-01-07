@@ -7,6 +7,7 @@ use App\Models\Report;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class ReportController extends Controller
 {
@@ -70,5 +71,123 @@ class ReportController extends Controller
     {
         $report->delete();
         return redirect()->route('reports.index');
+    }
+
+    public function analytics(Request $request): Response
+    {
+        $period = $request->get('period', '30'); // days
+        $monitorId = $request->get('monitor_id');
+
+        $query = Monitor::where('user_id', auth()->user()->id);
+        
+        if ($monitorId) {
+            $query->where('id', $monitorId);
+        }
+
+        $monitors = $query->with(['heartbeats' => function ($q) use ($period) {
+            $q->where('checked_at', '>=', now()->subDays($period));
+        }, 'incidents' => function ($q) use ($period) {
+            $q->where('started_at', '>=', now()->subDays($period));
+        }])->get();
+
+        $analytics = $monitors->map(function ($monitor) use ($period) {
+            $heartbeats = $monitor->heartbeats;
+            $incidents = $monitor->incidents;
+
+            $totalChecks = $heartbeats->count();
+            $successfulChecks = $heartbeats->where('is_up', true)->count();
+            $uptime = $totalChecks > 0 ? round(($successfulChecks / $totalChecks) * 100, 2) : 100;
+
+            $avgResponseTime = $heartbeats->avg('response_time');
+            $maxResponseTime = $heartbeats->max('response_time');
+            $minResponseTime = $heartbeats->min('response_time');
+
+            $totalDowntime = $incidents->sum(function ($incident) {
+                $end = $incident->resolved_at ?? now();
+                return $incident->started_at->diffInMinutes($end);
+            });
+
+            return [
+                'monitor_id' => $monitor->id,
+                'monitor_name' => $monitor->name,
+                'monitor_url' => $monitor->url,
+                'uptime_percentage' => $uptime,
+                'total_checks' => $totalChecks,
+                'successful_checks' => $successfulChecks,
+                'failed_checks' => $totalChecks - $successfulChecks,
+                'avg_response_time' => round($avgResponseTime, 2),
+                'max_response_time' => round($maxResponseTime, 2),
+                'min_response_time' => round($minResponseTime, 2),
+                'total_incidents' => $incidents->count(),
+                'total_downtime_minutes' => $totalDowntime,
+                'total_downtime_hours' => round($totalDowntime / 60, 2),
+            ];
+        });
+
+        $allMonitors = Monitor::where('user_id', auth()->user()->id)->get()->map(fn ($m) => [
+            'value' => $m->id,
+            'label' => $m->name,
+        ]);
+
+        return Inertia::render('Reports/Analytics', [
+            'analytics' => $analytics,
+            'period' => $period,
+            'selectedMonitor' => $monitorId,
+            'monitors' => $allMonitors,
+        ]);
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $period = $request->get('period', '30');
+        $monitorId = $request->get('monitor_id');
+
+        $query = Monitor::where('user_id', auth()->user()->id);
+        
+        if ($monitorId) {
+            $query->where('id', $monitorId);
+        }
+
+        $monitors = $query->with(['heartbeats' => function ($q) use ($period) {
+            $q->where('checked_at', '>=', now()->subDays($period));
+        }, 'incidents' => function ($q) use ($period) {
+            $q->where('started_at', '>=', now()->subDays($period));
+        }])->get();
+
+        $analytics = $monitors->map(function ($monitor) use ($period) {
+            $heartbeats = $monitor->heartbeats;
+            $incidents = $monitor->incidents;
+
+            $totalChecks = $heartbeats->count();
+            $successfulChecks = $heartbeats->where('is_up', true)->count();
+            $uptime = $totalChecks > 0 ? round(($successfulChecks / $totalChecks) * 100, 2) : 100;
+
+            $avgResponseTime = $heartbeats->avg('response_time');
+            $totalDowntime = $incidents->sum(function ($incident) {
+                $end = $incident->resolved_at ?? now();
+                return $incident->started_at->diffInMinutes($end);
+            });
+
+            return [
+                'monitor_name' => $monitor->name,
+                'monitor_url' => $monitor->url,
+                'uptime_percentage' => $uptime,
+                'total_checks' => $totalChecks,
+                'successful_checks' => $successfulChecks,
+                'failed_checks' => $totalChecks - $successfulChecks,
+                'avg_response_time' => round($avgResponseTime, 2),
+                'total_incidents' => $incidents->count(),
+                'total_downtime_hours' => round($totalDowntime / 60, 2),
+            ];
+        });
+
+        $pdf = Pdf::loadView('reports.pdf', [
+            'analytics' => $analytics,
+            'period' => $period,
+            'generated_at' => now()->format('M d, Y H:i'),
+            'user' => auth()->user(),
+        ]);
+
+        return $pdf->download('pingpanther-report-' . now()->format('Y-m-d') . '.pdf');
     }
 }

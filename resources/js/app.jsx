@@ -59,7 +59,19 @@ createInertiaApp({
         return pages[`./Pages/${name}.jsx`];
     },
     setup({ el, App, props }) {
-        createRoot(el).render(
+        const root = createRoot(el);
+
+        // Global keyboard shortcut for Spotlight
+        const handleKeyDown = (e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                window.dispatchEvent(new CustomEvent('open-spotlight'));
+            }
+        };
+
+        document.addEventListener('keydown', handleKeyDown);
+
+        root.render(
             <MantineProvider theme={theme} defaultColorScheme="light">
                 <Notifications position="top-right" zIndex={1000} />
                 <App {...props} />

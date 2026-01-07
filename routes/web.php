@@ -39,6 +39,8 @@ Route::middleware(['auth'])->group(function (): void {
     Route::get('/incidents', [IncidentController::class, 'index'])->name('incidents.index');
     Route::resource('maintenance-windows', MaintenanceWindowController::class)->only(['index', 'create', 'store', 'destroy']);
     Route::resource('reports', ReportController::class);
+    Route::get('/reports-analytics', [ReportController::class, 'analytics'])->name('reports.analytics');
+    Route::get('/reports-export-pdf', [ReportController::class, 'exportPdf'])->name('reports.export-pdf');
     Route::resource('alert-rules', AlertRuleController::class);
     Route::resource('custom-dashboards', CustomDashboardController::class);
     Route::resource('domains', DomainMonitorController::class)->only(['index', 'store', 'destroy']);
