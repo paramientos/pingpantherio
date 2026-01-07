@@ -1,5 +1,5 @@
 import React from 'react';
-import AppLayout from '@/Layouts/AppLayout';
+import SettingsLayout from '../SettingsLayout';
 import {
     Title,
     Text,
@@ -34,7 +34,7 @@ function WebhooksIndex({ webhooks }) {
     });
 
     const handleSubmit = (values) => {
-        router.post('/webhooks', values, {
+        router.post('/settings/webhooks', values, {
             onSuccess: () => {
                 notifications.show({
                     title: 'Success',
@@ -49,7 +49,7 @@ function WebhooksIndex({ webhooks }) {
 
     const handleDelete = (id) => {
         if (confirm('Are you sure you want to delete this webhook?')) {
-            router.delete(`/webhooks/${id}`, {
+            router.delete(`/settings/webhooks/${id}`, {
                 onSuccess: () => {
                     notifications.show({
                         title: 'Deleted',
@@ -62,14 +62,14 @@ function WebhooksIndex({ webhooks }) {
     };
 
     return (
-        <AppLayout>
+        <SettingsLayout activeTab="webhooks">
             <Stack gap="xl">
                 <Group justify="space-between">
                     <div>
-                        <Title order={2} fw={900}>Outgoing Webhooks</Title>
-                        <Text c="dimmed" size="sm">Receive real-time notifications to your own endpoints</Text>
+                        <Title order={4}>Outgoing Webhooks</Title>
+                        <Text c="dimmed" size="xs">Receive real-time notifications</Text>
                     </div>
-                    <Button leftSection={<IconPlus size={16} />} onClick={open}>
+                    <Button size="xs" leftSection={<IconPlus size={14} />} onClick={open}>
                         Add Webhook
                     </Button>
                 </Group>
@@ -173,7 +173,7 @@ function WebhooksIndex({ webhooks }) {
                     </Stack>
                 </form>
             </Modal>
-        </AppLayout>
+        </SettingsLayout>
     );
 }
 

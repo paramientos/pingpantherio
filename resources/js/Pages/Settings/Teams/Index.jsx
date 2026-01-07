@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import AppLayout from '@/Layouts/AppLayout';
+import SettingsLayout from '../SettingsLayout';
 import {
     Title,
     Text,
@@ -37,7 +37,7 @@ function TeamsIndex({ teams }) {
     });
 
     const handleCreateTeam = (values) => {
-        router.post('/teams', values, {
+        router.post('/settings/teams', values, {
             onSuccess: () => {
                 notifications.show({ title: 'Success', message: 'Team created', color: 'green' });
                 closeCreate();
@@ -47,7 +47,7 @@ function TeamsIndex({ teams }) {
     };
 
     const handleInvite = (values) => {
-        router.post(`/teams/${selectedTeam.id}/invite`, values, {
+        router.post(`/settings/teams/${selectedTeam.id}/invite`, values, {
             onSuccess: () => {
                 notifications.show({ title: 'Sent', message: 'Invitation sent to ' + values.email, color: 'blue' });
                 closeInvite();
@@ -58,7 +58,7 @@ function TeamsIndex({ teams }) {
 
     const handleRemoveMember = (teamId, userId) => {
         if (confirm('Are you sure you want to remove this member?')) {
-            router.delete(`/teams/${teamId}/members/${userId}`, {
+            router.delete(`/settings/teams/${teamId}/members/${userId}`, {
                 onSuccess: () => notifications.show({ title: 'Removed', message: 'Member removed from team', color: 'red' })
             });
         }
@@ -80,14 +80,14 @@ function TeamsIndex({ teams }) {
     };
 
     return (
-        <AppLayout>
+        <SettingsLayout activeTab="team">
             <Stack gap="xl">
                 <Group justify="space-between">
                     <div>
-                        <Title order={2} fw={900}>Team Management</Title>
-                        <Text c="dimmed" size="sm">Manage your organizations and collaborate with your team</Text>
+                        <Title order={4}>Team Management</Title>
+                        <Text c="dimmed" size="xs">Collaborate with your team</Text>
                     </div>
-                    <Button leftSection={<IconPlus size={16} />} onClick={openCreate}>
+                    <Button size="xs" leftSection={<IconPlus size={14} />} onClick={openCreate}>
                         Create New Team
                     </Button>
                 </Group>
@@ -213,7 +213,7 @@ function TeamsIndex({ teams }) {
                     </Stack>
                 </form>
             </Modal>
-        </AppLayout>
+        </SettingsLayout>
     );
 }
 

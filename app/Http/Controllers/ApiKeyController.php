@@ -24,7 +24,7 @@ class ApiKeyController extends Controller
                 'created_at' => $key->created_at->format('M d, Y'),
             ]);
 
-        return Inertia::render('ApiKeys/Index', [
+        return Inertia::render('Settings/ApiKeys/Index', [
             'apiKeys' => $keys,
         ]);
     }

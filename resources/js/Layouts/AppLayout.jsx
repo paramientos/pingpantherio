@@ -19,9 +19,12 @@ import {
     IconWorld,
     IconHistory,
     IconWebhook,
+    IconSun,
+    IconMoon,
 } from '@tabler/icons-react';
 
 function AppLayout({ children }) {
+    const { colorScheme, toggleColorScheme } = useMantineColorScheme();
     const [opened, { toggle }] = useDisclosure();
     const { auth, url } = usePage().props;
 
@@ -41,10 +44,10 @@ function AppLayout({ children }) {
 
     const settingsItems = [
         { label: 'Settings', icon: IconSettings, href: '/settings/notifications' },
-        { label: 'Webhooks', icon: IconWebhook, href: '/webhooks' },
-        { label: 'Team', icon: IconUsers, href: '/teams' },
-        { label: 'API Keys', icon: IconKey, href: '/api-keys' },
-        { label: 'Audit Logs', icon: IconHistory, href: '/audit-logs' },
+        { label: 'Webhooks', icon: IconWebhook, href: '/settings/webhooks' },
+        { label: 'Team', icon: IconUsers, href: '/settings/teams' },
+        { label: 'API Keys', icon: IconKey, href: '/settings/api-keys' },
+        { label: 'Audit Logs', icon: IconHistory, href: '/settings/audit-logs' },
     ];
 
     return (
@@ -81,47 +84,62 @@ function AppLayout({ children }) {
                         </Group>
                     </Group>
 
-                    {auth.user && (
-                        <Menu shadow="md" width={220} position="bottom-end">
-                            <Menu.Target>
-                                <Group style={{ cursor: 'pointer' }} gap="sm" px="sm" py={6}>
-                                    <Avatar color="indigo" radius="xl" size="sm" variant="filled">
-                                        {auth.user.name.substring(0, 2).toUpperCase()}
-                                    </Avatar>
-                                    <div style={{ flex: 1 }} visibleFrom="sm">
-                                        <Text size="sm" fw={600} style={{ lineHeight: 1 }}>
-                                            {auth.user.name}
-                                        </Text>
-                                        <Text size="xs" c="dimmed" style={{ lineHeight: 1.4 }}>
-                                            {auth.user.email}
-                                        </Text>
-                                    </div>
-                                </Group>
-                            </Menu.Target>
+                    <Group gap="sm">
+                        <ActionIcon
+                            onClick={() => toggleColorScheme()}
+                            variant="default"
+                            size="lg"
+                            aria-label="Toggle color scheme"
+                        >
+                            {colorScheme === 'dark' ? (
+                                <IconSun size={20} stroke={1.5} />
+                            ) : (
+                                <IconMoon size={20} stroke={1.5} />
+                            )}
+                        </ActionIcon>
 
-                            <Menu.Dropdown>
-                                <Menu.Label>Account</Menu.Label>
-                                <Menu.Item
-                                    leftSection={<IconSettings style={{ width: rem(16), height: rem(16) }} />}
-                                    component={Link}
-                                    href="/settings/notifications"
-                                >
-                                    Settings
-                                </Menu.Item>
-                                <Menu.Divider />
-                                <Menu.Item
-                                    color="red"
-                                    leftSection={<IconLogout style={{ width: rem(16), height: rem(16) }} />}
-                                    component={Link}
-                                    href="/logout"
-                                    method="post"
-                                    as="button"
-                                >
-                                    Logout
-                                </Menu.Item>
-                            </Menu.Dropdown>
-                        </Menu>
-                    )}
+                        {auth.user && (
+                            <Menu shadow="md" width={220} position="bottom-end">
+                                <Menu.Target>
+                                    <Group style={{ cursor: 'pointer' }} gap="sm" px="sm" py={6}>
+                                        <Avatar color="indigo" radius="xl" size="sm" variant="filled">
+                                            {auth.user.name.substring(0, 2).toUpperCase()}
+                                        </Avatar>
+                                        <div style={{ flex: 1 }} visibleFrom="sm">
+                                            <Text size="sm" fw={600} style={{ lineHeight: 1 }}>
+                                                {auth.user.name}
+                                            </Text>
+                                            <Text size="xs" c="dimmed" style={{ lineHeight: 1.4 }}>
+                                                {auth.user.email}
+                                            </Text>
+                                        </div>
+                                    </Group>
+                                </Menu.Target>
+
+                                <Menu.Dropdown>
+                                    <Menu.Label>Account</Menu.Label>
+                                    <Menu.Item
+                                        leftSection={<IconSettings style={{ width: rem(16), height: rem(16) }} />}
+                                        component={Link}
+                                        href="/settings/notifications"
+                                    >
+                                        Settings
+                                    </Menu.Item>
+                                    <Menu.Divider />
+                                    <Menu.Item
+                                        color="red"
+                                        leftSection={<IconLogout style={{ width: rem(16), height: rem(16) }} />}
+                                        component={Link}
+                                        href="/logout"
+                                        method="post"
+                                        as="button"
+                                    >
+                                        Logout
+                                    </Menu.Item>
+                                </Menu.Dropdown>
+                            </Menu>
+                        )}
+                    </Group>
                 </Group>
             </AppShell.Header>
 

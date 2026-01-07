@@ -39,7 +39,7 @@ class TeamController extends Controller
                 ]),
             ]);
 
-        return Inertia::render('Teams/Index', [
+        return Inertia::render('Settings/Teams/Index', [
             'teams' => $teams,
         ]);
     }

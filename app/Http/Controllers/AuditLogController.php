@@ -28,7 +28,7 @@ class AuditLogController extends Controller
                 ]
             ]);
 
-        return Inertia::render('AuditLogs/Index', [
+        return Inertia::render('Settings/AuditLogs/Index', [
             'logs' => $logs,
         ]);
     }

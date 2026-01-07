@@ -13,6 +13,7 @@
         "ext-openssl": "*",
         "inertiajs/inertia-laravel": "^2.0",
         "io-developer/php-whois": "^4.1",
+        "jenssegers/agent": "^2.6",
         "laravel/framework": "^12.0",
         "laravel/horizon": "^5.41",
         "laravel/sanctum": "^4.0",

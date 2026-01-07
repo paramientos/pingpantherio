@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import AppLayout from '@/Layouts/AppLayout';
+import SettingsLayout from '../SettingsLayout';
 import { usePage, router, Link } from '@inertiajs/react';
 import {
     Title,
@@ -37,7 +37,7 @@ function ApiKeysIndex({ apiKeys }) {
     });
 
     const handleCreate = (values) => {
-        router.post('/api-keys', values, {
+        router.post('/settings/api-keys', values, {
             onSuccess: (page) => {
                 setCreateModalOpened(false);
                 form.reset();
@@ -55,7 +55,7 @@ function ApiKeysIndex({ apiKeys }) {
 
     const handleDelete = (id) => {
         if (confirm('Are you sure you want to delete this API key? This action cannot be undone.')) {
-            router.delete(`/api-keys/${id}`, {
+            router.delete(`/settings/api-keys/${id}`, {
                 onSuccess: () => {
                     notifications.show({
                         title: 'Deleted',
@@ -68,19 +68,16 @@ function ApiKeysIndex({ apiKeys }) {
     };
 
     return (
-        <AppLayout>
+        <SettingsLayout activeTab="api-keys">
             <Stack gap="xl">
                 <Group justify="space-between">
                     <div>
-                        <Title order={2} fw={900} style={{ letterSpacing: '-0.5px' }}>
-                            API Keys
-                        </Title>
-                        <Text c="dimmed" size="sm" mt={4}>
-                            Manage your personal access tokens to interact with the PingPanther API
-                        </Text>
+                        <Title order={4}>API Keys</Title>
+                        <Text c="dimmed" size="xs">Manage your personal access tokens</Text>
                     </div>
                     <Button
-                        leftSection={<IconPlus size={16} />}
+                        size="xs"
+                        leftSection={<IconPlus size={14} />}
                         onClick={() => setCreateModalOpened(true)}
                     >
                         Generate New Key
@@ -209,7 +206,7 @@ function ApiKeysIndex({ apiKeys }) {
                     </Stack>
                 </form>
             </Modal>
-        </AppLayout>
+        </SettingsLayout>
     );
 }
 

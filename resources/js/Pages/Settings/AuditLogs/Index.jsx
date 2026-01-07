@@ -1,5 +1,5 @@
 import React from 'react';
-import AppLayout from '@/Layouts/AppLayout';
+import SettingsLayout from '../SettingsLayout';
 import {
     Title,
     Text,
@@ -26,15 +26,11 @@ function AuditLogsIndex({ logs }) {
     };
 
     return (
-        <AppLayout>
+        <SettingsLayout activeTab="audit-logs">
             <Stack gap="xl">
                 <div>
-                    <Title order={2} fw={900} style={{ letterSpacing: '-0.5px' }}>
-                        Security Audit Logs
-                    </Title>
-                    <Text c="dimmed" size="sm" mt={4}>
-                        Comprehensive history of all actions performed within your workspace
-                    </Text>
+                    <Title order={4}>Security Audit Logs</Title>
+                    <Text c="dimmed" size="xs">Workspace activity history</Text>
                 </div>
 
                 <Card padding="0" radius="md">
@@ -109,7 +105,7 @@ function AuditLogsIndex({ logs }) {
                     <Pagination total={logs.last_page} value={logs.current_page} />
                 </Group>
             </Stack>
-        </AppLayout>
+        </SettingsLayout>
     );
 }
 
