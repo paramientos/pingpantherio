@@ -96,10 +96,10 @@ export default function OnCallIndex({ schedules, teamMembers }) {
                                     <Badge color="gray" variant="light">{schedule.timezone}</Badge>
                                 </Group>
 
-                                <Paper withBorder p="md" radius="sm" mb="md" bg="gray.0">
+                                <Paper withBorder p="md" radius="sm" mb="md">
                                     <Group justify="space-between">
                                         <Group gap="sm">
-                                            <IconUserCheck size={20} color="var(--mantine-color-indigo-6)" />
+                                            <IconUserCheck size={20} style={{ color: 'var(--mantine-primary-color-filled)' }} />
                                             <div>
                                                 <Text size="xs" fw={700} c="dimmed">CURRENT ON-CALL</Text>
                                                 <Text size="sm" fw={600}>{schedule.current_on_call}</Text>

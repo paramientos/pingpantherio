@@ -40,7 +40,7 @@ export default function Notifications({ settings }) {
                         <Group justify="space-between" wrap="nowrap">
                             <Group gap="md">
                                 <Paper p="xs" radius="md" withBorder>
-                                    <IconMail size={20} style={{ color: 'var(--mantine-color-indigo-6)' }} />
+                                    <IconMail size={20} style={{ color: 'var(--mantine-primary-color-filled)' }} />
                                 </Paper>
                                 <div>
                                     <Text fw={600} size="sm">Email Notifications</Text>
@@ -59,7 +59,7 @@ export default function Notifications({ settings }) {
                         <Group justify="space-between" wrap="nowrap">
                             <Group gap="md">
                                 <Paper p="xs" radius="md" withBorder>
-                                    <IconDeviceDesktop size={20} style={{ color: 'var(--mantine-color-indigo-6)' }} />
+                                    <IconDeviceDesktop size={20} style={{ color: 'var(--mantine-primary-color-filled)' }} />
                                 </Paper>
                                 <div>
                                     <Text fw={600} size="sm">Browser Notifications</Text>
@@ -84,7 +84,7 @@ export default function Notifications({ settings }) {
                     <Group justify="space-between" wrap="nowrap">
                         <Group gap="md">
                             <Paper p="xs" radius="md" withBorder>
-                                <IconFileAnalytics size={20} style={{ color: 'var(--mantine-color-indigo-6)' }} />
+                                <IconFileAnalytics size={20} style={{ color: 'var(--mantine-primary-color-filled)' }} />
                             </Paper>
                             <div>
                                 <Text fw={600} size="sm">Weekly Health Report</Text>

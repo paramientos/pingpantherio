@@ -128,9 +128,9 @@ function WebhooksIndex({ webhooks }) {
                     </Table>
                 </Paper>
 
-                <Paper p="md" radius="md" withBorder bg="gray.0">
+                <Paper p="md" radius="md" withBorder>
                     <Group align="flex-start">
-                        <IconWebhook size={24} color="blue" />
+                        <IconWebhook size={24} style={{ color: 'var(--mantine-primary-color-filled)' }} />
                         <div style={{ flex: 1 }}>
                             <Text fw={600} size="sm">Webhook Documentation</Text>
                             <Text size="xs" c="dimmed" mt={4}>

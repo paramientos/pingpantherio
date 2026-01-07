@@ -119,7 +119,7 @@ export default function SlaIndex({ slas, monitors }) {
                                     <div>
                                         <Group justify="space-between" mb="xs">
                                             <Group gap="xs">
-                                                <IconTarget size={18} color="#6366f1" />
+                                                <IconTarget size={18} style={{ color: 'var(--mantine-primary-color-filled)' }} />
                                                 <Text size="xs" fw={600} c="dimmed">UPTIME TARGET</Text>
                                             </Group>
                                             <Text size="xs" fw={700}>{sla.uptime_target}%</Text>
@@ -146,7 +146,7 @@ export default function SlaIndex({ slas, monitors }) {
                                     {sla.max_downtime_minutes && (
                                         <Paper withBorder p="sm" radius="md">
                                             <Group gap="xs" mb="xs">
-                                                <IconClock size={18} color="#f59e0b" />
+                                                <IconClock size={18} style={{ color: 'var(--mantine-color-orange-filled)' }} />
                                                 <Text size="xs" fw={600} c="dimmed">DOWNTIME BUDGET</Text>
                                             </Group>
                                             <Progress

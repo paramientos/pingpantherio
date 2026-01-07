@@ -5,11 +5,13 @@ import { useForm } from '@inertiajs/react';
 import { notifications } from '@mantine/notifications';
 import { IconClock, IconWorld, IconRefresh, IconPalette } from '@tabler/icons-react';
 
+import { themes } from '../../Themes/palettes';
+
 export default function Preferences({ settings, timezones }) {
     const { data, setData, post, processing } = useForm({
         timezone: settings?.preferences?.timezone ?? 'UTC',
         language: settings?.preferences?.language ?? 'en',
-        theme: settings?.preferences?.theme ?? 'light',
+        theme: settings?.preferences?.theme ?? 'panther',
         refresh_rate: settings?.preferences?.refresh_rate ?? 60,
     });
 
@@ -22,6 +24,10 @@ export default function Preferences({ settings, timezones }) {
                     message: 'Your personal preferences have been updated.',
                     color: 'green',
                 });
+                // Reload the page to apply theme changes
+                setTimeout(() => {
+                    window.location.reload();
+                }, 500);
             },
         });
     };
@@ -50,9 +56,9 @@ export default function Preferences({ settings, timezones }) {
                             placeholder="Select language"
                             data={[
                                 { value: 'en', label: 'English' },
-                                { value: 'tr', label: 'Türkçe' },
-                                { value: 'de', label: 'Deutsch' },
-                                { value: 'fr', label: 'Français' },
+                                // { value: 'tr', label: 'Türkçe' },
+                                // { value: 'de', label: 'Deutsch' },
+                                // { value: 'fr', label: 'Français' },
                             ]}
                             value={data.language}
                             onChange={(val) => setData('language', val)}
@@ -70,7 +76,7 @@ export default function Preferences({ settings, timezones }) {
                         <Group justify="space-between" wrap="nowrap">
                             <Group gap="md">
                                 <Paper p="xs" radius="md" withBorder>
-                                    <IconRefresh size={20} style={{ color: 'var(--mantine-color-indigo-6)' }} />
+                                    <IconRefresh size={20} style={{ color: 'var(--mantine-primary-color-filled)' }} />
                                 </Paper>
                                 <div>
                                     <Text fw={600} size="sm">Auto-refresh Interval</Text>
@@ -93,7 +99,7 @@ export default function Preferences({ settings, timezones }) {
                         <Group justify="space-between" wrap="nowrap">
                             <Group gap="md">
                                 <Paper p="xs" radius="md" withBorder>
-                                    <IconPalette size={20} style={{ color: 'var(--mantine-color-indigo-6)' }} />
+                                    <IconPalette size={20} style={{ color: 'var(--mantine-primary-color-filled)' }} />
                                 </Paper>
                                 <div>
                                     <Text fw={600} size="sm">Interface Theme</Text>
@@ -101,14 +107,13 @@ export default function Preferences({ settings, timezones }) {
                                 </div>
                             </Group>
                             <Select
-                                data={[
-                                    { value: 'light', label: 'Light' },
-                                    { value: 'dark', label: 'Dark' },
-                                    { value: 'auto', label: 'System preference' },
-                                ]}
+                                data={Object.entries(themes).map(([key, theme]) => ({
+                                    value: key,
+                                    label: theme.name
+                                }))}
                                 value={data.theme}
                                 onChange={(val) => setData('theme', val)}
-                                w={150}
+                                w={200}
                             />
                         </Group>
                     </Stack>

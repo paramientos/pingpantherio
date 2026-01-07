@@ -83,7 +83,7 @@ export default function SettingsLayout({ children, activeTab }) {
                             </Tabs.Tab>
                         </Tabs.List>
 
-                        <Paper withBorder p="xl" radius="md" bg="white">
+                        <Paper withBorder p="xl" radius="md">
                             {children}
                         </Paper>
                     </Tabs>

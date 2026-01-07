@@ -1,6 +1,7 @@
 import React from 'react';
 import AppLayout from '@/Layouts/AppLayout';
 import {
+    Grid,
     Title,
     Text,
     Button,
@@ -151,7 +152,7 @@ export default function PostMortemCreate({ incident }) {
                                             required
                                         />
 
-                                        <Paper withBorder p="sm" bg="gray.0" radius="sm">
+                                        <Paper withBorder p="sm" radius="sm">
                                             <Text size="xs" fw={700} mb={4}>INCIDENT INFO</Text>
                                             <Text size="xs"><strong>Monitor:</strong> {incident.monitor.name}</Text>
                                             <Text size="xs"><strong>Started:</strong> {new Date(incident.started_at).toLocaleString()}</Text>

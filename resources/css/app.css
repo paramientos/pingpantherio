@@ -2,6 +2,8 @@
 @import '@mantine/notifications/styles.css';
 @import '@mantine/dates/styles.css';
 
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100;300;400;500;700;900&display=swap');
+
 * {
     box-sizing: border-box;
 }
@@ -9,4 +11,51 @@
 body {
     margin: 0;
     padding: 0;
+    background-color: #f1f3f5;
+    color: var(--mantine-color-text);
+    font-family: 'Outfit', sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+[data-mantine-color-scheme="dark"] body {
+    background-color: #050505;
+}
+
+/* Premium Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--mantine-color-dark-4);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--mantine-primary-color-filled);
+}
+
+.mantine-AppShell-header,
+.mantine-AppShell-navbar {
+    border-color: var(--mantine-color-default-border);
+}
+
+.mantine-NavLink-root[data-active] {
+    background: linear-gradient(90deg, var(--mantine-primary-color-light) 0%, transparent 100%) !important;
+    border-left: 3px solid var(--mantine-primary-color-filled);
+    color: var(--mantine-primary-color-filled) !important;
+}
+
+.mantine-Card-root,
+.mantine-Paper-root {
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.mantine-Card-root:hover {
+    border-color: var(--mantine-primary-color-light-hover) !important;
 }

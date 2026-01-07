@@ -87,7 +87,7 @@ export default function PostMortemShow({ postMortem }) {
                             {postMortem.preventive_measures && (
                                 <section>
                                     <Title order={4} mb="md">Preventive Measures</Title>
-                                    <Paper withBorder p="lg" radius="md" bg="blue.0" style={{ borderColor: 'var(--mantine-color-blue-2)' }}>
+                                    <Paper withBorder p="lg" radius="md" style={{ background: 'var(--mantine-primary-color-light)', borderColor: 'var(--mantine-primary-color-light)' }}>
                                         <Text style={{ whiteSpace: 'pre-wrap' }}>{postMortem.preventive_measures}</Text>
                                     </Paper>
                                 </section>

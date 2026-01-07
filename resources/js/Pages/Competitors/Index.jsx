@@ -17,6 +17,7 @@ import {
     ThemeIcon,
     ActionIcon,
     Table,
+    Tooltip,
 } from '@mantine/core';
 import { useForm, router } from '@inertiajs/react';
 import {
@@ -87,7 +88,7 @@ export default function CompetitorIndex({ competitors }) {
 
                 <Card shadow="sm" radius="md" withBorder p="0">
                     <Table verticalSpacing="md" highlightOnHover>
-                        <Table.Thead bg="gray.0">
+                        <Table.Thead>
                             <Table.Tr>
                                 <Table.Th>Competitor</Table.Th>
                                 <Table.Th>Status</Table.Th>
@@ -118,7 +119,7 @@ export default function CompetitorIndex({ competitors }) {
                                     </Table.Td>
                                     <Table.Td>
                                         <Group gap={4}>
-                                            <IconBolt size={14} color="#6366f1" />
+                                            <IconBolt size={14} style={{ color: 'var(--mantine-primary-color-filled)' }} />
                                             <Text size="sm" fw={600}>{competitor.response_time || '0'}ms</Text>
                                         </Group>
                                     </Table.Td>

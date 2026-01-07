@@ -229,7 +229,7 @@ function MonitorShow({ monitor, heartbeats, incidents, stats, recovery_actions, 
                             </Title>
                         </Group>
                         <Group gap="xs" mt={4}>
-                            <IconWorld size={16} color="var(--mantine-color-dimmed)" />
+                            <IconWorld size={16} />
                             <Text c="dimmed" size="sm" component="a" href={monitor.url} target="_blank" style={{ textDecoration: 'none' }}>
                                 {monitor.url}
                             </Text>
@@ -441,7 +441,7 @@ function MonitorShow({ monitor, heartbeats, incidents, stats, recovery_actions, 
                                                 <IconTerminal2 size={14} color="var(--mantine-color-dimmed)" />
                                                 <Text size="xs" c="dimmed" fw={700} tt="uppercase">Raw Headers</Text>
                                             </Group>
-                                            <Paper p="md" bg="gray.0" radius="md" withBorder style={{ maxHeight: 200, overflow: 'auto' }}>
+                                            <Paper p="md" radius="md" withBorder style={{ maxHeight: 200, overflow: 'auto' }}>
                                                 <Text size="xs" ff="monospace" style={{ whiteSpace: 'pre-wrap', lineHeight: '1.5' }}>
                                                     {monitor.metadata.response_headers ?
                                                         Object.entries(monitor.metadata.response_headers)
@@ -582,7 +582,7 @@ function MonitorShow({ monitor, heartbeats, incidents, stats, recovery_actions, 
                                 <Card padding="lg" radius="md" withBorder>
                                     <Title order={4} fw={700} mb="xl">Incident History</Title>
                                     {incidents.length === 0 ? (
-                                        <Paper p="md" radius="sm" bg="gray.0">
+                                        <Paper p="md" radius="sm">
                                             <Text size="sm" c="dimmed">No incidents recorded</Text>
                                         </Paper>
                                     ) : (
@@ -625,7 +625,7 @@ function MonitorShow({ monitor, heartbeats, incidents, stats, recovery_actions, 
                                             <Text c="dimmed" size="sm" mb="xl">ID: {selectedIncident.id}</Text>
 
                                             <SimpleGrid cols={2} mb="xl">
-                                                <Paper p="md" radius="md" bg="gray.0">
+                                                <Paper p="md" radius="md">
                                                     <Text size="xs" c="dimmed" fw={700} tt="uppercase">Started At</Text>
                                                     <Text fw={700}>{selectedIncident.started_at}</Text>
                                                 </Paper>
@@ -645,7 +645,7 @@ function MonitorShow({ monitor, heartbeats, incidents, stats, recovery_actions, 
                                                 <Tabs.Panel value="updates">
                                                     <Stack gap="md">
                                                         <form onSubmit={updateForm.onSubmit(handleAddUpdate)}>
-                                                            <Paper withBorder p="md" radius="md" bg="blue.0">
+                                                            <Paper withBorder p="md" radius="md" style={{ background: 'var(--mantine-primary-color-light)' }}>
                                                                 <Stack gap="xs">
                                                                     <Text size="xs" fw={700} c="blue">ADD PROGRESS UPDATE</Text>
                                                                     <Select
@@ -726,7 +726,7 @@ function MonitorShow({ monitor, heartbeats, incidents, stats, recovery_actions, 
 
                                                 <Tabs.Panel value="code">
                                                     {selectedIncident.html_snapshot ? (
-                                                        <Paper withBorder radius="md" p="md" bg="gray.9">
+                                                        <Paper withBorder radius="md" p="md" style={{ background: 'var(--mantine-color-dark-filled)' }}>
                                                             <Code block color="gray.0" ff="monospace" style={{ maxHeight: 400, overflow: 'auto' }}>
                                                                 {selectedIncident.html_snapshot}
                                                             </Code>
@@ -773,7 +773,7 @@ function MonitorShow({ monitor, heartbeats, incidents, stats, recovery_actions, 
                             </Group>
 
                             {recovery_actions.length === 0 ? (
-                                <Paper p="xl" withBorder style={{ textAlign: 'center' }} bg="gray.0">
+                                <Paper p="xl" withBorder style={{ textAlign: 'center' }}>
                                     <IconBolt size={48} color="gray" opacity={0.3} />
                                     <Text c="dimmed" mt="sm">No automated recovery actions configured.</Text>
                                     <Button variant="subtle" size="xs" mt="md" onClick={open}>Configure Now</Button>
@@ -828,7 +828,7 @@ function MonitorShow({ monitor, heartbeats, incidents, stats, recovery_actions, 
                                         <Badge variant="dot">Markdown Enabled</Badge>
                                     </Group>
                                     <Divider mb="xl" />
-                                    <Paper bg="gray.0" p="xl" radius="md">
+                                    <Paper p="xl" radius="md" withBorder>
                                         <div
                                             className="markdown-content"
                                             style={{ whiteSpace: 'pre-wrap', fontFamily: 'Inter, sans-serif', fontSize: '14px', lineHeight: '1.6' }}
@@ -838,7 +838,7 @@ function MonitorShow({ monitor, heartbeats, incidents, stats, recovery_actions, 
                                     </Paper>
                                 </Card>
                             ) : (
-                                <Paper p="xl" withBorder style={{ textAlign: 'center' }} bg="gray.0">
+                                <Paper p="xl" withBorder style={{ textAlign: 'center' }}>
                                     <IconBook size={48} color="gray" opacity={0.3} />
                                     <Text c="dimmed" mt="sm">No playbook assigned to this monitor.</Text>
                                     <Button variant="subtle" size="xs" mt="md" onClick={openPlaybookModal}>Select a Playbook</Button>
@@ -931,7 +931,7 @@ function MonitorShow({ monitor, heartbeats, incidents, stats, recovery_actions, 
                                     <Text size="sm" c="dimmed">Check completed at {testResult.checked_at}</Text>
                                 </div>
 
-                                <Card withBorder radius="md" p="md" bg="gray.0">
+                                <Card withBorder radius="md" p="md">
                                     <SimpleGrid cols={2}>
                                         <div>
                                             <Text size="xs" c="dimmed" fw={700} tt="uppercase">Response Time</Text>

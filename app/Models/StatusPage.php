@@ -100,8 +100,5 @@ class StatusPage extends Model
             ->orderBy('display_order');
     }
 
-    public function getRouteKeyName(): string
-    {
-        return 'slug';
-    }
+
 }

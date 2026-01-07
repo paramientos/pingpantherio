@@ -131,7 +131,7 @@ export default function ReportsAnalytics({ analytics, period, selectedMonitor, m
                                     <Grid.Col span={6}>
                                         <Paper withBorder p="md" radius="md">
                                             <Group gap="xs" mb="xs">
-                                                <IconClock size={20} color="#6366f1" />
+                                                <IconClock size={20} style={{ color: 'var(--mantine-primary-color-filled)' }} />
                                                 <Text size="xs" fw={600} c="dimmed">AVG RESPONSE TIME</Text>
                                             </Group>
                                             <Text fw={700} size="xl">{data.avg_response_time}ms</Text>
@@ -141,20 +141,20 @@ export default function ReportsAnalytics({ analytics, period, selectedMonitor, m
                                     <Grid.Col span={6}>
                                         <Paper withBorder p="md" radius="md">
                                             <Group gap="xs" mb="xs">
-                                                <IconCheck size={20} color="#10b981" />
+                                                <IconCheck size={20} style={{ color: 'var(--mantine-color-green-filled)' }} />
                                                 <Text size="xs" fw={600} c="dimmed">TOTAL CHECKS</Text>
                                             </Group>
                                             <Text fw={700} size="xl">{data.total_checks}</Text>
                                             <Text size="xs" c="dimmed">
-                                                <span style={{ color: '#10b981' }}>{data.successful_checks} passed</span> |
-                                                <span style={{ color: '#ef4444' }}> {data.failed_checks} failed</span>
+                                                <span style={{ color: 'var(--mantine-color-green-filled)' }}>{data.successful_checks} passed</span> |
+                                                <span style={{ color: 'var(--mantine-color-red-filled)' }}> {data.failed_checks} failed</span>
                                             </Text>
                                         </Paper>
                                     </Grid.Col>
                                     <Grid.Col span={6}>
                                         <Paper withBorder p="md" radius="md">
                                             <Group gap="xs" mb="xs">
-                                                <IconAlertTriangle size={20} color="#f59e0b" />
+                                                <IconAlertTriangle size={20} style={{ color: 'var(--mantine-color-orange-filled)' }} />
                                                 <Text size="xs" fw={600} c="dimmed">INCIDENTS</Text>
                                             </Group>
                                             <Text fw={700} size="xl">{data.total_incidents}</Text>
@@ -164,7 +164,7 @@ export default function ReportsAnalytics({ analytics, period, selectedMonitor, m
                                     <Grid.Col span={6}>
                                         <Paper withBorder p="md" radius="md">
                                             <Group gap="xs" mb="xs">
-                                                <IconX size={20} color="#ef4444" />
+                                                <IconX size={20} style={{ color: 'var(--mantine-color-red-filled)' }} />
                                                 <Text size="xs" fw={600} c="dimmed">DOWNTIME</Text>
                                             </Group>
                                             <Text fw={700} size="xl">{data.total_downtime_hours}h</Text>

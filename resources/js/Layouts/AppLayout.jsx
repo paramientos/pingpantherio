@@ -172,7 +172,7 @@ function AppLayout({ children }) {
                         <Group gap="sm">
                             <ActionIcon
                                 variant="gradient"
-                                gradient={{ from: 'indigo', to: 'violet', deg: 135 }}
+                                gradient={{ from: 'var(--mantine-primary-color-filled)', to: 'var(--mantine-primary-color-7)', deg: 135 }}
                                 size="lg"
                                 radius="md"
                             >
@@ -180,7 +180,7 @@ function AppLayout({ children }) {
                             </ActionIcon>
                             <div>
                                 <Text size="lg" fw={900} style={{ lineHeight: 1, letterSpacing: '-0.5px' }}>
-                                    Ping<span style={{ color: 'var(--mantine-color-indigo-6)' }}>Panther</span>
+                                    Ping<span style={{ color: 'var(--mantine-primary-color-filled)' }}>Panther</span>
                                 </Text>
                                 <Text size="xs" c="dimmed" fw={500} style={{ lineHeight: 1 }}>
                                     Uptime Monitoring
@@ -203,7 +203,7 @@ function AppLayout({ children }) {
                             <Menu shadow="md" width={220} position="bottom-end">
                                 <Menu.Target>
                                     <Group style={{ cursor: 'pointer' }} gap="sm" px="sm" py={6}>
-                                        <Avatar color="indigo" radius="xl" size="sm" variant="filled">
+                                        <Avatar color="primary" radius="xl" size="sm" variant="filled">
                                             {auth.user.name.substring(0, 2).toUpperCase()}
                                         </Avatar>
                                         <div style={{ flex: 1 }} visibleFrom="sm">
@@ -336,7 +336,7 @@ function AppLayout({ children }) {
                 </AppShell.Section>
             </AppShell.Navbar>
 
-            <AppShell.Main style={{ backgroundColor: 'var(--mantine-color-gray-0)' }}>
+            <AppShell.Main>
                 {children}
             </AppShell.Main>
 

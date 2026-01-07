@@ -4,46 +4,36 @@ import { createRoot } from 'react-dom/client';
 import { MantineProvider, createTheme } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
 
-const theme = createTheme({
-    primaryColor: 'indigo',
-    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif',
+import { themes } from './Themes/palettes';
+
+const baseTheme = {
+    primaryShade: 6,
+    fontFamily: 'Outfit, Inter, sans-serif',
     headings: {
-        fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif',
-        fontWeight: '700',
+        fontFamily: 'Outfit, Inter, sans-serif',
+        fontWeight: '900',
     },
     defaultRadius: 'md',
-    colors: {
-        indigo: [
-            '#eef2ff',
-            '#e0e7ff',
-            '#c7d2fe',
-            '#a5b4fc',
-            '#818cf8',
-            '#6366f1',
-            '#4f46e5',
-            '#4338ca',
-            '#3730a3',
-            '#312e81',
-        ],
-        dark: [
-            '#C1C2C5',
-            '#A6A7AB',
-            '#909296',
-            '#5c5f66',
-            '#373A40',
-            '#2C2E33',
-            '#25262b',
-            '#1A1B1E',
-            '#141517',
-            '#0f1114',
-        ],
-    },
     components: {
         Card: {
             defaultProps: {
                 shadow: 'sm',
                 withBorder: true,
             },
+            styles: (theme) => ({
+                root: {
+                    backgroundColor: theme.colorScheme === 'dark' ? 'rgba(255,255,255,0.01)' : 'var(--mantine-color-white)',
+                    borderColor: theme.colorScheme === 'dark' ? 'rgba(255,255,255,0.08)' : 'var(--mantine-color-gray-2)',
+                }
+            })
+        },
+        Paper: {
+            styles: (theme) => ({
+                root: {
+                    backgroundColor: theme.colorScheme === 'dark' ? 'rgba(255,255,255,0.01)' : 'var(--mantine-color-white)',
+                    borderColor: theme.colorScheme === 'dark' ? 'rgba(255,255,255,0.08)' : 'var(--mantine-color-gray-2)',
+                }
+            })
         },
         Button: {
             defaultProps: {
@@ -51,7 +41,33 @@ const theme = createTheme({
             },
         },
     },
-});
+};
+
+const ThemeWrapper = ({ children, initialPage }) => {
+    const userThemeName = initialPage.props.auth?.user?.settings?.preferences?.theme || 'panther';
+    const activeTheme = themes[userThemeName] || themes.panther;
+    const colorScheme = activeTheme.type === 'light' ? 'light' : 'dark';
+
+    const theme = createTheme({
+        ...baseTheme,
+        primaryColor: activeTheme.primaryColor || 'blue',
+        colors: {
+            ...activeTheme.colors,
+            // Ensure dark scale is always present for components that rely on it
+            dark: activeTheme.dark || [
+                '#C1C2C5', '#A6A7AB', '#909296', '#5c5f66', '#373A40',
+                '#2C2E33', '#25262b', '#1A1B1E', '#141517', '#101113'
+            ],
+        }
+    });
+
+    return (
+        <MantineProvider theme={theme} defaultColorScheme={colorScheme} forceColorScheme={colorScheme}>
+            <Notifications position="top-right" zIndex={1000} />
+            {children}
+        </MantineProvider>
+    );
+};
 
 createInertiaApp({
     resolve: (name) => {
@@ -72,10 +88,9 @@ createInertiaApp({
         document.addEventListener('keydown', handleKeyDown);
 
         root.render(
-            <MantineProvider theme={theme} forceColorScheme="light">
-                <Notifications position="top-right" zIndex={1000} />
+            <ThemeWrapper initialPage={props.initialPage}>
                 <App {...props} />
-            </MantineProvider>
+            </ThemeWrapper>
         );
     },
     progress: {

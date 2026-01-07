@@ -22,7 +22,7 @@ function StatusPageShow({ statusPage, monitors, incidents }) {
         <>
             <Head title={statusPage.name} />
 
-            <div style={{ minHeight: '100vh', backgroundColor: '#f8f9fa' }}>
+            <div style={{ minHeight: '100vh', backgroundColor: 'var(--mantine-color-body)' }}>
                 <Container size="lg" py="xl">
                     <Stack gap="xl">
                         {statusPage.logo_url && (
@@ -136,7 +136,7 @@ function StatusPageShow({ statusPage, monitors, incidents }) {
                                                 </Text>
 
                                                 {incident.updates && incident.updates.length > 0 && (
-                                                    <Stack gap="xs" mb="md" pl="md" style={{ borderLeft: '2px solid var(--mantine-color-gray-2)' }}>
+                                                    <Stack gap="xs" mb="md" pl="md" style={{ borderLeft: '2px solid var(--mantine-color-dimmed)' }}>
                                                         {incident.updates.map((update) => (
                                                             <div key={update.id}>
                                                                 <Group gap="xs">
@@ -166,7 +166,7 @@ function StatusPageShow({ statusPage, monitors, incidents }) {
                             </Stack>
                         )}
 
-                        <Paper p="md" radius="sm" bg="gray.1" ta="center">
+                        <Paper p="md" radius="sm" style={{ background: 'var(--mantine-color-dark-filled)' }} ta="center">
                             <Text size="sm" c="dimmed">
                                 Powered by <strong>PingPanther</strong>
                             </Text>

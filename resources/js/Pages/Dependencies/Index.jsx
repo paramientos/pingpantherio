@@ -69,8 +69,8 @@ export default function DependencyIndex({ monitors, allMonitors }) {
     };
 
     const getStatusIcon = (status) => {
-        if (status === 'up') return <IconCircleCheck size={16} color="var(--mantine-color-green-6)" />;
-        return <IconCircleX size={16} color="var(--mantine-color-red-6)" />;
+        if (status === 'up') return <IconCircleCheck size={16} style={{ color: 'var(--mantine-color-green-filled)' }} />;
+        return <IconCircleX size={16} style={{ color: 'var(--mantine-color-red-filled)' }} />;
     };
 
     const getImpactLevel = (dependentsCount) => {
@@ -150,7 +150,7 @@ export default function DependencyIndex({ monitors, allMonitors }) {
                                         </Text>
                                         <Stack gap={4}>
                                             {monitor.dependents.length > 0 ? monitor.dependents.map((dep) => (
-                                                <Paper key={dep.id} withBorder p="xs" radius="sm" bg="gray.0">
+                                                <Paper key={dep.id} withBorder p="xs" radius="sm">
                                                     <Group gap={6}>
                                                         {getStatusIcon(dep.status)}
                                                         <Text size="xs" fw={600} truncate>{dep.name}</Text>

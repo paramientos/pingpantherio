@@ -1,28 +1,33 @@
 import React from 'react';
 import AppLayout from '@/Layouts/AppLayout';
-import { Title, Text, Grid, Card, Group, Badge, Stack, Paper, ThemeIcon } from '@mantine/core';
+import { Title, Text, Grid, Card, Group, Badge, Stack, Paper, ThemeIcon, useMantineTheme } from '@mantine/core';
 import { IconArrowUp, IconClock, IconAlertTriangle, IconCheck } from '@tabler/icons-react';
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 function Dashboard({ stats, uptimeData, responseTimeData }) {
+    const theme = useMantineTheme();
+    const isDark = theme.colorScheme === 'dark';
+
+    console.log(stats)
+
     const statCards = [
         {
             title: 'Uptime (24h)',
-            value: `${stats?.uptime_24h || 99.9}%`,
+            value: `${stats?.uptime_24h || 0}%`,
             icon: IconArrowUp,
             color: 'teal',
             trend: '+0.1%',
         },
         {
             title: 'Avg Response',
-            value: `${stats?.avg_response || 245}ms`,
+            value: `${stats?.avg_response || 0}ms`,
             icon: IconClock,
             color: 'blue',
             trend: '-12ms',
         },
         {
             title: 'Active Monitors',
-            value: stats?.active_monitors || '12',
+            value: stats?.active_monitors || '0',
             icon: IconCheck,
             color: 'green',
             trend: '+2',
@@ -45,6 +50,12 @@ function Dashboard({ stats, uptimeData, responseTimeData }) {
         time: `${i}:00`,
         response: 200 + Math.random() * 100,
     }));
+
+    const gridColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+    const textColor = isDark ? '#5c5f66' : '#909296';
+    const tooltipBg = isDark ? '#1A1B1E' : '#FFFFFF';
+    const tooltipBorder = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+    const tooltipColor = isDark ? '#fff' : '#000';
 
     return (
         <AppLayout>
@@ -110,15 +121,17 @@ function Dashboard({ stats, uptimeData, responseTimeData }) {
                                             <stop offset="95%" stopColor="#12b886" stopOpacity={0} />
                                         </linearGradient>
                                     </defs>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#e9ecef" />
-                                    <XAxis dataKey="time" stroke="#868e96" fontSize={12} />
-                                    <YAxis stroke="#868e96" fontSize={12} domain={[90, 100]} />
+                                    <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
+                                    <XAxis dataKey="time" stroke={textColor} fontSize={12} />
+                                    <YAxis stroke={textColor} fontSize={12} domain={[90, 100]} />
                                     <Tooltip
                                         contentStyle={{
-                                            backgroundColor: '#fff',
-                                            border: '1px solid #e9ecef',
-                                            borderRadius: '8px'
+                                            backgroundColor: tooltipBg,
+                                            border: `1px solid ${tooltipBorder}`,
+                                            borderRadius: '8px',
+                                            color: tooltipColor
                                         }}
+                                        itemStyle={{ color: tooltipColor }}
                                     />
                                     <Area
                                         type="monotone"
@@ -143,15 +156,17 @@ function Dashboard({ stats, uptimeData, responseTimeData }) {
                             </Text>
                             <ResponsiveContainer width="100%" height={250}>
                                 <LineChart data={defaultResponseData}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#e9ecef" />
-                                    <XAxis dataKey="time" stroke="#868e96" fontSize={12} />
-                                    <YAxis stroke="#868e96" fontSize={12} />
+                                    <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
+                                    <XAxis dataKey="time" stroke={textColor} fontSize={12} />
+                                    <YAxis stroke={textColor} fontSize={12} />
                                     <Tooltip
                                         contentStyle={{
-                                            backgroundColor: '#fff',
-                                            border: '1px solid #e9ecef',
-                                            borderRadius: '8px'
+                                            backgroundColor: tooltipBg,
+                                            border: `1px solid ${tooltipBorder}`,
+                                            borderRadius: '8px',
+                                            color: tooltipColor
                                         }}
+                                        itemStyle={{ color: tooltipColor }}
                                     />
                                     <Line
                                         type="monotone"
@@ -177,7 +192,7 @@ function Dashboard({ stats, uptimeData, responseTimeData }) {
                             </Text>
                         </div>
                     </Group>
-                    <Paper p="md" radius="sm" bg="gray.0" mt="md">
+                    <Paper p="md" radius="sm" style={{ background: 'var(--mantine-primary-color-light)' }} mt="md">
                         <Group gap="xs">
                             <ThemeIcon color="green" variant="light" size="sm" radius="xl">
                                 <IconCheck size={14} />

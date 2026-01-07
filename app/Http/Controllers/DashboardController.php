@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\MonitorStatus;
 use App\Models\Monitor;
 use App\Models\Heartbeat;
 use App\Models\Incident;
@@ -13,13 +14,15 @@ class DashboardController extends Controller
     public function index(): Response
     {
         $monitors = Monitor::where('user_id', auth()->id())->get();
-        
+
         $stats = [
             'uptime_24h' => $this->calculateGlobalUptime(24),
-            'avg_response' => Heartbeat::whereIn('monitor_id', $monitors->pluck('id'))
+            'avg_response' => floor(Heartbeat::whereIn('monitor_id', $monitors->pluck('id'))
                 ->where('checked_at', '>=', now()->subHours(24))
-                ->avg('response_time'),
-            'active_monitors' => $monitors->where('status', 'active')->count(),
+                ->avg('response_time')),
+
+            'active_monitors' => $monitors->where('status', MonitorStatus::UP)->count(),
+
             'incidents' => Incident::whereIn('monitor_id', $monitors->pluck('id'))
                 ->whereNull('resolved_at')
                 ->count(),
@@ -38,7 +41,7 @@ class DashboardController extends Controller
     protected function calculateGlobalUptime(int $hours): float
     {
         $monitors = Monitor::where('user_id', auth()->id())->get();
-        
+
         if ($monitors->isEmpty()) {
             return 100.0;
         }
@@ -65,7 +68,7 @@ class DashboardController extends Controller
     protected function getUptimeChartData($monitors, int $hours): array
     {
         $data = [];
-        
+
         for ($i = $hours - 1; $i >= 0; $i--) {
             $hourStart = now()->subHours($i)->startOfHour();
             $hourEnd = $hourStart->copy()->endOfHour();
@@ -92,7 +95,7 @@ class DashboardController extends Controller
     protected function getResponseTimeChartData($monitors, int $hours): array
     {
         $data = [];
-        
+
         for ($i = $hours - 1; $i >= 0; $i--) {
             $hourStart = now()->subHours($i)->startOfHour();
             $hourEnd = $hourStart->copy()->endOfHour();

@@ -97,7 +97,7 @@ export default function EscalationPoliciesEdit({ policy, channels, schedules }) 
 
                             <Stack gap="sm">
                                 {data.rules.map((rule, index) => (
-                                    <Paper key={index} withBorder p="sm" bg="gray.0">
+                                    <Paper key={index} withBorder p="sm">
                                         <Group align="flex-end" gap="sm">
                                             <div style={{ flex: 1 }}>
                                                 <Select

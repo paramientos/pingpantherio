@@ -78,8 +78,6 @@ class StatusPageManagementController extends Controller
 
     public function edit(StatusPage $statusPage): Response
     {
-        $this->authorize('update', $statusPage);
-
         $monitors = Monitor::where('user_id', auth()->id())
             ->get()
             ->map(fn ($m) => [
@@ -110,8 +108,6 @@ class StatusPageManagementController extends Controller
 
     public function update(Request $request, StatusPage $statusPage)
     {
-        $this->authorize('update', $statusPage);
-
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:status_pages,slug,'.$statusPage->id,
@@ -141,8 +137,6 @@ class StatusPageManagementController extends Controller
 
     public function destroy(StatusPage $statusPage)
     {
-        $this->authorize('delete', $statusPage);
-
         $statusPage->delete();
 
         return redirect()->route('status-pages.index');
