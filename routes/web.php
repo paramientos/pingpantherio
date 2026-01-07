@@ -45,6 +45,7 @@ Route::middleware(['auth'])->group(function (): void {
     Route::resource('on-call', OnCallController::class);
     Route::get('/incidents/{incident}/post-mortem/create', [PostMortemController::class, 'create'])->name('post-mortems.create-for-incident');
     Route::resource('monitors', MonitorController::class)->except(['create', 'edit']);
+    Route::post('/monitors/{monitor}/check', [MonitorController::class, 'check'])->name('monitors.check');
     Route::post('/monitors/{monitor}/recovery-actions', [\App\Http\Controllers\RecoveryActionController::class, 'store'])->name('monitors.recovery-actions.store');
     Route::delete('/recovery-actions/{recoveryAction}', [\App\Http\Controllers\RecoveryActionController::class, 'destroy'])->name('recovery-actions.destroy');
     Route::resource('status-pages', StatusPageManagementController::class);

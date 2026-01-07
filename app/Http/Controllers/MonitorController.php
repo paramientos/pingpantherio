@@ -148,9 +148,25 @@ class MonitorController extends Controller
             'status' => MonitorStatus::PENDING,
         ]);
 
-        dispatch(new CheckSslCertificates($monitor));
+        dispatch(new \App\Jobs\CheckSslCertificates($monitor));
 
         return redirect()->back();
+    }
+
+    public function check(Monitor $monitor)
+    {
+        // Run synchronously to get immediate result
+        (new \App\Jobs\CheckMonitors($monitor))->handle();
+
+        $lastHeartbeat = $monitor->heartbeats()->latest()->first();
+
+        return response()->json([
+            'is_up' => $lastHeartbeat?->is_up,
+            'response_time' => $lastHeartbeat?->response_time,
+            'status_code' => $lastHeartbeat?->status_code,
+            'error' => $lastHeartbeat?->error,
+            'checked_at' => $lastHeartbeat?->checked_at?->format('H:i:s'),
+        ]);
     }
 
     public function update(Request $request, Monitor $monitor)

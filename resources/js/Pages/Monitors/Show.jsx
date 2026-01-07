@@ -14,9 +14,21 @@ import {
     Paper,
     ThemeIcon,
     RingProgress,
-    Timeline,
     Tabs,
+    SimpleGrid,
+    Tooltip as MantineTooltip,
+    Alert,
+    Timeline,
+    TextInput,
+    Modal,
+    Select,
+    ActionIcon,
+    Code,
+    Divider,
+    Loader,
+    Center
 } from '@mantine/core';
+import axios from 'axios';
 import {
     IconArrowLeft,
     IconCheck,
@@ -29,12 +41,15 @@ import {
     IconPlayerPlay,
     IconPlus,
     IconBook,
+    IconWorld,
+    IconShieldLock,
+    IconCpu,
+    IconTerminal2,
 } from '@tabler/icons-react';
 import { useForm } from '@mantine/form';
 import { useDisclosure } from '@mantine/hooks';
 import { router } from '@inertiajs/react';
 import { notifications } from '@mantine/notifications';
-import { TextInput, Modal, Select, ActionIcon, Code, Divider } from '@mantine/core';
 import {
     AreaChart,
     Area,
@@ -48,6 +63,44 @@ import {
 function MonitorShow({ monitor, heartbeats, incidents, stats, recovery_actions, playbooks }) {
     const [opened, { open, close }] = useDisclosure(false);
     const [playbookModalOpened, { open: openPlaybookModal, close: closePlaybookModal }] = useDisclosure(false);
+    const [testModalOpened, { open: openTestModal, close: closeTestModal }] = useDisclosure(false);
+    const [testing, setTesting] = React.useState(false);
+    const [testResult, setTestResult] = React.useState(null);
+
+    const handleTestNow = async () => {
+        setTesting(true);
+        setTestResult(null);
+        openTestModal();
+
+        // Add a bit of "dramatic effect" fake delay so the spinner is actually seen
+        const minDelay = new Promise(resolve => setTimeout(resolve, 1500));
+
+        try {
+            const [response] = await Promise.all([
+                axios.post(route('monitors.check', monitor.id), {}, {
+                    timeout: 10000 // 10 second timeout
+                }),
+                minDelay
+            ]);
+
+            setTestResult(response.data);
+            // Refresh the page data to show new heartbeat in charts/list
+            router.reload({ only: ['heartbeats', 'stats', 'monitor'] });
+        } catch (error) {
+            let msg = 'Could not reach the server';
+            if (error.code === 'ECONNABORTED') msg = 'Test timed out after 10 seconds';
+            else if (error.response?.data?.message) msg = error.response.data.message;
+
+            notifications.show({
+                title: 'Test Failed',
+                message: msg,
+                color: 'red'
+            });
+            closeTestModal();
+        } finally {
+            setTesting(false);
+        }
+    };
 
     const form = useForm({
         initialValues: {
@@ -105,115 +158,165 @@ function MonitorShow({ monitor, heartbeats, incidents, stats, recovery_actions, 
     return (
         <AppLayout>
             <Stack gap="xl">
-                <Group justify="space-between">
+                <Group justify="space-between" align="flex-start">
                     <div>
                         <Group gap="sm" mb="xs">
                             <Button
                                 component={Link}
                                 href="/monitors"
                                 variant="subtle"
+                                color="gray"
                                 leftSection={<IconArrowLeft size={16} />}
-                                size="sm"
+                                size="xs"
+                                radius="xl"
                             >
-                                Back
+                                Back to Monitors
                             </Button>
-                            <Badge color={getStatusColor(monitor.status)} variant="light">
+                            <Badge
+                                color={getStatusColor(monitor.status)}
+                                variant="filled"
+                                size="lg"
+                                leftSection={monitor.status === 'up' ? <IconCheck size={14} /> : <IconAlertTriangle size={14} />}
+                            >
                                 {monitor.status.toUpperCase()}
                             </Badge>
                         </Group>
-                        <Title order={2} fw={900} style={{ letterSpacing: '-0.5px' }}>
-                            {monitor.name}
-                        </Title>
-                        <Text c="dimmed" size="sm" mt={4}>
-                            {monitor.url}
-                        </Text>
+                        <Group gap="md">
+                            <Title order={1} fw={900} style={{ letterSpacing: '-1px', fontSize: '2.5rem' }}>
+                                {monitor.name}
+                            </Title>
+                        </Group>
+                        <Group gap="xs" mt={4}>
+                            <IconWorld size={16} color="var(--mantine-color-dimmed)" />
+                            <Text c="dimmed" size="sm" component="a" href={monitor.url} target="_blank" style={{ textDecoration: 'none' }}>
+                                {monitor.url}
+                            </Text>
+                        </Group>
                     </div>
+                    <Group>
+                        <Button variant="light" color="blue" leftSection={<IconBook size={18} />} onClick={openPlaybookModal}>
+                            Playbook
+                        </Button>
+                        <Button
+                            variant="filled"
+                            color="blue"
+                            leftSection={<IconBolt size={18} />}
+                            onClick={handleTestNow}
+                            loading={testing}
+                        >
+                            Test Now
+                        </Button>
+                    </Group>
                 </Group>
 
-                <Grid>
-                    <Grid.Col span={{ base: 12, xs: 6, md: 3 }}>
-                        <Card padding="lg" radius="md">
-                            <Group justify="center" mb="md">
-                                <RingProgress
-                                    size={100}
-                                    thickness={10}
-                                    roundCaps
-                                    sections={[
-                                        { value: stats.uptime_24h, color: 'teal' },
-                                        { value: 100 - stats.uptime_24h, color: 'gray.2' },
-                                    ]}
-                                    label={
-                                        <div style={{ textAlign: 'center' }}>
-                                            <Text size="lg" fw={900} style={{ lineHeight: 1 }}>
-                                                {stats.uptime_24h}%
-                                            </Text>
-                                        </div>
-                                    }
-                                />
-                            </Group>
-                            <Text size="xs" c="dimmed" ta="center" fw={600} tt="uppercase">
-                                24h Uptime
-                            </Text>
-                        </Card>
-                    </Grid.Col>
+                <SimpleGrid cols={{ base: 1, sm: 2, md: 4 }} spacing="lg">
+                    <Card padding="xl" radius="lg" withBorder style={{ overflow: 'visible' }}>
+                        <div style={{ position: 'absolute', top: -10, right: 20 }}>
+                            <RingProgress
+                                size={80}
+                                thickness={8}
+                                roundCaps
+                                sections={[
+                                    { value: stats.uptime_24h, color: 'teal' },
+                                    { value: 100 - stats.uptime_24h, color: 'gray.1' },
+                                ]}
+                                label={
+                                    <Text ta="center" fw={700} size="xs">
+                                        {stats.uptime_24h}%
+                                    </Text>
+                                }
+                            />
+                        </div>
+                        <Text size="xs" c="dimmed" fw={700} tt="uppercase" mb={4}>Uptime (24h)</Text>
+                        <Text size="h2" fw={900} style={{ lineHeight: 1 }}>{stats.uptime_24h}%</Text>
+                        <Text size="xs" c="green" fw={600} mt={8}>Steady as a rock</Text>
+                    </Card>
 
-                    <Grid.Col span={{ base: 12, xs: 6, md: 3 }}>
-                        <Card padding="lg" radius="md">
-                            <Group justify="space-between" mb="md">
-                                <ThemeIcon size="xl" radius="md" variant="light" color="blue">
-                                    <IconClock size={24} stroke={1.5} />
-                                </ThemeIcon>
-                            </Group>
-                            <Text size="xs" c="dimmed" fw={600} tt="uppercase" mb={4}>
-                                Avg Response
-                            </Text>
-                            <Text size="xl" fw={900} style={{ lineHeight: 1 }}>
-                                {Math.round(stats.avg_response_time || 0)}ms
-                            </Text>
-                        </Card>
-                    </Grid.Col>
+                    <Card padding="xl" radius="lg" withBorder>
+                        <ThemeIcon color="blue" variant="light" size="xl" radius="md" mb="md">
+                            <IconClock size={24} />
+                        </ThemeIcon>
+                        <Text size="xs" c="dimmed" fw={700} tt="uppercase" mb={4}>Avg Response</Text>
+                        <Text size="h2" fw={900} style={{ lineHeight: 1 }}>{Math.round(stats.avg_response_time || 0)}<span style={{ fontSize: '1rem', fontWeight: 500, marginLeft: 2 }}>ms</span></Text>
+                        <Text size="xs" c="dimmed" fw={500} mt={8}>Last 100 checks</Text>
+                    </Card>
 
-                    <Grid.Col span={{ base: 12, xs: 6, md: 3 }}>
-                        <Card padding="lg" radius="md">
-                            <Group justify="space-between" mb="md">
-                                <ThemeIcon size="xl" radius="md" variant="light" color="orange">
-                                    <IconAlertTriangle size={24} stroke={1.5} />
-                                </ThemeIcon>
-                            </Group>
-                            <Text size="xs" c="dimmed" fw={600} tt="uppercase" mb={4}>
-                                Total Incidents
-                            </Text>
-                            <Text size="xl" fw={900} style={{ lineHeight: 1 }}>
-                                {stats.total_incidents}
-                            </Text>
-                        </Card>
-                    </Grid.Col>
+                    <Card padding="xl" radius="lg" withBorder>
+                        <ThemeIcon color="orange" variant="light" size="xl" radius="md" mb="md">
+                            <IconAlertTriangle size={24} />
+                        </ThemeIcon>
+                        <Text size="xs" c="dimmed" fw={700} tt="uppercase" mb={4}>Total Incidents</Text>
+                        <Text size="h2" fw={900} style={{ lineHeight: 1 }}>{stats.total_incidents}</Text>
+                        <Text size="xs" c="dimmed" fw={500} mt={8}>Lifetime</Text>
+                    </Card>
 
-                    <Grid.Col span={{ base: 12, xs: 6, md: 3 }}>
-                        <Card padding="lg" radius="md">
-                            <Group justify="space-between" mb="md">
-                                <ThemeIcon size="xl" radius="md" variant="light" color="red">
-                                    <IconActivity size={24} stroke={1.5} />
-                                </ThemeIcon>
-                            </Group>
-                            <Text size="xs" c="dimmed" fw={600} tt="uppercase" mb={4}>
-                                Active Incidents
-                            </Text>
-                            <Text size="xl" fw={900} style={{ lineHeight: 1 }}>
-                                {stats.active_incidents}
-                            </Text>
-                        </Card>
-                    </Grid.Col>
-                </Grid>
+                    <Card padding="xl" radius="lg" withBorder>
+                        <ThemeIcon color={stats.active_incidents > 0 ? "red" : "green"} variant="light" size="xl" radius="md" mb="md">
+                            {stats.active_incidents > 0 ? <IconX size={24} /> : <IconCheck size={24} />}
+                        </ThemeIcon>
+                        <Text size="xs" c="dimmed" fw={700} tt="uppercase" mb={4}>Active Incidents</Text>
+                        <Text size="h2" fw={900} style={{ lineHeight: 1 }}>{stats.active_incidents}</Text>
+                        <Text size="xs" c={stats.active_incidents > 0 ? "red" : "green"} fw={600} mt={8}>
+                            {stats.active_incidents > 0 ? "Under investigation" : "All systems normal"}
+                        </Text>
+                    </Card>
+                </SimpleGrid>
 
-                <Card padding="lg" radius="md" withBorder>
-                    <Title order={4} fw={700} mb="xl">Response Time (Last 100 Checks)</Title>
-                    <div style={{ height: 300, width: '100%' }}>
+                <Card padding="xl" radius="lg" withBorder shadow="sm">
+                    <Group justify="space-between" mb="xl">
+                        <div>
+                            <Title order={4} fw={800}>Check History</Title>
+                            <Text size="sm" c="dimmed">Visual representation of the last 100 heartbeats</Text>
+                        </div>
+                        <Group gap={4}>
+                            <Text size="xs" c="dimmed">SLOW</Text>
+                            {[...Array(5)].map((_, i) => (
+                                <div key={i} style={{ width: 12, height: 12, borderRadius: 2, background: `rgba(34, 139, 230, ${0.2 + (i * 0.2)})` }} />
+                            ))}
+                            <Text size="xs" c="dimmed" ml={4}>FAST</Text>
+                        </Group>
+                    </Group>
+
+                    <Group gap={6} justify="center">
+                        {heartbeats.slice(0, 50).map((h, i) => {
+                            const speed = h.response_time;
+                            let color = 'var(--mantine-color-blue-filled)';
+                            if (!h.is_up) color = 'var(--mantine-color-red-filled)';
+                            else if (speed > 1000) color = 'var(--mantine-color-blue-3)';
+                            else if (speed > 500) color = 'var(--mantine-color-blue-5)';
+                            else if (speed > 200) color = 'var(--mantine-color-blue-7)';
+
+                            return (
+                                <MantineTooltip
+                                    key={h.id}
+                                    label={`${h.is_up ? 'Up' : 'Down'} - ${Math.round(speed)}ms at ${h.checked_at}`}
+                                    withArrow
+                                >
+                                    <div
+                                        style={{
+                                            width: 14,
+                                            height: 32,
+                                            borderRadius: 4,
+                                            background: color,
+                                            transition: 'transform 0.2s ease',
+                                            cursor: 'pointer'
+                                        }}
+                                        onMouseEnter={(e) => e.currentTarget.style.transform = 'scaleY(1.2)'}
+                                        onMouseLeave={(e) => e.currentTarget.style.transform = 'scaleY(1)'}
+                                    />
+                                </MantineTooltip>
+                            );
+                        })}
+                    </Group>
+
+                    <Divider my="xl" label="Performance Analysis" labelPosition="center" />
+
+                    <div style={{ height: 350, width: '100%', marginTop: 20 }}>
                         <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={chartData}>
                                 <defs>
                                     <linearGradient id="colorRes" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#228be6" stopOpacity={0.1} />
+                                        <stop offset="5%" stopColor="#228be6" stopOpacity={0.2} />
                                         <stop offset="95%" stopColor="#228be6" stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
@@ -230,15 +333,26 @@ function MonitorShow({ monitor, heartbeats, incidents, stats, recovery_actions, 
                                     tick={{ fill: '#adb5bd' }}
                                 />
                                 <Tooltip
-                                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                                    itemStyle={{ color: '#228be6', fontWeight: 600 }}
+                                    content={({ active, payload }) => {
+                                        if (active && payload && payload.length) {
+                                            return (
+                                                <Paper shadow="xl" p="md" withBorder radius="md">
+                                                    <Text size="xs" c="dimmed" fw={700} tt="uppercase">{payload[0].payload.time}</Text>
+                                                    <Text size="lg" fw={900} c="blue">{payload[0].value}ms</Text>
+                                                    <Badge size="xs" color={payload[0].payload.status === 'UP' ? 'green' : 'red'}>
+                                                        {payload[0].payload.status}
+                                                    </Badge>
+                                                </Paper>
+                                            );
+                                        }
+                                        return null;
+                                    }}
                                 />
                                 <Area
                                     type="monotone"
                                     dataKey="responseTime"
-                                    name="Response Time"
                                     stroke="#228be6"
-                                    strokeWidth={2}
+                                    strokeWidth={3}
                                     fillOpacity={1}
                                     fill="url(#colorRes)"
                                     animationDuration={1500}
@@ -248,108 +362,101 @@ function MonitorShow({ monitor, heartbeats, incidents, stats, recovery_actions, 
                     </div>
                 </Card>
 
-                {monitor.check_ssl && monitor.ssl_expires_at && (
-                    <Card padding="lg" radius="md" withBorder>
-                        <Group justify="space-between">
-                            <div>
-                                <Group gap="sm" mb="xs">
-                                    <ThemeIcon
-                                        size="lg"
-                                        radius="md"
-                                        variant="light"
-                                        color={monitor.ssl_days_until_expiry <= 7 ? 'red' : monitor.ssl_days_until_expiry <= 30 ? 'orange' : 'green'}
-                                    >
-                                        🔒
+                <Grid>
+                    <Grid.Col span={{ base: 12, md: 8 }}>
+                        {monitor.metadata && (
+                            <Card padding="xl" radius="lg" withBorder>
+                                <Group mb="xl">
+                                    <ThemeIcon variant="light" color="gray" size="lg" radius="md">
+                                        <IconCpu size={20} />
                                     </ThemeIcon>
-                                    <div>
-                                        <Text fw={700} size="lg">
-                                            SSL Certificate
-                                        </Text>
-                                        <Text size="sm" c="dimmed">
-                                            {monitor.ssl_issuer}
-                                        </Text>
-                                    </div>
+                                    <Title order={4} fw={800}>Infrastructure Details</Title>
                                 </Group>
-                            </div>
-                            <div style={{ textAlign: 'right' }}>
-                                <Badge
-                                    size="lg"
-                                    variant="light"
-                                    color={monitor.ssl_days_until_expiry <= 7 ? 'red' : monitor.ssl_days_until_expiry <= 30 ? 'orange' : 'green'}
-                                >
-                                    {monitor.ssl_days_until_expiry} days left
-                                </Badge>
-                                <Text size="xs" c="dimmed" mt={4}>
-                                    Expires: {monitor.ssl_expires_at}
-                                </Text>
-                            </div>
-                        </Group>
-                    </Card>
-                )}
 
-                {monitor.metadata && (
-                    <Card padding="lg" radius="md" withBorder>
-                        <Title order={4} fw={700} mb="md">
-                            Site Information
-                        </Title>
-                        <Grid>
-                            <Grid.Col span={{ base: 12, md: 6 }}>
-                                <Stack gap="sm">
+                                <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="xl">
+                                    <Stack gap="md">
+                                        <div>
+                                            <Text size="xs" c="dimmed" fw={700} tt="uppercase" mb={4}>Server Environment</Text>
+                                            <Badge variant="light" color="gray" size="lg" radius="sm">{monitor.metadata.server || 'Unknown'}</Badge>
+                                        </div>
+                                        <div>
+                                            <Text size="xs" c="dimmed" fw={700} tt="uppercase" mb={4}>IP Address</Text>
+                                            <Text size="sm" fw={700} ff="monospace">{monitor.metadata.ip_address || 'Unknown'}</Text>
+                                        </div>
+                                        <div>
+                                            <Text size="xs" c="dimmed" fw={700} tt="uppercase" mb={4}>Protocol & Type</Text>
+                                            <Text size="sm" fw={700}>{monitor.metadata.content_type || 'Unknown'}</Text>
+                                        </div>
+                                    </Stack>
+
+                                    <Stack gap="md">
+                                        <div>
+                                            <Text size="xs" c="dimmed" fw={700} tt="uppercase" mb={4}>Response Size</Text>
+                                            <Text size="sm" fw={700}>{monitor.metadata.content_length ? `${(monitor.metadata.content_length / 1024).toFixed(2)} KB` : 'Dynamic'}</Text>
+                                        </div>
+                                        <div>
+                                            <Group gap="xs" mb={4}>
+                                                <IconTerminal2 size={14} color="var(--mantine-color-dimmed)" />
+                                                <Text size="xs" c="dimmed" fw={700} tt="uppercase">Raw Headers</Text>
+                                            </Group>
+                                            <Paper p="md" bg="gray.0" radius="md" withBorder style={{ maxHeight: 200, overflow: 'auto' }}>
+                                                <Text size="xs" ff="monospace" style={{ whiteSpace: 'pre-wrap', lineHeight: '1.5' }}>
+                                                    {monitor.metadata.response_headers ?
+                                                        Object.entries(monitor.metadata.response_headers)
+                                                            .map(([key, value]) => `${key.toUpperCase()}: ${value}`)
+                                                            .join('\n')
+                                                        : 'No header data available'}
+                                                </Text>
+                                            </Paper>
+                                        </div>
+                                    </Stack>
+                                </SimpleGrid>
+                            </Card>
+                        )}
+                    </Grid.Col>
+
+                    <Grid.Col span={{ base: 12, md: 4 }}>
+                        {monitor.check_ssl && monitor.ssl_expires_at && (
+                            <Card padding="xl" radius="lg" withBorder bg={monitor.ssl_days_until_expiry <= 30 ? 'red.0' : 'blue.0'}>
+                                <Stack gap="lg">
+                                    <Group justify="space-between">
+                                        <ThemeIcon
+                                            size="xl"
+                                            radius="md"
+                                            variant="filled"
+                                            color={monitor.ssl_days_until_expiry <= 7 ? 'red' : monitor.ssl_days_until_expiry <= 30 ? 'orange' : 'blue'}
+                                        >
+                                            <IconShieldLock size={24} />
+                                        </ThemeIcon>
+                                        <Badge size="lg" radius="sm" variant="filled" color={monitor.ssl_days_until_expiry <= 30 ? 'red' : 'blue'}>
+                                            SECURE
+                                        </Badge>
+                                    </Group>
+
                                     <div>
-                                        <Text size="xs" c="dimmed" fw={600} tt="uppercase">
-                                            Server
-                                        </Text>
-                                        <Text size="sm" fw={500}>
-                                            {monitor.metadata.server || 'Unknown'}
-                                        </Text>
+                                        <Text fw={900} size="xl" mb={4}>SSL Certificate</Text>
+                                        <Text size="sm" c="dimmed" fw={500}>{monitor.ssl_issuer}</Text>
                                     </div>
-                                    <div>
-                                        <Text size="xs" c="dimmed" fw={600} tt="uppercase">
-                                            IP Address
-                                        </Text>
-                                        <Text size="sm" fw={500} ff="monospace">
-                                            {monitor.metadata.ip_address || 'Unknown'}
-                                        </Text>
-                                    </div>
-                                    <div>
-                                        <Text size="xs" c="dimmed" fw={600} tt="uppercase">
-                                            Content Type
-                                        </Text>
-                                        <Text size="sm" fw={500}>
-                                            {monitor.metadata.content_type || 'Unknown'}
-                                        </Text>
-                                    </div>
-                                </Stack>
-                            </Grid.Col>
-                            <Grid.Col span={{ base: 12, md: 6 }}>
-                                <Stack gap="sm">
-                                    <div>
-                                        <Text size="xs" c="dimmed" fw={600} tt="uppercase">
-                                            Content Length
-                                        </Text>
-                                        <Text size="sm" fw={500}>
-                                            {monitor.metadata.content_length ? `${(monitor.metadata.content_length / 1024).toFixed(2)} KB` : 'Unknown'}
-                                        </Text>
-                                    </div>
-                                    <div>
-                                        <Text size="xs" c="dimmed" fw={600} tt="uppercase">
-                                            Response Headers
-                                        </Text>
-                                        <Paper p="xs" bg="gray.0" radius="sm" style={{ maxHeight: 150, overflow: 'auto' }}>
-                                            <Text size="xs" ff="monospace" style={{ whiteSpace: 'pre-wrap' }}>
-                                                {monitor.metadata.response_headers ?
-                                                    Object.entries(monitor.metadata.response_headers)
-                                                        .map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(', ') : value}`)
-                                                        .join('\n')
-                                                    : 'No headers'}
+
+                                    <Divider />
+
+                                    <Group justify="space-between">
+                                        <div>
+                                            <Text size="xs" c="dimmed" fw={700} tt="uppercase">Expires In</Text>
+                                            <Text fw={900} size="h3" c={monitor.ssl_days_until_expiry <= 30 ? 'red' : 'blue'}>
+                                                {monitor.ssl_days_until_expiry} Days
                                             </Text>
-                                        </Paper>
-                                    </div>
+                                        </div>
+                                        <div style={{ textAlign: 'right' }}>
+                                            <Text size="xs" c="dimmed" fw={700} tt="uppercase">Valid Until</Text>
+                                            <Text fw={700} size="sm">{new Date(monitor.ssl_expires_at).toLocaleDateString()}</Text>
+                                        </div>
+                                    </Group>
                                 </Stack>
-                            </Grid.Col>
-                        </Grid>
-                    </Card>
-                )}
+                            </Card>
+                        )}
+                    </Grid.Col>
+                </Grid>
 
                 <Tabs defaultValue="heartbeats">
                     <Tabs.List>
@@ -606,6 +713,67 @@ function MonitorShow({ monitor, heartbeats, incidents, stats, recovery_actions, 
                             <Button type="submit" fullWidth mt="md">Save Action</Button>
                         </Stack>
                     </form>
+                </Modal>
+
+                <Modal
+                    opened={testModalOpened}
+                    onClose={testing ? () => { } : closeTestModal}
+                    title="Manual Monitor Test"
+                    centered
+                    size="md"
+                    radius="lg"
+                    withCloseButton={!testing}
+                >
+                    <div style={{ padding: '1rem 0' }}>
+                        {testing ? (
+                            <Stack align="center" gap="xl" py="xl">
+                                <Loader size="xl" variant="bars" />
+                                <div style={{ textAlign: 'center' }}>
+                                    <Text fw={700} size="lg">Testing {monitor.name}...</Text>
+                                    <Text size="sm" c="dimmed">This might take up to 10 seconds</Text>
+                                </div>
+                            </Stack>
+                        ) : testResult && (
+                            <Stack gap="md">
+                                <Center>
+                                    <ThemeIcon size={60} radius={60} color={testResult.is_up ? 'green' : 'red'} variant="light">
+                                        {testResult.is_up ? <IconCheck size={40} /> : <IconX size={40} />}
+                                    </ThemeIcon>
+                                </Center>
+
+                                <div style={{ textAlign: 'center' }}>
+                                    <Title order={3} c={testResult.is_up ? 'green' : 'red'}>
+                                        {testResult.is_up ? 'System is Online' : 'System is Offline'}
+                                    </Title>
+                                    <Text size="sm" c="dimmed">Check completed at {testResult.checked_at}</Text>
+                                </div>
+
+                                <Card withBorder radius="md" p="md" bg="gray.0">
+                                    <SimpleGrid cols={2}>
+                                        <div>
+                                            <Text size="xs" c="dimmed" fw={700} tt="uppercase">Response Time</Text>
+                                            <Text fw={700}>{Math.round(testResult.response_time)}ms</Text>
+                                        </div>
+                                        <div>
+                                            <Text size="xs" c="dimmed" fw={700} tt="uppercase">Status Code</Text>
+                                            <Text fw={700}>{testResult.status_code || 'N/A'}</Text>
+                                        </div>
+                                    </SimpleGrid>
+                                    {!testResult.is_up && (
+                                        <div style={{ marginTop: 12 }}>
+                                            <Divider my="xs" />
+                                            <Text size="xs" c="dimmed" fw={700} tt="uppercase">Error Detail</Text>
+                                            <Text size="sm" c="red" fw={500}>{testResult.error || 'Unknown connection error'}</Text>
+                                        </div>
+                                    )}
+                                </Card>
+
+                                <Button fullWidth variant="light" onClick={closeTestModal} mt="md">
+                                    Close Results
+                                </Button>
+                            </Stack>
+                        )}
+                    </div>
                 </Modal>
             </Stack>
         </AppLayout>

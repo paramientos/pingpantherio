@@ -25,8 +25,18 @@ class CheckMonitors implements ShouldQueue
     use SendsAlerts;
     use SerializesModels;
 
+    public function __construct(
+        protected ?Monitor $monitor = null
+    ) {}
+
     public function handle(): void
     {
+        if ($this->monitor) {
+            $this->checkMonitor($this->monitor);
+
+            return;
+        }
+
         $monitors = Monitor::whereIn('status', [
             MonitorStatus::UP,
             MonitorStatus::PENDING,
