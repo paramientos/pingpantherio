@@ -4,6 +4,7 @@ use App\Http\Controllers\AlertChannelController;
 use App\Http\Controllers\AlertRuleController;
 use App\Http\Controllers\ApiKeyController;
 use App\Http\Controllers\AuditLogController;
+use App\Http\Controllers\EscalationPolicyController;
 use App\Http\Controllers\CustomDashboardController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DomainMonitorController;
@@ -13,6 +14,7 @@ use App\Http\Controllers\MonitorController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PushMonitorController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\SslController;
 use App\Http\Controllers\StatusPageController;
 use App\Http\Controllers\StatusPageManagementController;
 use App\Http\Controllers\TeamController;
@@ -27,6 +29,8 @@ Route::middleware(['auth'])->group(function (): void {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/ssl', [SslController::class, 'index'])->name('ssl.index');
+    Route::resource('escalation-policies', EscalationPolicyController::class);
     Route::resource('monitors', MonitorController::class)->except(['create', 'edit']);
     Route::post('/monitors/{monitor}/recovery-actions', [\App\Http\Controllers\RecoveryActionController::class, 'store'])->name('monitors.recovery-actions.store');
     Route::delete('/recovery-actions/{recoveryAction}', [\App\Http\Controllers\RecoveryActionController::class, 'destroy'])->name('recovery-actions.destroy');

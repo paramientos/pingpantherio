@@ -34,6 +34,10 @@ class MonitorController extends Controller
 
         return Inertia::render('Monitors/Index', [
             'monitors' => $monitors,
+            'escalationPolicies' => \App\Models\EscalationPolicy::where('user_id', auth()->id())->get()->map(fn ($p) => [
+                'value' => $p->id,
+                'label' => $p->name,
+            ]),
         ]);
     }
 
@@ -98,6 +102,10 @@ class MonitorController extends Controller
                 'delay_seconds' => $ra->delay_seconds,
                 'is_active' => $ra->is_active,
             ]),
+            'escalationPolicies' => \App\Models\EscalationPolicy::where('user_id', auth()->id())->get()->map(fn ($p) => [
+                'value' => $p->id,
+                'label' => $p->name,
+            ]),
         ]);
     }
 
@@ -118,6 +126,7 @@ class MonitorController extends Controller
             'check_ssl' => 'nullable|boolean',
             'tags' => 'nullable|array',
             'group' => 'nullable|string|max:255',
+            'escalation_policy_id' => 'nullable|exists:escalation_policies,id',
         ]);
 
         if (isset($validated['headers']) && ! empty($validated['headers'])) {
@@ -153,6 +162,7 @@ class MonitorController extends Controller
             'check_ssl' => 'nullable|boolean',
             'tags' => 'nullable|array',
             'group' => 'nullable|string|max:255',
+            'escalation_policy_id' => 'nullable|exists:escalation_policies,id',
         ]);
 
         if (isset($validated['headers']) && ! empty($validated['headers'])) {

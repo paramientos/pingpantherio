@@ -21,7 +21,11 @@ import {
     IconWebhook,
     IconSun,
     IconMoon,
+    IconSearch,
+    IconShieldCheck,
 } from '@tabler/icons-react';
+import { Spotlight, spotlight } from '@mantine/spotlight';
+import '@mantine/spotlight/styles.css';
 
 function AppLayout({ children }) {
     const { colorScheme, toggleColorScheme } = useMantineColorScheme();
@@ -35,9 +39,11 @@ function AppLayout({ children }) {
         { label: 'Monitors', icon: IconDeviceDesktop, href: '/monitors' },
         { label: 'Incidents', icon: IconAlertTriangle, href: '/incidents' },
         { label: 'Status Pages', icon: IconBroadcast, href: '/status-pages' },
+        { label: 'SSL Certificates', icon: IconShieldCheck, href: '/ssl' },
         { label: 'Domains', icon: IconWorld, href: '/domains' },
         { label: 'Reports', icon: IconFileAnalytics, href: '/reports' },
         { label: 'Alert Rules', icon: IconSettingsAutomation, href: '/alert-rules' },
+        { label: 'Escalation Policies', icon: IconSettingsAutomation, href: '/escalation-policies' },
         { label: 'Alert Channels', icon: IconBolt, href: '/alert-channels' },
         { label: 'Maintenance', icon: IconClock, href: '/maintenance-windows' },
     ];
@@ -48,6 +54,72 @@ function AppLayout({ children }) {
         { label: 'Team', icon: IconUsers, href: '/settings/teams' },
         { label: 'API Keys', icon: IconKey, href: '/settings/api-keys' },
         { label: 'Audit Logs', icon: IconHistory, href: '/settings/audit-logs' },
+    ];
+
+    const spotlightActions = [
+        {
+            id: 'home',
+            label: 'Home',
+            description: 'Go to overview',
+            onClick: () => router.visit('/'),
+            leftSection: <IconChartPie size={18} />,
+        },
+        {
+            id: 'monitors',
+            label: 'Monitors',
+            description: 'List all uptime monitors',
+            onClick: () => router.visit('/monitors'),
+            leftSection: <IconDeviceDesktop size={18} />,
+        },
+        {
+            id: 'incidents',
+            label: 'Incidents',
+            description: 'View incident reports',
+            onClick: () => router.visit('/incidents'),
+            leftSection: <IconAlertTriangle size={18} />,
+        },
+        {
+            id: 'status-pages',
+            label: 'Status Pages',
+            description: 'Manage public status pages',
+            onClick: () => router.visit('/status-pages'),
+            leftSection: <IconBroadcast size={18} />,
+        },
+        {
+            id: 'ssl',
+            label: 'SSL Certificates',
+            description: 'Monitor certificate expirations',
+            onClick: () => router.visit('/ssl'),
+            leftSection: <IconShieldCheck size={18} />,
+        },
+        {
+            id: 'escalation-policies',
+            label: 'Escalation Policies',
+            description: 'Define alert chains',
+            onClick: () => router.visit('/escalation-policies'),
+            leftSection: <IconSettingsAutomation size={18} />,
+        },
+        {
+            id: 'settings',
+            label: 'Settings',
+            description: 'Update your preferences',
+            onClick: () => router.visit('/settings/notifications'),
+            leftSection: <IconSettings size={18} />,
+        },
+        {
+            id: 'team',
+            label: 'Team',
+            description: 'Manage members',
+            onClick: () => router.visit('/settings/teams'),
+            leftSection: <IconUsers size={18} />,
+        },
+        {
+            id: 'security',
+            label: 'Security',
+            description: 'Session management',
+            onClick: () => router.visit('/settings/security'),
+            leftSection: <IconShieldCheck size={18} />,
+        },
     ];
 
     return (
@@ -85,6 +157,16 @@ function AppLayout({ children }) {
                     </Group>
 
                     <Group gap="sm">
+                        <ActionIcon
+                            onClick={() => spotlight.open()}
+                            variant="default"
+                            size="lg"
+                            aria-label="Search"
+                            title="Search (Cmd + K)"
+                        >
+                            <IconSearch size={20} stroke={1.5} />
+                        </ActionIcon>
+
                         <ActionIcon
                             onClick={() => toggleColorScheme()}
                             variant="default"
@@ -189,6 +271,16 @@ function AppLayout({ children }) {
             <AppShell.Main style={{ backgroundColor: 'var(--mantine-color-gray-0)' }}>
                 {children}
             </AppShell.Main>
+
+            <Spotlight
+                actions={spotlightActions}
+                nothingFound="Nothing found..."
+                highlightQuery
+                searchProps={{
+                    leftSection: <IconSearch size={20} stroke={1.5} />,
+                    placeholder: 'Search monitors, pages, settings...',
+                }}
+            />
         </AppShell>
     );
 }

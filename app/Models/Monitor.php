@@ -98,6 +98,7 @@ class Monitor extends Model
         'tags',
         'group',
         'uuid',
+        'escalation_policy_id',
     ];
 
     protected $casts = [
@@ -138,5 +139,10 @@ class Monitor extends Model
     public function recoveryActions(): HasMany
     {
         return $this->hasMany(RecoveryAction::class);
+    }
+
+    public function escalationPolicy(): BelongsTo
+    {
+        return $this->belongsTo(EscalationPolicy::class);
     }
 }

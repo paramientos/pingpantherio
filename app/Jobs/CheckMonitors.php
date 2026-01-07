@@ -12,6 +12,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Http;
+use App\Traits\SendsAlerts;
 
 class CheckMonitors implements ShouldQueue
 {
@@ -19,6 +20,7 @@ class CheckMonitors implements ShouldQueue
     use InteractsWithQueue;
     use Queueable;
     use SerializesModels;
+    use SendsAlerts;
 
     public function handle(): void
     {
@@ -223,7 +225,11 @@ class CheckMonitors implements ShouldQueue
                 'error_message' => $errorMessage,
             ]);
 
-            $monitor->user->notify(new IncidentAlert($monitor, $incident, 'started'));
+            if ($monitor->escalation_policy_id) {
+                dispatch(new \App\Jobs\ProcessEscalationStep($incident, 0));
+            } else {
+                $monitor->user->notify(new IncidentAlert($monitor, $incident, 'started'));
+            }
 
             // Webhook Tetikle
             $this->triggerWebhooks($monitor->user, 'incident.started', [
@@ -273,7 +279,16 @@ class CheckMonitors implements ShouldQueue
                 'resolved_at' => now(),
             ]);
 
-            $monitor->user->notify(new IncidentAlert($monitor, $incident, 'resolved'));
+            if ($monitor->escalation_policy_id && $monitor->escalationPolicy) {
+                $channels = $monitor->escalationPolicy->rules->map(fn($r) => $r->channel)->unique('id');
+                foreach ($channels as $channel) {
+                    if ($channel && $channel->is_active) {
+                        $this->notifyChannelResolved($channel, $monitor, $incident);
+                    }
+                }
+            } else {
+                $monitor->user->notify(new IncidentAlert($monitor, $incident, 'resolved'));
+            }
 
             // Webhook Tetikle
             $this->triggerWebhooks($monitor->user, 'incident.resolved', [
@@ -281,5 +296,10 @@ class CheckMonitors implements ShouldQueue
                 'incident' => $incident->only(['id', 'started_at', 'resolved_at']),
             ]);
         }
+    }
+
+    protected function notifyChannelResolved($channel, $monitor, $incident): void
+    {
+        $this->sendAlertToChannel($channel, $monitor, $incident, 'resolved');
     }
 }

@@ -326,10 +326,22 @@
     "@mantine/store" "8.3.10"
     react-transition-group "4.4.5"
 
+"@mantine/spotlight@^8.3.11":
+  version "8.3.11"
+  resolved "https://registry.npmjs.org/@mantine/spotlight/-/spotlight-8.3.11.tgz"
+  integrity sha512-ddtCs33NUUMX8QOuqKi2TfmCNJQiwvdl/o90prfFQrOmcy7KiWuhl5vL7HFEuY8von8G6To7wQGMH9UdrvY6jQ==
+  dependencies:
+    "@mantine/store" "8.3.11"
+
 "@mantine/store@8.3.10":
   version "8.3.10"
   resolved "https://registry.npmjs.org/@mantine/store/-/store-8.3.10.tgz"
   integrity sha512-38t1UivcucZo9hQq27F/eqR5GvovNs4NHEz6DchOuZzV5IJWqO8+T07ivb8wct47ovYe42rPfLcaOdnIEvMsJA==
+
+"@mantine/store@8.3.11":
+  version "8.3.11"
+  resolved "https://registry.npmjs.org/@mantine/store/-/store-8.3.11.tgz"
+  integrity sha512-ku48CzN9HobVUjd7o41voaaHKz2CMrtkk454vwXWAspfbpqR4hklL5zq/MzctETFCG6HBDiPRfZAvNm8WaM3Tw==
 
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"

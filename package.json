@@ -30,6 +30,7 @@
         "@mantine/form": "^8.3.10",
         "@mantine/hooks": "^8.3.10",
         "@mantine/notifications": "^8.3.10",
+        "@mantine/spotlight": "^8.3.11",
         "@tabler/icons-react": "^3.36.1",
         "@vitejs/plugin-react": "^5.1.2",
         "@vitejs/plugin-react-swc": "^4.2.2",

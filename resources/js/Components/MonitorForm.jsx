@@ -11,7 +11,7 @@ import {
 } from '@mantine/core';
 import { IconPlus } from '@tabler/icons-react';
 
-function MonitorForm({ form, onSubmit, submitLabel }) {
+function MonitorForm({ form, onSubmit, submitLabel, escalationPolicies = [] }) {
     return (
         <form onSubmit={form.onSubmit(onSubmit)}>
             <Stack gap="md">
@@ -134,6 +134,15 @@ function MonitorForm({ form, onSubmit, submitLabel }) {
                         {...form.getInputProps('port')}
                     />
                 )}
+
+                <Select
+                    label="Escalation Policy"
+                    description="Choose how to escalate alerts if the service stays down"
+                    placeholder="Select a policy"
+                    data={escalationPolicies}
+                    clearable
+                    {...form.getInputProps('escalation_policy_id')}
+                />
 
                 <TextInput
                     label="Group"

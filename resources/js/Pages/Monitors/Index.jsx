@@ -25,7 +25,7 @@ import { IconPlus, IconDots, IconEdit, IconTrash, IconCircleCheck, IconCircleX, 
 import { notifications } from '@mantine/notifications';
 import MonitorForm from '@/Components/MonitorForm';
 
-function MonitorsIndex({ monitors }) {
+function MonitorsIndex({ monitors, escalationPolicies }) {
     const [createOpened, { open: openCreate, close: closeCreate }] = useDisclosure(false);
     const [editOpened, { open: openEdit, close: closeEdit }] = useDisclosure(false);
     const [selectedMonitor, setSelectedMonitor] = useState(null);
@@ -45,6 +45,7 @@ function MonitorsIndex({ monitors }) {
             port: 80,
             tags: [],
             group: '',
+            escalation_policy_id: null,
         },
     });
 
@@ -63,6 +64,7 @@ function MonitorsIndex({ monitors }) {
             port: 80,
             tags: [],
             group: '',
+            escalation_policy_id: null,
         },
     });
 
@@ -102,6 +104,7 @@ function MonitorsIndex({ monitors }) {
             keyword: monitor.keyword || '',
             port: monitor.port || 80,
             check_ssl: monitor.check_ssl || false,
+            escalation_policy_id: monitor.escalation_policy_id,
         });
 
         openEdit();
@@ -271,11 +274,11 @@ function MonitorsIndex({ monitors }) {
             </Stack>
 
             <Modal opened={createOpened} onClose={closeCreate} title="Create Monitor" size="lg">
-                <MonitorForm form={createForm} onSubmit={handleCreate} submitLabel="Create Monitor" />
+                <MonitorForm form={createForm} onSubmit={handleCreate} submitLabel="Create Monitor" escalationPolicies={escalationPolicies} />
             </Modal>
 
             <Modal opened={editOpened} onClose={closeEdit} title="Edit Monitor" size="lg">
-                <MonitorForm form={editForm} onSubmit={handleUpdate} submitLabel="Update Monitor" />
+                <MonitorForm form={editForm} onSubmit={handleUpdate} submitLabel="Update Monitor" escalationPolicies={escalationPolicies} />
             </Modal>
         </AppLayout>
     );
