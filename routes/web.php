@@ -29,12 +29,17 @@ use Illuminate\Support\Facades\Route;
 Route::get('/status/{slug}', [StatusPageController::class, 'show'])->name('status-page.show');
 Route::get('/ping/{uuid}', [PushMonitorController::class, 'ping'])->name('push.ping');
 
+// Landing Page
+Route::get('/', function () {
+    return inertia('Landing');
+})->name('landing');
+
 Route::middleware(['auth'])->group(function (): void {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/console', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/ssl', [SslController::class, 'index'])->name('ssl.index');
     Route::resource('escalation-policies', EscalationPolicyController::class);
     Route::resource('sla', SlaController::class)->only(['index', 'store', 'destroy']);

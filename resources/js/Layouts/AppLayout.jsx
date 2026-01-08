@@ -52,7 +52,7 @@ function AppLayout({ children }) {
 
 
     const monitoringItems = [
-        { label: 'Overview', icon: IconChartPie, href: '/' },
+        { label: 'Overview', icon: IconChartPie, href: '/console' },
         { label: 'Monitors', icon: IconDeviceDesktop, href: '/monitors' },
         { label: 'War Room', icon: IconFocusCentered, href: '/war-room' },
         { label: 'Incidents', icon: IconAlertTriangle, href: '/incidents' },
@@ -164,6 +164,7 @@ function AppLayout({ children }) {
                 collapsed: { mobile: !opened },
             }}
             padding="md"
+            bg="var(--mantine-color-body)"
         >
             <AppShell.Header>
                 <Group h="100%" px="lg" justify="space-between">

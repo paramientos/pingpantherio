@@ -43,21 +43,16 @@ const baseTheme = {
     },
 };
 
-const ThemeWrapper = ({ children, initialPage }) => {
-    const userThemeName = initialPage.props.auth?.user?.settings?.preferences?.theme || 'panther';
-    const activeTheme = themes[userThemeName] || themes.panther;
-    const colorScheme = activeTheme.type === 'light' ? 'light' : 'dark';
+const ThemeWrapper = ({ children }) => {
+    const activeTheme = themes.panther;
+    const colorScheme = 'dark';
 
     const theme = createTheme({
         ...baseTheme,
-        primaryColor: activeTheme.primaryColor || 'blue',
+        primaryColor: activeTheme.primaryColor || 'orange',
         colors: {
             ...activeTheme.colors,
-            // Ensure dark scale is always present for components that rely on it
-            dark: activeTheme.dark || [
-                '#C1C2C5', '#A6A7AB', '#909296', '#5c5f66', '#373A40',
-                '#2C2E33', '#25262b', '#1A1B1E', '#141517', '#101113'
-            ],
+            dark: activeTheme.colors.dark
         }
     });
 
