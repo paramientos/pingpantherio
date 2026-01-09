@@ -14,7 +14,7 @@ PROJECT_NAME="pingpanther"
 INSTALL_DIR="/var/www/$PROJECT_NAME"
 DB_NAME="pingpanther"
 DB_USER="panther"
-DB_PASS=$(openssl rand -base64 12)
+DB_PASS=$(openssl rand -hex 12)
 
 # --- Colors ---
 RED='\033[0;31m'
