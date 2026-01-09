@@ -151,19 +151,19 @@ fi
 
 if [ ! -f ".env" ]; then
     cp .env.example .env
-    sed -i "s|APP_NAME=Laravel|APP_NAME=PingPanther|g" .env
-    sed -i "s|APP_ENV=local|APP_ENV=production|g" .env
-    sed -i "s|APP_DEBUG=true|APP_DEBUG=false|g" .env
-    sed -i "s|APP_URL=http://localhost|APP_URL=http://$APP_DOMAIN|g" .env
-    sed -i "s|DB_CONNECTION=sqlite|DB_CONNECTION=pgsql|g" .env
-    sed -i "s|# DB_HOST=127.0.0.1|DB_HOST=127.0.0.1|g" .env
-    sed -i "s|# DB_PORT=3306|DB_PORT=5432|g" .env
-    sed -i "s|# DB_DATABASE=laravel|DB_DATABASE=$DB_NAME|g" .env
-    sed -i "s|# DB_USERNAME=root|DB_USERNAME=$DB_USER|g" .env
-    sed -i "s|# DB_PASSWORD=|DB_PASSWORD=$DB_PASS|g" .env
-    sed -i "s|SESSION_DRIVER=database|SESSION_DRIVER=redis|g" .env
-    sed -i "s|CACHE_STORE=database|CACHE_STORE=redis|g" .env
-    sed -i "s|QUEUE_CONNECTION=database|QUEUE_CONNECTION=redis|g" .env
+    sed -i "s|^APP_NAME=.*|APP_NAME=PingPanther|g" .env
+    sed -i "s|^APP_ENV=.*|APP_ENV=production|g" .env
+    sed -i "s|^APP_DEBUG=.*|APP_DEBUG=false|g" .env
+    sed -i "s|^APP_URL=.*|APP_URL=http://$APP_DOMAIN|g" .env
+    sed -i "s|^DB_CONNECTION=.*|DB_CONNECTION=pgsql|g" .env
+    sed -i "s|^#* *DB_HOST=.*|DB_HOST=127.0.0.1|g" .env
+    sed -i "s|^#* *DB_PORT=.*|DB_PORT=5432|g" .env
+    sed -i "s|^#* *DB_DATABASE=.*|DB_DATABASE=$DB_NAME|g" .env
+    sed -i "s|^#* *DB_USERNAME=.*|DB_USERNAME=$DB_USER|g" .env
+    sed -i "s|^#* *DB_PASSWORD=.*|DB_PASSWORD=$DB_PASS|g" .env
+    sed -i "s|^SESSION_DRIVER=.*|SESSION_DRIVER=redis|g" .env
+    sed -i "s|^CACHE_STORE=.*|CACHE_STORE=redis|g" .env
+    sed -i "s|^QUEUE_CONNECTION=.*|QUEUE_CONNECTION=redis|g" .env
     # Key generation moved to after composer install
 else
     echo -e "${BLUE}.env already exists, skipping generation.${NC}"
