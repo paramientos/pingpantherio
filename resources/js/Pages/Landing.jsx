@@ -15,7 +15,8 @@ import {
     Paper,
     Stepper,
     Code,
-    List
+    List,
+    Anchor
 } from '@mantine/core';
 import {
     IconBolt,
@@ -69,12 +70,12 @@ export default function Landing() {
                         <Title ta="center" style={{ fontSize: rem(64), letterSpacing: '-2px', fontWeight: 900, maxWidth: 800, lineHeight: 1.1 }}>
                             Deploy Your Own <br />
                             <span style={{ color: 'var(--mantine-color-orange-6)' }}>Uptime Monitoring</span> <br />
-                            <span style={{ color: 'var(--mantine-color-green-6)' }}>in 60 seconds</span>
+                            <span style={{ color: 'var(--mantine-color-green-6)' }}>in 60 Seconds</span>
                         </Title>
 
                         <Text size="xl" c="dimmed" maw={700} ta="center" style={{ lineHeight: 1.7 }}>
-                            Like VitoDeploy, but for monitoring. One command installs everything:
-                            PHP 8.4, Nginx, PostgreSQL, Redis, SSL certificates, and a beautiful dashboard.
+                            Self-hosted uptime monitoring that alerts you before your customers notice.
+                            Track websites, APIs, servers, SSL certificates, and cron jobs from a single dashboard.
                         </Text>
 
                         <Group gap="lg" mt="md">
@@ -120,141 +121,81 @@ export default function Landing() {
                                 <Text size="sm" c="dimmed">Production Ready</Text>
                             </Group>
                         </Group>
-
-                        <Paper
-                            p="lg"
-                            mt="xl"
-                            bg="rgba(34, 197, 94, 0.05)"
-                            withBorder
-                            style={{ borderColor: 'rgba(34, 197, 94, 0.3)', maxWidth: 500 }}
-                        >
-                            <Text fw={700} size="lg" c="green" mb="md">🎯 Try Live Demo</Text>
-                            <Stack gap="sm">
-                                <Group>
-                                    <Text w={80} size="sm" c="dimmed">Email:</Text>
-                                    <Code style={{ fontSize: rem(13) }}>admin@pingpanther.io</Code>
-                                </Group>
-                                <Group>
-                                    <Text w={80} size="sm" c="dimmed">Password:</Text>
-                                    <Code style={{ fontSize: rem(13) }}>password</Code>
-                                </Group>
-                            </Stack>
-                            <Button
-                                component={Link}
-                                href="/login"
-                                fullWidth
-                                mt="md"
-                                color="green"
-                                rightSection={<IconArrowRight size={18} />}
-                            >
-                                Access Demo Dashboard
-                            </Button>
-                        </Paper>
                     </Stack>
-                </Container >
+                </Container>
 
                 {/* Installation Steps */}
-                < Box id="installation" py={80} style={{ background: 'rgba(255,255,255,0.01)' }
-                }>
-                    <Container size="md">
-                        <Stack align="center" mb={60}>
-                            <Badge size="lg" color="orange">INSTALLATION</Badge>
-                            <Title ta="center" style={{ fontSize: rem(42), letterSpacing: '-1.5px', fontWeight: 900 }}>
-                                Three Steps to Production
+                <Box id="installation" py={120} style={{ background: 'rgba(255,255,255,0.01)' }}>
+                    <Container size="lg">
+                        <Stack align="center" mb={80}>
+                            <Badge size="lg" color="orange">QUICK START</Badge>
+                            <Title ta="center" style={{ fontSize: rem(48), letterSpacing: '-2px', fontWeight: 900, lineHeight: 1.2 }}>
+                                Ready in 3 Simple Steps
                             </Title>
-                            <Text size="lg" c="dimmed" ta="center">
-                                Seriously. That's all it takes.
-                            </Text>
                         </Stack>
 
-                        <Stepper active={3} orientation="vertical" size="lg" iconSize={50}>
-                            <Stepper.Step
-                                label="Prepare Your Server"
-                                description="Fresh Ubuntu 24.04 LTS"
-                                icon={<IconServer size={24} />}
-                            >
-                                <Paper p="xl" mt="md" bg="rgba(255,255,255,0.02)" withBorder style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
-                                    <Text size="lg" fw={600} mb="md">Requirements:</Text>
-                                    <List spacing="sm" c="dimmed">
-                                        <List.Item>Ubuntu 24.04 LTS (fresh install recommended)</List.Item>
-                                        <List.Item>Minimum: 2GB RAM, 1 CPU core</List.Item>
-                                        <List.Item>Recommended: 4GB RAM, 2 CPU cores</List.Item>
-                                        <List.Item>Root or sudo access</List.Item>
-                                        <List.Item>A domain pointing to your server (optional, for SSL)</List.Item>
-                                    </List>
-                                    <Text size="sm" c="dimmed" mt="lg">
-                                        💡 Works on any VPS: DigitalOcean, Hetzner, Linode, AWS EC2, etc.
-                                    </Text>
-                                </Paper>
-                            </Stepper.Step>
+                        <SimpleGrid cols={{ base: 1, md: 3 }} spacing={60}>
+                            {/* Step 1 */}
+                            <Stack align="center" ta="center" gap="md">
+                                <ThemeIcon size={80} radius="xl" color="orange" variant="light">
+                                    <IconServer size={40} />
+                                </ThemeIcon>
+                                <Title order={3}>1. Prepare</Title>
+                                <Text c="dimmed" size="sm" maw={300}>
+                                    Get a fresh Ubuntu 24.04 server. Any VPS provider works.
+                                    Minimum 2GB RAM.
+                                </Text>
+                            </Stack>
 
-                            <Stepper.Step
-                                label="Run the Installer"
-                                description="One command does everything"
-                                icon={<IconTerminal2 size={24} />}
-                            >
-                                <Paper p="xl" mt="md" bg="#0a0a0a" withBorder style={{ borderColor: 'rgba(255,119,0,0.2)' }}>
-                                    <Text size="sm" c="dimmed" mb="md" fw={600}>SSH into your server and run:</Text>
-                                    <Code
-                                        block
-                                        style={{
-                                            background: 'rgba(0,0,0,0.5)',
-                                            padding: rem(20),
-                                            fontSize: rem(15),
-                                            fontFamily: 'var(--mantine-font-family-monospace)',
-                                            color: 'var(--mantine-color-green-4)',
-                                            border: '1px solid rgba(255,255,255,0.1)'
-                                        }}
-                                    >
-                                        curl -sSL https://raw.githubusercontent.com/pingpanther/pingpanther/main/install.sh | sudo bash
-                                    </Code>
-                                    <Text size="sm" c="dimmed" mt="lg">
-                                        The installer will interactively ask for:
-                                    </Text>
-                                    <List size="sm" c="dimmed" mt="xs" spacing="xs">
-                                        <List.Item>Domain name (or use IP if you don't have one)</List.Item>
-                                        <List.Item>Admin email address</List.Item>
-                                        <List.Item>A secure password will be auto-generated</List.Item>
-                                    </List>
-                                    <Text size="sm" c="orange" mt="md" fw={600}>
-                                        ⚡ The script will automatically:
-                                    </Text>
-                                    <List size="sm" c="dimmed" mt="xs" spacing="xs">
-                                        <List.Item>Install PHP 8.4, Nginx, PostgreSQL, Redis</List.Item>
-                                        <List.Item>Configure Laravel Horizon for queue management</List.Item>
-                                        <List.Item>Set up Let's Encrypt SSL (if domain provided)</List.Item>
-                                        <List.Item>Create systemd services for auto-restart</List.Item>
-                                        <List.Item>Optimize for production (OPcache, Redis caching)</List.Item>
-                                    </List>
-                                </Paper>
-                            </Stepper.Step>
+                            {/* Step 2 */}
+                            <Stack align="center" ta="center" gap="md">
+                                <ThemeIcon size={80} radius="xl" color="orange" variant="filled">
+                                    <IconTerminal2 size={40} />
+                                </ThemeIcon>
+                                <Title order={3}>2. Install</Title>
+                                <Text c="dimmed" size="sm" maw={300}>
+                                    Run our magic command. It installs the entire stack and configures your domain.
+                                </Text>
+                                <Code
+                                    p="xs"
+                                    style={{
+                                        background: '#0a0a0a',
+                                        border: '1px solid rgba(255,119,0,0.3)',
+                                        color: 'orange',
+                                        fontSize: rem(10),
+                                        borderRadius: '4px'
+                                    }}
+                                >
+                                    curl -sSL ... | sudo bash
+                                </Code>
+                                <Anchor component={Link} href="/docs" size="xs" c="orange" fw={600}>
+                                    View Installation Docs
+                                </Anchor>
+                            </Stack>
 
-                            <Stepper.Step
-                                label="Access Your Dashboard"
-                                description="Start monitoring immediately"
-                                icon={<IconRocket size={24} />}
-                            >
-                                <Paper p="xl" mt="md" bg="rgba(34, 197, 94, 0.05)" withBorder style={{ borderColor: 'rgba(34, 197, 94, 0.2)' }}>
-                                    <Text size="lg" fw={700} c="green" mb="md">✓ Installation Complete!</Text>
-                                    <Text size="md" c="dimmed" mb="lg">
-                                        Open your browser and navigate to your domain (or IP address).
-                                        You'll see the login screen.
-                                    </Text>
-                                    <Box p="md" bg="rgba(0,0,0,0.3)" style={{ borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)' }}>
-                                        <Text size="sm" c="dimmed" mb="xs">Login credentials:</Text>
-                                        <Text size="sm" c="green" fw={600}>
-                                            You'll create your admin account during installation.
-                                            The installer will ask for your email and generate a secure password.
-                                        </Text>
-                                    </Box>
-                                    <Text size="sm" c="orange" mt="lg" fw={600}>
-                                        💡 Your credentials will be displayed at the end of installation.
-                                    </Text>
-                                </Paper>
-                            </Stepper.Step>
-                        </Stepper>
+                            {/* Step 3 */}
+                            <Stack align="center" ta="center" gap="md">
+                                <ThemeIcon size={80} radius="xl" color="green" variant="light">
+                                    <IconRocket size={40} />
+                                </ThemeIcon>
+                                <Title order={3}>3. Monitor</Title>
+                                <Text c="dimmed" size="sm" maw={300}>
+                                    Login to your dashboard. Your admin account is ready.
+                                    Start monitoring instantly.
+                                </Text>
+                                <Button
+                                    component={Link}
+                                    href="/login"
+                                    variant="subtle"
+                                    color="green"
+                                    rightSection={<IconArrowRight size={16} />}
+                                >
+                                    Try Demo
+                                </Button>
+                            </Stack>
+                        </SimpleGrid>
                     </Container>
-                </Box >
+                </Box>
 
                 {/* Features */}
                 < Container size="lg" py={80} >
@@ -464,7 +405,7 @@ export default function Landing() {
                                 rightSection={<IconArrowRight size={24} />}
                                 style={{ fontSize: rem(20), fontWeight: 700 }}
                                 component="a"
-                                href="#installation"
+                                href="/docs"
                             >
                                 Install Now
                             </Button>

@@ -111,26 +111,31 @@ corepack enable
 corepack prepare yarn@stable --activate
 
 # 7. Setup Directory
-echo -e "${YELLOW}[7/12] Setting up project directory...${NC}"
-if [ ! -d "$INSTALL_DIR" ]; then
-    mkdir -p "$INSTALL_DIR"
-fi
 
-# Clean up local git changes if this is an update to prevent merge conflicts
+# Check if directory exists and is a git repo
 if [ -d "$INSTALL_DIR/.git" ]; then
-    echo -e "${BLUE}Existing installation detected. Cleaning up local changes before update...${NC}"
+    echo -e "${BLUE}Existing installation detected. Updating...${NC}"
     cd "$INSTALL_DIR"
-    git reset --hard > /dev/null 2>&1
-    git clean -fd > /dev/null 2>&1
-    cd - > /dev/null
+    git fetch --tags
+else
+    echo -e "${BLUE}Cloning repository...${NC}"
+    # Ensure directory exists but is empty or doesn't exist to avoid clone errors
+    if [ -d "$INSTALL_DIR" ]; then
+        if [ "$(ls -A $INSTALL_DIR)" ]; then
+             echo -e "${YELLOW}Directory $INSTALL_DIR exists and is not empty. Backing up...${NC}"
+             mv "$INSTALL_DIR" "${INSTALL_DIR}_backup_$(date +%s)"
+        fi
+    fi
+    git clone https://github.com/pingpanther/pingpanther.git "$INSTALL_DIR"
+    cd "$INSTALL_DIR"
 fi
 
-# Use rsync if available for cleaner copy, fallback to cp
-if command -v rsync > /dev/null; then
-    rsync -avq --exclude='.git' . "$INSTALL_DIR/"
-else
-    cp -R . "$INSTALL_DIR"
-fi
+# Get latest tag
+LATEST_TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
+echo -e "${GREEN}Detected latest version: $LATEST_TAG${NC}"
+
+# Checkout latest tag
+git checkout "$LATEST_TAG" || echo -e "${YELLOW}Could not checkout tag $LATEST_TAG, staying on main branch.${NC}"
 
 cd "$INSTALL_DIR"
 
