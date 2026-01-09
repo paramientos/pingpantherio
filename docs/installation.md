@@ -1,69 +1,94 @@
-# Self-Hosting PingPanther
+# Installation Guide
 
-PingPanther can be easily self-hosted using Docker. This guide will help you get your instance up and running in minutes.
+PingPanther can be installed directly on a Ubuntu 24.04 LTS server (recommended) for maximum performance, or via Docker for simplified container management.
 
-## Prerequisites
+## 🚀 One-Command Installation (Recommended)
 
-- Docker and Docker Compose installed on your server.
-- A domain name (optional but recommended for SSL).
-- SMTP credentials for notifications (Email).
+The easiest way to get PingPanther running on a fresh **Ubuntu 24.04 LTS** server is our unattended installation script. This will set up PHP 8.4, Nginx, PostgreSQL, Redis, Horizon, and SSL automatically.
 
-## Quick Start (Docker Compose)
+### Requirements
+- A fresh Ubuntu 24.04 LTS server.
+- **Minimum:** 2GB RAM, 1 CPU core
+- **Recommended:** 4GB RAM, 2 CPU cores
+- Root or sudo access.
+- A domain name (e.g., `status.example.com`) pointing to your server's IP (optional, for SSL).
 
+### Installation
+Run the following command as root:
+
+```bash
+curl -sSL https://raw.githubusercontent.com/pingpanther/pingpanther/main/install.sh | sudo bash
+```
+
+The installer will interactively prompt you for:
+- **Domain name** (or it will use your server IP if you don't have one)
+- **Admin email address**
+- A secure password will be **auto-generated** and displayed at the end
+
+### What this script does:
+1.  **System Update:** Upgrades packages and installs core tools.
+2.  **Stack Setup:** Installs PHP 8.4 (FPM/CLI), Nginx, PostgreSQL, and Redis.
+3.  **App Provisioning:** Clones the app, installs Compose/Yarn dependencies, and builds assets.
+4.  **Optimization:** Configures OPcache, Redis caching, and Laravel Horizon.
+5.  **Security:** Configures UFW firewall and requests Let's Encrypt SSL (optional).
+6.  **Persistence:** Sets up Systemd services for Horizon and Cron jobs for the Scheduler.
+
+---
+
+## 🐋 Docker Installation
+
+If you prefer containerized environments, you can use our Docker setup.
+
+### Prerequisites
+- Docker & Docker Compose installed.
+
+### Steps
 1. **Clone the repository:**
-
    ```bash
-   git clone https://github.com/yourusername/pingpanther.git
+   git clone https://github.com/pingpanther/pingpanther.git
    cd pingpanther
    ```
 
-2. **Prepare environment variables:**
-
-   Copy the example environment file and generate an application key.
-
+2. **Configure Environment:**
    ```bash
    cp .env.example .env
+   # Edit .env with your domain and database credentials
    ```
 
-   Open `.env` and configure at least the following:
-   - `APP_KEY`: Run `php artisan key:generate --show` locally or use a secure random string.
-   - `APP_URL`: Your public URL (e.g., `https://ping.example.com`).
-   - `DB_PASSWORD`: Set a secure password for Postgres.
-   - `REDIS_PASSWORD`: Set a secure password for Redis.
-
-3. **Start the containers:**
-
+3. **Deploy:**
    ```bash
    docker-compose up -d
    ```
 
-4. **Access the application:**
+---
 
-   Once the containers are running, you can access PingPanther at `http://localhost:8080` (or the port you configured).
+## 🛠 Post-Installation
 
-## Advanced Configuration
+After installation completes, you can access your dashboard:
+- **URL**: `http://your-ip` or `https://your-domain.com`
+- **Email**: The email you provided during installation
+- **Password**: The auto-generated password displayed at the end of installation
 
-### Using a Reverse Proxy
+**💡 Important:** Save your credentials immediately! They are only shown once during installation.
 
-If you want to use your own reverse proxy (like Nginx Proxy Manager, Traefik, or Caddy) to handle SSL:
+### Post-Install Tasks
 
-1. Update the `APP_URL` in your `.env` to use `https`.
-2. Configure your reverse proxy to point to the `app` service on port `80`.
+1.  **Change Password**: First thing you should do is login and change the administrator password.
+2.  **Setup Notifications**: Configure your mail server or Slack/Discord webhooks in the Settings.
+3.  **Define Escalation Policies**: Set up how alerts should be routed if initial responders are unavailable.
 
-### Database Backups
+## 📝 Troubleshooting
 
-It is highly recommended to regularly back up the `postgres_data` volume. You can use tools like `pg_dump` or volume backup utilities.
+- **Logs**: View application logs at `/var/www/pingpanther/storage/logs/laravel.log`
+- **Horizon**: Access the Horizon dashboard at `/horizon` (Auth required).
+- **Services**: Check service status:
+  ```bash
+  systemctl status nginx
+  systemctl status postgresql
+  systemctl status redis-server
+  systemctl status pingpanther-horizon
+  ```
 
-### Horizontal Scaling
+---
 
-PingPanther is designed to be stateless (except for storage). You can scale the `app` and `worker` services as needed:
-
-```bash
-docker-compose up -d --scale app=3 --scale worker=2
-```
-
-## Troubleshooting
-
-- **Check logs:** `docker-compose logs -f app`
-- **Restart services:** `docker-compose restart`
-- **Rebuild image:** `docker-compose build --no-cache app`
+*Need help? Open an issue on [GitHub](https://github.com/pingpanther/pingpanther/issues).*

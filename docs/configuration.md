@@ -1,53 +1,79 @@
-# Configuration
+# Post-Installation Configuration
 
-PingPanther is configured using environment variables. You can set these in your `.env` file or directly in your `docker-compose.yml`.
+After running the `install.sh` script, your PingPanther instance is ready for use. However, you might want to configure additional settings for production.
 
-## Core Settings
+## 🔑 Default Credentials
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `APP_NAME` | The name of your instance. | PingPanther |
-| `APP_ENV` | Environment (production/local). | `production` |
-| `APP_KEY` | Application secret key. | (None) |
-| `APP_DEBUG` | Enable debug mode (not recommended for production). | `false` |
-| `APP_URL` | The public URL of your instance. | `http://localhost` |
+- **Admin Email**: `admin@pingpanther.io`
+- **Admin Password**: `password`
 
-## Database (PostgreSQL)
+> **Warning**: Change these credentials immediately after your first login!
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `DB_HOST` | Database host. | `postgres` |
-| `DB_PORT` | Database port. | `5432` |
-| `DB_DATABASE` | Database name. | `pingpanther` |
-| `DB_USERNAME` | Database user. | `postgres` |
-| `DB_PASSWORD` | Database password. | (None) |
+## 📧 Mail Settings
 
-## Redis
+To receive email alerts, update your `.env` file located at `/var/www/pingpanther/.env`:
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `REDIS_HOST` | Redis host. | `redis` |
-| `REDIS_PASSWORD` | Redis password. | (None) |
-| `REDIS_PORT` | Redis port. | `6379` |
+```env
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.mailtrap.io
+MAIL_PORT=2525
+MAIL_USERNAME=your_username
+MAIL_PASSWORD=your_password
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS="alerts@yourdomain.com"
+MAIL_FROM_NAME="PingPanther Alerts"
+```
 
-## Mail Configuration
+After updating `.env`, clear the cache:
+```bash
+php artisan config:cache
+```
 
-To receive notifications, you must configure an SMTP server.
+## 🚨 Laravel Horizon
 
-| Variable | Description |
-|----------|-------------|
-| `MAIL_MAILER` | Mailer driver (smtp, ses, mailgun). |
-| `MAIL_HOST` | SMTP host. |
-| `MAIL_PORT` | SMTP port. |
-| `MAIL_USERNAME` | SMTP username. |
-| `MAIL_PASSWORD` | SMTP password. |
-| `MAIL_ENCRYPTION` | Encryption (tls/ssl). |
-| `MAIL_FROM_ADDRESS` | From email address. |
-| `MAIL_FROM_NAME` | From name. |
+Horizon provides a beautiful dashboard and code-driven configuration for your Redis-powered queues.
 
-## Feature Toggles
+- **Dashboard**: `https://yourdomain.com/horizon`
+- **Service**: Managed via systemd as `pingpanther-horizon.service`.
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `REGISTRATION_ENABLED` | Allow new users to register. | `true` |
-| `DEMO_MODE` | Enable demo mode (read-only). | `false` |
+To restart horizon after code changes:
+```bash
+sudo systemctl restart pingpanther-horizon
+```
+
+## ⏱ Scheduler
+
+The Laravel scheduler handles monitor checks, SSL audits, and report generation. It is managed via a cron job file at `/etc/cron.d/pingpanther-scheduler`.
+
+To see the scheduled tasks:
+```bash
+php artisan schedule:list
+```
+
+## 📦 Updating PingPanther
+
+To update to the latest version:
+
+```bash
+cd /var/www/pingpanther
+git pull origin main
+composer install --no-dev --optimize-autoloader
+yarn install
+yarn build
+php artisan migrate --force
+php artisan optimize
+sudo systemctl restart pingpanther-horizon
+```
+
+## 🛡 Firewall (UFW)
+
+The installer configures UFW to allow SSH, HTTP, and HTTPS. You can check the status with:
+
+```bash
+sudo ufw status
+```
+
+If you need to allow additional ports (e.g., for custom integrations):
+```bash
+sudo ufw allow 8080/tcp
+```

@@ -34,6 +34,11 @@ Route::get('/', function () {
     return inertia('Landing');
 })->name('landing');
 
+// Documentation
+Route::get('/docs', function () {
+    return inertia('Docs');
+})->name('docs');
+
 Route::middleware(['auth'])->group(function (): void {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
