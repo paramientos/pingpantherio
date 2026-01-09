@@ -49,7 +49,7 @@ export default function Docs() {
                                 <Text>• Ubuntu 24.04 LTS (fresh installation recommended)</Text>
                                 <Text>• Minimum: 2GB RAM, 1 CPU core</Text>
                                 <Text>• Recommended: 4GB RAM, 2 CPU cores</Text>
-                                <Text>• Root or sudo access</Text>
+                                <Text>• Root access (sudo is not enough)</Text>
                                 <Text>• A domain name pointing to your server (optional, for SSL)</Text>
                             </Stack>
                         </Paper>

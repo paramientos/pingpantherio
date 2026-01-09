@@ -60,7 +60,7 @@ echo ""
 
 # --- Root Check ---
 if [ "$EUID" -ne 0 ]; then
-  echo -e "${RED}Error: Please run as root (sudo bash install.sh)${NC}"
+  echo -e "${RED}Error: You need to run the command via root user!${NC}"
   exit 1
 fi
 
