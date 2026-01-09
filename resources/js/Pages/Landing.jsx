@@ -168,7 +168,7 @@ export default function Landing() {
                                         borderRadius: '4px'
                                     }}
                                 >
-                                    curl -sSL ... | sudo bash
+                                    bash <(curl -sSL ...)
                                 </Code>
                                 <Anchor component={Link} href="/docs" size="xs" c="orange" fw={600}>
                                     View Installation Docs
