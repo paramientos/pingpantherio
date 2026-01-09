@@ -143,14 +143,14 @@ cd "$INSTALL_DIR"
 # 8. Environment Configuration
 echo -e "${YELLOW}[8/12] Configuring Environment...${NC}"
 
-# Check for incomplete .env from previous failed runs
-if [ -f ".env" ] && grep -q "^# DB_PASSWORD=" .env; then
-    echo -e "${YELLOW}Detected incomplete .env file (DB_PASSWORD is not set). Removing and recreating...${NC}"
-    rm .env
+if [ -f ".env" ]; then
+    BACKUP_ENV=".env.backup_$(date +%s)"
+    echo -e "${YELLOW}Existing .env detected. Backing up to $BACKUP_ENV...${NC}"
+    mv .env "$BACKUP_ENV"
 fi
 
-if [ ! -f ".env" ]; then
-    cp .env.example .env
+# Create new .env from example
+cp .env.example .env
     sed -i "s|^APP_NAME=.*|APP_NAME=PingPanther|g" .env
     sed -i "s|^APP_ENV=.*|APP_ENV=production|g" .env
     sed -i "s|^APP_DEBUG=.*|APP_DEBUG=false|g" .env
@@ -165,9 +165,7 @@ if [ ! -f ".env" ]; then
     sed -i "s|^CACHE_STORE=.*|CACHE_STORE=redis|g" .env
     sed -i "s|^QUEUE_CONNECTION=.*|QUEUE_CONNECTION=redis|g" .env
     # Key generation moved to after composer install
-else
-    echo -e "${BLUE}.env already exists, skipping generation.${NC}"
-fi
+    # else block removed as we always recreate .env
 
 # 9. Install Dependencies
 echo -e "${YELLOW}[9/12] Installing PHP & Frontend dependencies...${NC}"

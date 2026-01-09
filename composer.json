@@ -8,7 +8,7 @@
         "framework"
     ],
     "license": "MIT",
-    "version": "0.6.12",
+    "version": "0.6.13",
     "require": {
         "php": "^8.2",
         "ext-openssl": "*",
