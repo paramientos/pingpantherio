@@ -10,14 +10,14 @@ The easiest way to get PingPanther running on a fresh **Ubuntu 24.04 LTS** serve
 - A fresh Ubuntu 24.04 LTS server.
 - **Minimum:** 2GB RAM, 1 CPU core
 - **Recommended:** 4GB RAM, 2 CPU cores
-- Root or sudo access.
+- Root access (sudo is not enough).
 - A domain name (e.g., `status.example.com`) pointing to your server's IP (optional, for SSL).
 
 ### Installation
 Run the following command as root:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/paramientos/pingpantherio/main/install.sh | sudo bash
+bash <(curl -sSL https://raw.githubusercontent.com/paramientos/pingpantherio/main/install.sh)
 ```
 
 The installer will interactively prompt you for:
