@@ -94,9 +94,9 @@ echo -e "${YELLOW}[5/12] Configuring Database...${NC}"
 # Check if database already exists
 DB_EXISTS=$(sudo -u postgres psql -tAc "SELECT 1 FROM pg_database WHERE datname='$DB_NAME'")
 if [ "$DB_EXISTS" != "1" ]; then
-    sudo -u postgres psql -c "CREATE DATABASE $DB_NAME;"
-    sudo -u postgres psql -c "CREATE USER $DB_USER WITH PASSWORD '$DB_PASS';"
-    sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE $DB_NAME TO $DB_USER;"
+    sudo -u postgres psql -c "CREATE USER $DB_USER WITH PASSWORD '$DB_PASS';" || true
+    sudo -u postgres psql -c "CREATE DATABASE $DB_NAME OWNER $DB_USER;"
+    sudo -u postgres psql -d $DB_NAME -c "GRANT ALL ON SCHEMA public TO $DB_USER;"
 else
     echo -e "${BLUE}Database already exists, skipping creation.${NC}"
 fi
