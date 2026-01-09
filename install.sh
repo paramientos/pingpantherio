@@ -156,7 +156,7 @@ if [ ! -f ".env" ]; then
     sed -i "s/SESSION_DRIVER=database/SESSION_DRIVER=redis/g" .env
     sed -i "s/CACHE_STORE=database/CACHE_STORE=redis/g" .env
     sed -i "s/QUEUE_CONNECTION=database/QUEUE_CONNECTION=redis/g" .env
-    php artisan key:generate --force
+    # Key generation moved to after composer install
 else
     echo -e "${BLUE}.env already exists, skipping generation.${NC}"
 fi
@@ -166,6 +166,12 @@ echo -e "${YELLOW}[9/12] Installing PHP & Frontend dependencies...${NC}"
 composer install --no-dev --optimize-autoloader --no-interaction
 yarn install
 yarn build
+
+# Generate Application Key (now that composer install is done)
+if [ ! -f ".env" ] || ! grep -q "^APP_KEY=base64:" .env; then
+    echo -e "${YELLOW}Generating Application Key...${NC}"
+    php artisan key:generate --force
+fi
 
 # 10. Database Migrations & Admin User Creation
 echo -e "${YELLOW}[10/12] Initializing Database & Creating Admin User...${NC}"
