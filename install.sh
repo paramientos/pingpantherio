@@ -126,7 +126,7 @@ else
              mv "$INSTALL_DIR" "${INSTALL_DIR}_backup_$(date +%s)"
         fi
     fi
-    git clone https://github.com/pingpanther/pingpanther.git "$INSTALL_DIR"
+    git clone https://github.com/paramientos/pingpantherio.git "$INSTALL_DIR"
     cd "$INSTALL_DIR"
 fi
 

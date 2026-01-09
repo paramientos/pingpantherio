@@ -43,15 +43,17 @@ export default function Landing() {
                 <Box style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', position: 'sticky', top: 0, zIndex: 100, background: '#050505' }}>
                     <Container size="lg" py="lg">
                         <Group justify="space-between">
-                            <Group gap="xs">
-                                <ThemeIcon size="lg" variant="gradient" gradient={{ from: 'orange', to: 'red' }}>
-                                    <IconBolt size={20} />
-                                </ThemeIcon>
-                                <Text fw={900} size="xl">PingPanther</Text>
-                            </Group>
+                            <Link href="/" style={{ textDecoration: 'none', color: 'inherit' }}>
+                                <Group gap="xs">
+                                    <ThemeIcon size="lg" variant="gradient" gradient={{ from: 'orange', to: 'red' }}>
+                                        <IconBolt size={20} />
+                                    </ThemeIcon>
+                                    <Text fw={900} size="xl">PingPanther</Text>
+                                </Group>
+                            </Link>
                             <Group gap="lg">
                                 <Button component={Link} href="/docs" variant="subtle" color="gray">Documentation</Button>
-                                <Button component="a" href="https://github.com/pingpanther/pingpanther" target="_blank" variant="subtle" color="gray" leftSection={<IconBrandGithub size={18} />}>
+                                <Button component="a" href="https://github.com/paramientos/pingpantherio" target="_blank" variant="subtle" color="gray" leftSection={<IconBrandGithub size={18} />}>
                                     GitHub
                                 </Button>
                                 <Button component={Link} href="/login" color="orange">Try Demo</Button>
@@ -87,7 +89,7 @@ export default function Landing() {
                                 rightSection={<IconRocket size={20} />}
                                 style={{ fontSize: rem(18), fontWeight: 700 }}
                                 component="a"
-                                href="#installation"
+                                href="/login"
                             >
                                 Try Live Demo
                             </Button>
@@ -100,7 +102,7 @@ export default function Landing() {
                                 leftSection={<IconBrandGithub size={20} />}
                                 style={{ fontSize: rem(18) }}
                                 component="a"
-                                href="https://github.com/pingpanther/pingpanther"
+                                href="https://github.com/paramientos/pingpantherio"
                                 target="_blank"
                             >
                                 View Source
@@ -290,13 +292,13 @@ export default function Landing() {
                                 <ThemeIcon size={50} radius="md" color="orange" variant="light" mb="lg">
                                     <feature.icon size={26} />
                                 </ThemeIcon>
-                                <Text fw={700} size="lg" mb="sm">{feature.title}</Text>
-                                <Text size="sm" c="dimmed" style={{ lineHeight: 1.6 }} mb="md">{feature.desc}</Text>
+                                <Text fw={700} size="xl" mb="sm">{feature.title}</Text>
+                                <Text size="md" c="dimmed" style={{ lineHeight: 1.6 }} mb="md">{feature.desc}</Text>
                                 <Stack gap={6}>
                                     {feature.features.map((item, idx) => (
                                         <Group key={idx} gap="xs">
-                                            <IconCheck size={14} color="var(--mantine-color-green-6)" />
-                                            <Text size="xs" c="dimmed">{item}</Text>
+                                            <IconCheck size={16} color="var(--mantine-color-green-6)" />
+                                            <Text size="sm" c="dimmed">{item}</Text>
                                         </Group>
                                     ))}
                                 </Stack>
@@ -423,7 +425,7 @@ export default function Landing() {
                             <Text c="dimmed" size="sm">© 2026 PingPanther. Open Source.</Text>
                             <Group gap="xl">
                                 <Text component={Link} href="/docs" c="dimmed" size="sm" style={{ textDecoration: 'none' }}>Documentation</Text>
-                                <Text component="a" href="https://github.com/pingpanther/pingpanther" target="_blank" c="dimmed" size="sm" style={{ textDecoration: 'none' }}>GitHub</Text>
+                                <Text component="a" href="https://github.com/paramientos/pingpantherio" target="_blank" c="dimmed" size="sm" style={{ textDecoration: 'none' }}>GitHub</Text>
                                 <Text component={Link} href="/login" c="dimmed" size="sm" style={{ textDecoration: 'none' }}>Demo</Text>
                             </Group>
                         </Group>

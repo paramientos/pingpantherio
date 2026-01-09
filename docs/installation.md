@@ -17,7 +17,7 @@ The easiest way to get PingPanther running on a fresh **Ubuntu 24.04 LTS** serve
 Run the following command as root:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/pingpanther/pingpanther/main/install.sh | sudo bash
+curl -sSL https://raw.githubusercontent.com/paramientos/pingpantherio/main/install.sh | sudo bash
 ```
 
 The installer will interactively prompt you for:
@@ -45,7 +45,7 @@ If you prefer containerized environments, you can use our Docker setup.
 ### Steps
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/pingpanther/pingpanther.git
+   git clone https://github.com/paramientos/pingpantherio.git
    cd pingpanther
    ```
 
@@ -91,4 +91,4 @@ After installation completes, you can access your dashboard:
 
 ---
 
-*Need help? Open an issue on [GitHub](https://github.com/pingpanther/pingpanther/issues).*
+*Need help? Open an issue on [GitHub](https://github.com/paramientos/pingpantherio/issues).*

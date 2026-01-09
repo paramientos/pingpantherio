@@ -60,7 +60,7 @@ export default function Docs() {
                             SSH into your server and run the following command:
                         </Text>
                         <Code block style={{ background: '#0a0a0a', padding: rem(20), fontSize: rem(14) }}>
-                            curl -sSL https://raw.githubusercontent.com/pingpanther/pingpanther/main/install.sh | sudo bash
+                            curl -sSL https://raw.githubusercontent.com/paramientos/pingpantherio/main/install.sh | sudo bash
                         </Code>
                         <Text size="sm" c="dimmed" mt="md">
                             The installer will interactively prompt you for:
@@ -111,20 +111,10 @@ export default function Docs() {
                         </Paper>
 
                         <Paper p="lg" mt="lg" bg="rgba(34, 197, 94, 0.1)" withBorder style={{ borderColor: 'rgba(34, 197, 94,0.4)' }}>
-                            <Text fw={700} size="lg" c="green" mb="md">🎯 Try Our Live Demo</Text>
+                            <Text fw={700} size="lg" c="green" mb="md">Try Live Demo</Text>
                             <Text size="sm" c="dimmed" mb="md">
-                                Want to try PingPanther before installing? Use our demo instance:
+                                Want to try PingPanther before installing? Access our demo instance with pre-filled credentials.
                             </Text>
-                            <Stack gap="sm">
-                                <Group>
-                                    <Text w={100} fw={600}>Email:</Text>
-                                    <Code style={{ fontSize: rem(14) }}>admin@pingpanther.io</Code>
-                                </Group>
-                                <Group>
-                                    <Text w={100} fw={600}>Password:</Text>
-                                    <Code style={{ fontSize: rem(14) }}>password</Code>
-                                </Group>
-                            </Stack>
                             <Button
                                 component={Link}
                                 href="/login"
@@ -394,17 +384,21 @@ sudo systemctl restart pingpanther-horizon`}
                     <Container size="xl" py="lg">
                         <Group justify="space-between">
                             <Group gap="xs">
-                                <ThemeIcon size="lg" variant="gradient" gradient={{ from: 'orange', to: 'red' }}>
-                                    <IconBolt size={20} />
-                                </ThemeIcon>
-                                <Text fw={900} size="xl">PingPanther</Text>
+                                <Link href="/" style={{ textDecoration: 'none', color: 'inherit' }}>
+                                    <Group gap="xs">
+                                        <ThemeIcon size="lg" variant="gradient" gradient={{ from: 'orange', to: 'red' }}>
+                                            <IconBolt size={20} />
+                                        </ThemeIcon>
+                                        <Text fw={900} size="xl">PingPanther</Text>
+                                    </Group>
+                                </Link>
                                 <Text c="dimmed" size="sm">/ Documentation</Text>
                             </Group>
                             <Group gap="lg">
                                 <Button component={Link} href="/" variant="subtle" color="gray" leftSection={<IconArrowLeft size={18} />}>
                                     Back to Home
                                 </Button>
-                                <Button component="a" href="https://github.com/pingpanther/pingpanther" target="_blank" variant="subtle" color="gray" leftSection={<IconBrandGithub size={18} />}>
+                                <Button component="a" href="https://github.com/paramientos/pingpantherio" target="_blank" variant="subtle" color="gray" leftSection={<IconBrandGithub size={18} />}>
                                     GitHub
                                 </Button>
                             </Group>
