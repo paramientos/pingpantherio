@@ -61,7 +61,7 @@ export default function Docs() {
                             SSH into your server and run the following command:
                         </Text>
                         <Code block style={{ background: '#0a0a0a', padding: rem(20), fontSize: rem(14) }}>
-                            bash <(curl -sSL https://raw.githubusercontent.com/paramientos/pingpantherio/main/install.sh)
+                            {'bash <(curl -sSL https://raw.githubusercontent.com/paramientos/pingpantherio/main/install.sh)'}
                         </Code>
                         <Text size="sm" c="dimmed" mt="md">
                             The installer will interactively prompt you for:
