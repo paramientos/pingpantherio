@@ -95,12 +95,14 @@ echo -e "${YELLOW}[5/12] Configuring Database...${NC}"
 DB_EXISTS=$(sudo -u postgres psql -tAc "SELECT 1 FROM pg_database WHERE datname='$DB_NAME'")
 if [ "$DB_EXISTS" != "1" ]; then
     sudo -u postgres psql -c "CREATE USER $DB_USER WITH PASSWORD '$DB_PASS';" || true
-    sudo -u postgres psql -c "ALTER USER $DB_USER WITH PASSWORD '$DB_PASS';"
     sudo -u postgres psql -c "CREATE DATABASE $DB_NAME OWNER $DB_USER;"
     sudo -u postgres psql -d $DB_NAME -c "GRANT ALL ON SCHEMA public TO $DB_USER;"
 else
     echo -e "${BLUE}Database already exists, skipping creation.${NC}"
 fi
+
+# Always update password (critical for reinstalls with new .env)
+sudo -u postgres psql -c "ALTER USER $DB_USER WITH PASSWORD '$DB_PASS';" 2>/dev/null || true
 
 # 6. Install Composer & Node/Yarn
 echo -e "${YELLOW}[6/12] Installing Composer, Node.js and Yarn...${NC}"
