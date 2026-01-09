@@ -36,7 +36,20 @@ import {
 export default function Landing() {
     return (
         <>
-            <Head title="PingPanther - Self-Hosted Uptime Monitoring" />
+            <Head title="PingPanther - Self-Hosted Uptime Monitoring & Status Pages">
+                <meta name="description" content="Open source uptime monitoring solution. Monitor your API, website, and servers with real-time alerts. Self-hosted alternative to PagerDuty and UptimeRobot." />
+                <meta name="keywords" content="uptime monitoring, status page, open source, laravel, pingpanther, server monitoring, self-hosted, devops tools" />
+
+                <meta property="og:type" content="website" />
+                <meta property="og:url" content="https://pingpanther.io/" />
+                <meta property="og:title" content="PingPanther - Self-Hosted Uptime Monitoring" />
+                <meta property="og:description" content="Monitor your infrastructure with style. Real-time alerts, beautiful status pages, and unlimited checks." />
+
+                <meta property="twitter:card" content="summary_large_image" />
+                <meta property="twitter:url" content="https://pingpanther.io/" />
+                <meta property="twitter:title" content="PingPanther - Self-Hosted Uptime Monitoring" />
+                <meta property="twitter:description" content="Monitor your infrastructure with style. Real-time alerts, beautiful status pages, and unlimited checks." />
+            </Head>
 
             <Box bg="#050505" style={{ minHeight: '100vh', color: 'white' }}>
                 {/* Navbar */}

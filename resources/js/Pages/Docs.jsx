@@ -332,7 +332,11 @@ sudo systemctl restart pingpanther-horizon`}
 
     return (
         <>
-            <Head title="Documentation - PingPanther" />
+            <Head title="Documentation - PingPanther">
+                <meta name="description" content="Official documentation for PingPanther. Learn how to install, configure, and use your self-hosted uptime monitoring dashboard." />
+                <meta property="og:title" content="PingPanther Documentation" />
+                <meta property="og:description" content="Everything you need to know about setting up and managing PingPanther." />
+            </Head>
 
             <Box bg="#050505" style={{ minHeight: '100vh', color: 'white' }}>
                 {/* Header */}
