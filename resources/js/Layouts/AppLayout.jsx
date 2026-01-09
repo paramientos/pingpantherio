@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
-import { AppShell, Burger, Group, NavLink, Avatar, Menu, Text, rem, ActionIcon, ScrollArea, Divider } from '@mantine/core';
+import { AppShell, Burger, Group, NavLink, Avatar, Menu, Text, rem, ActionIcon, ScrollArea, Divider, ThemeIcon } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { Link, usePage } from '@inertiajs/react';
+import { Link, usePage, router } from '@inertiajs/react';
 import {
     IconChartPie,
     IconDeviceDesktop,
@@ -170,21 +170,21 @@ function AppLayout({ children }) {
                 <Group h="100%" px="lg" justify="space-between">
                     <Group>
                         <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
-                        <Group gap="sm">
-                            <ActionIcon
-                                variant="gradient"
-                                gradient={{ from: 'var(--mantine-primary-color-filled)', to: 'var(--mantine-primary-color-7)', deg: 135 }}
+                        <Group gap="xs">
+                            <ThemeIcon
+                                variant="filled"
+                                color="orange"
                                 size="lg"
                                 radius="md"
                             >
                                 <IconBolt size={20} />
-                            </ActionIcon>
+                            </ThemeIcon>
                             <div>
-                                <Text size="lg" fw={900} style={{ lineHeight: 1, letterSpacing: '-0.5px' }}>
+                                <Text size="lg" fw={900} style={{ lineHeight: 1, letterSpacing: '-1px', textTransform: 'uppercase' }}>
                                     Ping<span style={{ color: 'var(--mantine-primary-color-filled)' }}>Panther</span>
                                 </Text>
-                                <Text size="xs" c="dimmed" fw={500} style={{ lineHeight: 1 }}>
-                                    Uptime Monitoring
+                                <Text size="10px" c="dimmed" fw={800} tt="uppercase" style={{ lineHeight: 1, letterSpacing: '0.5px' }}>
+                                    Command Console
                                 </Text>
                             </div>
                         </Group>
@@ -247,8 +247,8 @@ function AppLayout({ children }) {
 
             <AppShell.Navbar p="md">
                 <AppShell.Section grow component={ScrollArea}>
-                    <Text size="xs" fw={700} c="dimmed" tt="uppercase" mb="xs" px="sm">
-                        Monitoring
+                    <Text size="10px" fw={800} c="dimmed" tt="uppercase" mb="xs" px="sm" style={{ letterSpacing: '1px' }}>
+                        Operational Telemetry
                     </Text>
                     {monitoringItems.map((item) => (
                         <NavLink
@@ -263,8 +263,8 @@ function AppLayout({ children }) {
                         />
                     ))}
 
-                    <Text size="xs" fw={700} c="dimmed" tt="uppercase" mt="xl" mb="xs" px="sm">
-                        Infrastructure
+                    <Text size="10px" fw={800} c="dimmed" tt="uppercase" mt="xl" mb="xs" px="sm" style={{ letterSpacing: '1px' }}>
+                        Global Infrastructure
                     </Text>
                     {infrastructureItems.map((item) => (
                         <NavLink
@@ -279,8 +279,8 @@ function AppLayout({ children }) {
                         />
                     ))}
 
-                    <Text size="xs" fw={700} c="dimmed" tt="uppercase" mt="xl" mb="xs" px="sm">
-                        Analysis & Reports
+                    <Text size="10px" fw={800} c="dimmed" tt="uppercase" mt="xl" mb="xs" px="sm" style={{ letterSpacing: '1px' }}>
+                        Intelligence & Recon
                     </Text>
                     {analysisItems.map((item) => (
                         <NavLink
@@ -295,8 +295,8 @@ function AppLayout({ children }) {
                         />
                     ))}
 
-                    <Text size="xs" fw={700} c="dimmed" tt="uppercase" mt="xl" mb="xs" px="sm">
-                        Alerting
+                    <Text size="10px" fw={800} c="dimmed" tt="uppercase" mt="xl" mb="xs" px="sm" style={{ letterSpacing: '1px' }}>
+                        Deployment & Alerting
                     </Text>
                     {configurationItems.map((item) => (
                         <NavLink
@@ -311,8 +311,8 @@ function AppLayout({ children }) {
                         />
                     ))}
 
-                    <Text size="xs" fw={700} c="dimmed" tt="uppercase" mt="xl" mb="xs" px="sm">
-                        Settings
+                    <Text size="10px" fw={800} c="dimmed" tt="uppercase" mt="xl" mb="xs" px="sm" style={{ letterSpacing: '1px' }}>
+                        Core Configuration
                     </Text>
 
                     {settingsItems.map((item) => (

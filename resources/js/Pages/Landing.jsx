@@ -82,8 +82,7 @@ export default function Landing() {
                             <Text fw={900} size="xl" style={{ letterSpacing: '-1px' }}>PingPanther</Text>
                         </Group>
                         <Group>
-                            <Button component={Link} href="/login" variant="subtle" color="gray">Log in</Button>
-                            <Button component={Link} href="/register" color="white" c="black" fw={600}>Sign up</Button>
+                            <Button component={Link} href="/login" color="white" c="black" fw={600}>Log in</Button>
                         </Group>
                     </Group>
                 </Container>
@@ -106,27 +105,28 @@ export default function Landing() {
                             </Group>
                         </Badge>
 
-                        <div style={{ textAlign: 'center', maxWidth: 800 }}>
+                        <div style={{ textAlign: 'center', maxWidth: 900 }}>
                             <Title
                                 order={1}
                                 style={{
-                                    fontSize: 'clamp(3.5rem, 5vw, 5rem)',
+                                    fontSize: 'clamp(3.5rem, 8vw, 7rem)',
                                     fontWeight: 900,
-                                    lineHeight: 1.1,
-                                    letterSpacing: '-3px',
-                                    marginBottom: rem(24),
-                                    background: 'linear-gradient(180deg, #ffffff 0%, #a0a0a0 100%)',
+                                    lineHeight: 0.9,
+                                    letterSpacing: '-5px',
+                                    marginBottom: rem(32),
+                                    textTransform: 'uppercase',
+                                    background: 'linear-gradient(180deg, #ffffff 0%, #666666 100%)',
                                     WebkitBackgroundClip: 'text',
                                     WebkitTextFillColor: 'transparent',
                                     filter: 'drop-shadow(0 0 30px rgba(255,255,255,0.1))'
                                 }}
                             >
                                 Fix It Before <br />
-                                <span style={{ color: 'white' }}>Twitter Does.</span>
+                                <span style={{ color: 'var(--mantine-color-orange-6)', WebkitTextFillColor: 'var(--mantine-color-orange-6)' }}>Twitter Does.</span>
                             </Title>
-                            <Text size="xl" c="dimmed" maw={660} mx="auto" mb="xl" style={{ lineHeight: 1.6, fontSize: '1.25rem' }}>
-                                The only thing faster than a viral tweet is our alerting engine.
-                                Detect downtime instantly and deploy the fix before the memes start.
+                            <Text size="xl" c="dimmed" maw={700} mx="auto" mb="xl" fw={600} style={{ lineHeight: 1.4, fontSize: '1.5rem', letterSpacing: '-0.5px' }}>
+                                Advanced infrastructure telemetry for high-stakes environments.
+                                Detect anomalies in milliseconds, not minutes.
                             </Text>
 
                             {/* Core Features Quick List */}
@@ -153,7 +153,7 @@ export default function Landing() {
                         <Group mt="xl">
                             <Button
                                 component={Link}
-                                href="/register"
+                                href="/login"
                                 size="xl"
                                 color="orange"
                                 radius="md"
@@ -162,7 +162,7 @@ export default function Landing() {
                                     boxShadow: '0 0 20px rgba(247, 103, 7, 0.4)',
                                 }}
                             >
-                                Start Building
+                                Get Started
                             </Button>
                             <Button
                                 component={Link}
@@ -216,7 +216,7 @@ export default function Landing() {
                                         <IconServer size={20} color="gray" />
                                         <Text size="sm" c="dimmed">System Status</Text>
                                     </Group>
-                                    <Text size="2rem" fw={700} c="green.4">99.99%</Text>
+                                    <Text size="2.5rem" fw={900} c="green.4" style={{ fontFamily: 'var(--mantine-font-family-monospace)' }}>99.99%</Text>
                                     <Text size="xs" c="dimmed" mt={4}>All systems operational</Text>
 
                                     <Stack mt="xl" gap="xs">
@@ -239,7 +239,7 @@ export default function Landing() {
                                         <IconActivity size={20} color="gray" />
                                         <Text size="sm" c="dimmed">Response Time</Text>
                                     </Group>
-                                    <Text size="2rem" fw={700} c="white">45<span style={{ fontSize: '1rem', color: '#666' }}>ms</span></Text>
+                                    <Text size="2.5rem" fw={900} c="white" style={{ fontFamily: 'var(--mantine-font-family-monospace)' }}>45<span style={{ fontSize: '1rem', color: '#666' }}>ms</span></Text>
 
                                     {/* Mock Chart */}
                                     <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4, height: 100, marginTop: 20 }}>
@@ -266,7 +266,7 @@ export default function Landing() {
                                             roundCaps
                                             sections={[{ value: 85, color: 'orange' }]}
                                             label={
-                                                <Text c="white" fw={700} ta="center" size="xl">
+                                                <Text c="white" fw={900} ta="center" size="xl" style={{ fontFamily: 'var(--mantine-font-family-monospace)' }}>
                                                     1,240
                                                 </Text>
                                             }
@@ -686,7 +686,7 @@ export default function Landing() {
                                     color={plan.color}
                                     variant={plan.popular ? 'filled' : 'light'}
                                     component={Link}
-                                    href="/register"
+                                    href="/login"
                                 >
                                     Get Started
                                 </Button>
@@ -775,7 +775,7 @@ export default function Landing() {
                             <Group mt="xl">
                                 <Button
                                     component={Link}
-                                    href="/register"
+                                    href="/login"
                                     size="xl"
                                     color="orange"
                                     radius="md"
@@ -789,7 +789,7 @@ export default function Landing() {
                                     }}
                                     rightSection={<IconArrowRight size={24} />}
                                 >
-                                    Start Monitoring Free
+                                    Login to Dashboard
                                 </Button>
                             </Group>
 

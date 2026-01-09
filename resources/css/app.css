@@ -11,14 +11,14 @@
 body {
     margin: 0;
     padding: 0;
-    background-color: #000000;
+    background-color: #050505;
     color: var(--mantine-color-text);
     font-family: 'Outfit', sans-serif;
     -webkit-font-smoothing: antialiased;
 }
 
 [data-mantine-color-scheme="dark"] body {
-    background-color: #000000;
+    background-color: #050505;
 }
 
 /* Premium Scrollbar */

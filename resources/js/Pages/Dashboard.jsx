@@ -51,33 +51,36 @@ function Dashboard({ stats, uptimeData, responseTimeData }) {
         response: 200 + Math.random() * 100,
     }));
 
-    const gridColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
-    const textColor = isDark ? '#5c5f66' : '#909296';
-    const tooltipBg = isDark ? '#1A1B1E' : '#FFFFFF';
-    const tooltipBorder = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
-    const tooltipColor = isDark ? '#fff' : '#000';
+    const gridColor = 'rgba(255,255,255,0.05)';
+    const textColor = '#5c5f66';
+    const tooltipBg = '#1A1B1E';
+    const tooltipBorder = 'rgba(255,255,255,0.1)';
+    const tooltipColor = '#fff';
 
     return (
         <AppLayout>
             <Stack gap="xl">
-                <div>
-                    <Title order={2} fw={900} style={{ letterSpacing: '-0.5px' }}>
-                        System Overview
-                    </Title>
-                    <Text c="dimmed" size="sm" mt={4}>
-                        Monitor your infrastructure health and performance in real-time
-                    </Text>
-                </div>
+                <Group justify="space-between" align="flex-end">
+                    <div>
+                        <Title order={1} fw={900} style={{ letterSpacing: '-1.5px', textTransform: 'uppercase' }}>
+                            Infrastructure <span style={{ color: 'var(--mantine-primary-color-filled)' }}>Status</span>
+                        </Title>
+                        <Text c="dimmed" size="xs" fw={700} tt="uppercase" mt={4} style={{ letterSpacing: '1px' }}>
+                            Real-time monitoring console • Live Feed
+                        </Text>
+                    </div>
+                    <Badge variant="dot" color="green" size="lg">SYSTEMS STABLE</Badge>
+                </Group>
 
                 <Grid>
                     {statCards.map((stat) => (
                         <Grid.Col key={stat.title} span={{ base: 12, xs: 6, md: 3 }}>
-                            <Card padding="lg" radius="md">
+                            <Card padding="lg">
                                 <Group justify="space-between" mb="md">
                                     <ThemeIcon
                                         size="xl"
                                         radius="md"
-                                        variant="light"
+                                        variant="filled"
                                         color={stat.color}
                                     >
                                         <stat.icon size={24} stroke={1.5} />
@@ -86,10 +89,10 @@ function Dashboard({ stats, uptimeData, responseTimeData }) {
                                         {stat.trend}
                                     </Badge>
                                 </Group>
-                                <Text size="xs" c="dimmed" fw={600} tt="uppercase" mb={4}>
+                                <Text size="xs" c="dimmed" fw={800} tt="uppercase" mb={4} style={{ letterSpacing: '0.5px' }}>
                                     {stat.title}
                                 </Text>
-                                <Text size="xl" fw={900} style={{ lineHeight: 1 }}>
+                                <Text size="2.5rem" fw={900} style={{ lineHeight: 1, fontFamily: 'var(--mantine-font-family-monospace)' }}>
                                     {stat.value}
                                 </Text>
                             </Card>
@@ -99,31 +102,28 @@ function Dashboard({ stats, uptimeData, responseTimeData }) {
 
                 <Grid>
                     <Grid.Col span={{ base: 12, md: 8 }}>
-                        <Card padding="lg" radius="md" h="100%">
-                            <Group justify="space-between" mb="md">
+                        <Card padding="xl" h="100%">
+                            <Group justify="space-between" mb="xl">
                                 <div>
-                                    <Title order={4} fw={700}>
-                                        Uptime (Last 24 Hours)
+                                    <Title order={4} fw={800} tt="uppercase" style={{ letterSpacing: '0.5px' }}>
+                                        Regional Latency
                                     </Title>
-                                    <Text size="xs" c="dimmed">
-                                        Real-time uptime percentage
+                                    <Text size="xs" c="dimmed" fw={700}>
+                                        NETWORK PROPAGATION DELAY
                                     </Text>
                                 </div>
-                                <Badge color="green" variant="dot">
-                                    All Systems Operational
-                                </Badge>
                             </Group>
-                            <ResponsiveContainer width="100%" height={250}>
+                            <ResponsiveContainer width="100%" height={300}>
                                 <AreaChart data={defaultUptimeData}>
                                     <defs>
                                         <linearGradient id="colorUptime" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#12b886" stopOpacity={0.3} />
-                                            <stop offset="95%" stopColor="#12b886" stopOpacity={0} />
+                                            <stop offset="5%" stopColor="var(--mantine-color-green-6)" stopOpacity={0.3} />
+                                            <stop offset="95%" stopColor="var(--mantine-color-green-6)" stopOpacity={0} />
                                         </linearGradient>
                                     </defs>
-                                    <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
-                                    <XAxis dataKey="time" stroke={textColor} fontSize={12} />
-                                    <YAxis stroke={textColor} fontSize={12} domain={[90, 100]} />
+                                    <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
+                                    <XAxis dataKey="time" stroke={textColor} fontSize={10} fw={700} />
+                                    <YAxis stroke={textColor} fontSize={10} fw={700} domain={[90, 100]} />
                                     <Tooltip
                                         contentStyle={{
                                             backgroundColor: tooltipBg,
@@ -136,10 +136,11 @@ function Dashboard({ stats, uptimeData, responseTimeData }) {
                                     <Area
                                         type="monotone"
                                         dataKey="uptime"
-                                        stroke="#12b886"
-                                        strokeWidth={2}
+                                        stroke="var(--mantine-color-green-6)"
+                                        strokeWidth={3}
                                         fillOpacity={1}
                                         fill="url(#colorUptime)"
+                                        isAnimationActive={false}
                                     />
                                 </AreaChart>
                             </ResponsiveContainer>
@@ -147,18 +148,18 @@ function Dashboard({ stats, uptimeData, responseTimeData }) {
                     </Grid.Col>
 
                     <Grid.Col span={{ base: 12, md: 4 }}>
-                        <Card padding="lg" radius="md" h="100%">
-                            <Title order={4} fw={700} mb="md">
-                                Response Time
+                        <Card padding="xl" h="100%">
+                            <Title order={4} fw={800} tt="uppercase" mb="xs" style={{ letterSpacing: '0.5px' }}>
+                                Response Dynamics
                             </Title>
-                            <Text size="xs" c="dimmed" mb="md">
-                                Average response time (ms)
+                            <Text size="xs" c="dimmed" fw={700} mb="xl">
+                                PACKET ROUND-TRIP PERFORMANCE
                             </Text>
-                            <ResponsiveContainer width="100%" height={250}>
+                            <ResponsiveContainer width="100%" height={300}>
                                 <LineChart data={defaultResponseData}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
-                                    <XAxis dataKey="time" stroke={textColor} fontSize={12} />
-                                    <YAxis stroke={textColor} fontSize={12} />
+                                    <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
+                                    <XAxis dataKey="time" stroke={textColor} fontSize={10} fw={700} />
+                                    <YAxis stroke={textColor} fontSize={10} fw={700} />
                                     <Tooltip
                                         contentStyle={{
                                             backgroundColor: tooltipBg,
@@ -171,9 +172,10 @@ function Dashboard({ stats, uptimeData, responseTimeData }) {
                                     <Line
                                         type="monotone"
                                         dataKey="response"
-                                        stroke="#228be6"
-                                        strokeWidth={2}
+                                        stroke="var(--mantine-color-blue-6)"
+                                        strokeWidth={3}
                                         dot={false}
+                                        isAnimationActive={false}
                                     />
                                 </LineChart>
                             </ResponsiveContainer>
@@ -181,25 +183,28 @@ function Dashboard({ stats, uptimeData, responseTimeData }) {
                     </Grid.Col>
                 </Grid>
 
-                <Card padding="lg" radius="md">
+                <Card padding="xl">
                     <Group justify="space-between" mb="md">
                         <div>
-                            <Title order={4} fw={700}>
-                                Operational Log
+                            <Title order={4} fw={800} tt="uppercase" style={{ letterSpacing: '0.5px' }}>
+                                Operational Event Log
                             </Title>
-                            <Text size="xs" c="dimmed">
-                                Recent system events and incidents
+                            <Text size="xs" c="dimmed" fw={700}>
+                                SECURITY & PERFORMANCE AUDIT TRAIL
                             </Text>
                         </div>
                     </Group>
-                    <Paper p="md" radius="sm" style={{ background: 'var(--mantine-primary-color-light)' }} mt="md">
-                        <Group gap="xs">
-                            <ThemeIcon color="green" variant="light" size="sm" radius="xl">
-                                <IconCheck size={14} />
+                    <Paper p="xl" radius="md" bg="rgba(255,255,255,0.02)" withBorder style={{ borderColor: 'rgba(255,255,255,0.05)' }} mt="md">
+                        <Group gap="md">
+                            <ThemeIcon color="green" variant="light" size="lg" radius="xl">
+                                <IconCheck size={20} />
                             </ThemeIcon>
-                            <Text size="sm" c="dimmed">
-                                No recent incidents. All monitors are running smoothly.
-                            </Text>
+                            <Stack gap={0}>
+                                <Text size="sm" fw={800} c="green.4">ALL SYSTEMS NOMINAL</Text>
+                                <Text size="xs" c="dimmed" fw={600}>
+                                    No anomalies detected in the last 168 hours of operation.
+                                </Text>
+                            </Stack>
                         </Group>
                     </Paper>
                 </Card>

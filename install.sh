@@ -1,0 +1,256 @@
+#!/bin/bash
+
+# =================================================================0
+# PingPanther - Unattended Installation Script for Ubuntu 24.04
+# =================================================================0
+# This script installs PHP 8.4, Nginx, PostgreSQL, Redis, Node.js 22,
+# and configures the host to run PingPanther directly.
+# =================================================================0
+
+set -e
+
+# --- Configuration ---
+PROJECT_NAME="pingpanther"
+INSTALL_DIR="/var/www/$PROJECT_NAME"
+DB_NAME="pingpanther"
+DB_USER="panther"
+DB_PASS=$(openssl rand -base64 12)
+APP_DOMAIN=${1:-"$(hostname -I | awk '{print $1}')"}
+
+# --- Colors ---
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+# --- Banner ---
+clear
+echo -e "${CYAN}"
+echo "    ____  _             ____                __  __               "
+echo "   / __ \(_)___  ____ _/ __ \____ _____  / /_/ /_  ___  _____  "
+echo "  / /_/ / / __ \/ __ \`/ /_/ / __ \`/ __ \/ __/ __ \/ _ \/ ___/  "
+echo " / ____/ / / / / /_/ / ____/ /_/ / / / / /_/ / / /  __/ /      "
+echo "/_/   /_/_/ /_/\__, /_/    \__,_/_/ /_/\__/_/ /_/\___/_/       "
+echo "              /____/                                           "
+echo -e "${NC}"
+echo -e "${BLUE}>>> Starting Unattended Installation for Ubuntu 24.04 <<<${NC}\n"
+
+# --- Root Check ---
+if [ "$EUID" -ne 0 ]; then
+  echo -e "${RED}Error: Please run as root (sudo bash install.sh)${NC}"
+  exit 1
+fi
+
+# 1. Update System
+echo -e "${YELLOW}[1/12] Updating system packages...${NC}"
+export DEBIAN_FRONTEND=noninteractive
+apt-get update && apt-get upgrade -y
+apt-get install -y curl zip unzip git gnupg2 ca-certificates lsb-release apt-transport-https software-properties-common build-essential certbot python3-certbot-nginx
+
+# 2. Add Repositories
+echo -e "${YELLOW}[2/12] Adding PHP and Node.js repositories...${NC}"
+# PHP PPA
+add-apt-repository -y ppa:ondrej/php
+# NodeSource
+curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
+
+apt-get update
+
+# 3. Install PHP 8.4
+echo -e "${YELLOW}[3/12] Installing PHP 8.4 and extensions...${NC}"
+apt-get install -y php8.4-fpm php8.4-cli php8.4-pgsql php8.4-redis \
+    php8.4-gd php8.4-intl php8.4-zip php8.4-bcmath php8.4-mbstring \
+    php8.4-xml php8.4-curl php8.4-pcntl php8.4-opcache
+
+# 4. Install Nginx, Redis, PostgreSQL
+echo -e "${YELLOW}[4/12] Installing Web Server, Redis and Database...${NC}"
+apt-get install -y nginx redis-server postgresql postgresql-contrib
+
+# 5. Configure PostgreSQL
+echo -e "${YELLOW}[5/12] Configuring Database...${NC}"
+# Check if database already exists
+DB_EXISTS=$(sudo -u postgres psql -tAc "SELECT 1 FROM pg_database WHERE datname='$DB_NAME'")
+if [ "$DB_EXISTS" != "1" ]; then
+    sudo -u postgres psql -c "CREATE DATABASE $DB_NAME;"
+    sudo -u postgres psql -c "CREATE USER $DB_USER WITH PASSWORD '$DB_PASS';"
+    sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE $DB_NAME TO $DB_USER;"
+else
+    echo -e "${BLUE}Database already exists, skipping creation.${NC}"
+fi
+
+# 6. Install Composer & Node/Yarn
+echo -e "${YELLOW}[6/12] Installing Composer, Node.js and Yarn...${NC}"
+curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+# Node already added to repo in step 2
+apt-get install -y nodejs
+npm install --global yarn
+
+# 7. Setup Directory
+echo -e "${YELLOW}[7/12] Setting up project directory...${NC}"
+if [ ! -d "$INSTALL_DIR" ]; then
+    mkdir -p "$INSTALL_DIR"
+fi
+# Clear directory but keep .git if exists
+# rm -rf "${INSTALL_DIR:?}"/*
+cp -R . "$INSTALL_DIR"
+cd "$INSTALL_DIR"
+
+# 8. Environment Configuration
+echo -e "${YELLOW}[8/12] Configuring Environment...${NC}"
+if [ ! -f ".env" ]; then
+    cp .env.example .env
+    sed -i "s/APP_NAME=Laravel/APP_NAME=PingPanther/g" .env
+    sed -i "s/APP_ENV=local/APP_ENV=production/g" .env
+    sed -i "s/APP_DEBUG=true/APP_DEBUG=false/g" .env
+    sed -i "s|APP_URL=http://localhost|APP_URL=http://$APP_DOMAIN|g" .env
+    sed -i "s/DB_CONNECTION=sqlite/DB_CONNECTION=pgsql/g" .env
+    sed -i "s/# DB_HOST=127.0.0.1/DB_HOST=127.0.0.1/g" .env
+    sed -i "s/# DB_PORT=5432/DB_PORT=5432/g" .env
+    sed -i "s/# DB_DATABASE=laravel/DB_DATABASE=$DB_NAME/g" .env
+    sed -i "s/# DB_USERNAME=root/DB_USERNAME=$DB_USER/g" .env
+    sed -i "s/# DB_PASSWORD=/DB_PASSWORD=$DB_PASS/g" .env
+    sed -i "s/SESSION_DRIVER=database/SESSION_DRIVER=redis/g" .env
+    sed -i "s/CACHE_STORE=database/CACHE_STORE=redis/g" .env
+    sed -i "s/QUEUE_CONNECTION=database/QUEUE_CONNECTION=redis/g" .env
+    php artisan key:generate --force
+else
+    echo -e "${BLUE}.env already exists, skipping generation.${NC}"
+fi
+
+# 9. Install Dependencies
+echo -e "${YELLOW}[9/12] Installing PHP & Frontend dependencies...${NC}"
+composer install --no-dev --optimize-autoloader --no-interaction
+yarn install --frozen-lockfile
+yarn build
+
+# 10. Database Migrations & Permissions
+echo -e "${YELLOW}[10/12] Initializing Database & Permissions...${NC}"
+php artisan migrate --force
+php artisan db:seed --force
+php artisan horizon:install --force
+
+# Optimize for production
+echo -e "${YELLOW}Optimizing application for production...${NC}"
+php artisan optimize
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+php artisan event:cache
+
+chown -R www-data:www-data "$INSTALL_DIR"
+chmod -R 775 "$INSTALL_DIR/storage" "$INSTALL_DIR/bootstrap/cache"
+
+# 11. Nginx & Firewall Configuration
+echo -e "${YELLOW}[11/12] Configuring Nginx & UFW...${NC}"
+cat > /etc/nginx/sites-available/$PROJECT_NAME <<EOF
+server {
+    listen 80;
+    server_name $APP_DOMAIN;
+    root $INSTALL_DIR/public;
+
+    add_header X-Frame-Options "SAMEORIGIN";
+    add_header X-Content-Type-Options "nosniff";
+
+    index index.php;
+
+    charset utf-8;
+
+    location / {
+        try_files \$uri \$uri/ /index.php?\$query_string;
+    }
+
+    location = /favicon.ico { access_log off; log_not_found off; }
+    location = /robots.txt  { access_log off; log_not_found off; }
+
+    error_page 404 /index.php;
+
+    location ~ \.php$ {
+        fastcgi_pass unix:/var/run/php/php8.4-fpm.sock;
+        fastcgi_param SCRIPT_FILENAME \$realpath_root\$fastcgi_script_name;
+        include fastcgi_params;
+    }
+
+    location ~ /\.(?!well-known).* {
+        deny all;
+    }
+}
+EOF
+
+ln -sf /etc/nginx/sites-available/$PROJECT_NAME /etc/nginx/sites-enabled/
+rm -f /etc/nginx/sites-enabled/default
+
+# Firewall
+if command -v ufw > /dev/null; then
+    ufw allow 'Nginx Full'
+    ufw --force enable
+fi
+
+systemctl restart nginx
+
+# 12. Optional SSL (Let's Encrypt)
+echo -e "${YELLOW}[11.1/12] SSL Configuration (Optional)...${NC}"
+# Check if APP_DOMAIN is not an IP address
+if [[ ! $APP_DOMAIN =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    echo -e "${CYAN}Detected domain ($APP_DOMAIN). Would you like to install Let's Encrypt SSL? (y/n)${NC}"
+    # 10s timeout for interaction
+    read -t 10 -p "Choice [n]: " ssl_choice
+    ssl_choice=${ssl_choice:-n}
+
+    if [[ $ssl_choice =~ ^[Yy]$ ]]; then
+        echo -e "${YELLOW}Please enter email for Let's Encrypt notifications:${NC}"
+        read ssl_email
+        if [ ! -z "$ssl_email" ]; then
+            certbot --nginx -d "$APP_DOMAIN" --non-interactive --agree-tos -m "$ssl_email" --redirect
+            echo -e "${GREEN}SSL successfully installed for $APP_DOMAIN${NC}"
+            # Update APP_URL in .env
+            sed -i "s|APP_URL=http://$APP_DOMAIN|APP_URL=https://$APP_DOMAIN|g" /var/www/pingpanther/.env
+            APP_URL="https://$APP_DOMAIN"
+        fi
+    fi
+else
+    echo -e "${BLUE}IP address detected, skipping SSL configuration.${NC}"
+fi
+
+# 12. Setup Systemd Services (Queue & Schedule)
+echo -e "${YELLOW}[12/12] Creating Systemd services...${NC}"
+
+# Queue Worker (Horizon)
+cat > /etc/systemd/system/pingpanther-horizon.service <<EOF
+[Unit]
+Description=PingPanther Horizon Queue Management
+After=network.target postgresql.service redis-server.service
+
+[Service]
+User=www-data
+Group=www-data
+Restart=always
+ExecStart=/usr/bin/php $INSTALL_DIR/artisan horizon
+ExecStop=/usr/bin/php $INSTALL_DIR/artisan horizon:terminate
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=pingpanther-horizon
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Pulse/Checkers
+echo "* * * * * www-data /usr/bin/php $INSTALL_DIR/artisan schedule:run >> /dev/null 2>&1" > /etc/cron.d/pingpanther-scheduler
+
+systemctl daemon-reload
+systemctl enable pingpanther-horizon
+systemctl start pingpanther-horizon
+
+# --- Finalize ---
+echo -e "\n${GREEN}=================================================================${NC}"
+echo -e "${GREEN}    INSTALLATION COMPLETE!${NC}"
+echo -e "${GREEN}=================================================================${NC}"
+echo -e "${CYAN}Access URL:  ${APP_URL:-http://$APP_DOMAIN}${NC}"
+echo -e "${CYAN}DB User:     $DB_USER${NC}"
+echo -e "${CYAN}DB Password: $DB_PASS${NC}"
+echo -e "${CYAN}Project Dir: $INSTALL_DIR${NC}"
+echo -e "${GREEN}=================================================================${NC}"
+echo -e "${YELLOW}Demo Admin: admin@pingpanther.io / password${NC}"
+echo -e "${GREEN}=================================================================${NC}"

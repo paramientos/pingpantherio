@@ -9,6 +9,7 @@ import { themes } from './Themes/palettes';
 const baseTheme = {
     primaryShade: 6,
     fontFamily: 'Outfit, Inter, sans-serif',
+    fontFamilyMonospace: 'JetBrains Mono, Roboto Mono, Courier New, monospace',
     headings: {
         fontFamily: 'Outfit, Inter, sans-serif',
         fontWeight: '900',
@@ -22,24 +23,45 @@ const baseTheme = {
             },
             styles: (theme) => ({
                 root: {
-                    backgroundColor: theme.colorScheme === 'dark' ? 'rgba(255,255,255,0.01)' : 'var(--mantine-color-white)',
-                    borderColor: theme.colorScheme === 'dark' ? 'rgba(255,255,255,0.08)' : 'var(--mantine-color-gray-2)',
+                    backgroundColor: 'rgba(255,255,255,0.02)',
+                    borderColor: 'rgba(255,255,255,0.08)',
+                    transition: 'transform 0.2s ease, background-color 0.2s ease, border-color 0.2s ease',
+                    '&:hover': {
+                        backgroundColor: 'rgba(255,255,255,0.04)',
+                        borderColor: 'rgba(255,255,255,0.15)',
+                    }
                 }
             })
         },
         Paper: {
             styles: (theme) => ({
                 root: {
-                    backgroundColor: theme.colorScheme === 'dark' ? 'rgba(255,255,255,0.01)' : 'var(--mantine-color-white)',
-                    borderColor: theme.colorScheme === 'dark' ? 'rgba(255,255,255,0.08)' : 'var(--mantine-color-gray-2)',
+                    backgroundColor: 'rgba(255,255,255,0.01)',
+                    borderColor: 'rgba(255,255,255,0.08)',
                 }
             })
         },
         Button: {
             defaultProps: {
                 radius: 'md',
+                fw: 700,
             },
         },
+        AppShell: {
+            styles: (theme) => ({
+                main: {
+                    backgroundColor: '#050505',
+                },
+                navbar: {
+                    backgroundColor: '#050505',
+                    borderRight: '1px solid rgba(255,255,255,0.08)',
+                },
+                header: {
+                    backgroundColor: '#050505',
+                    borderBottom: '1px solid rgba(255,255,255,0.08)',
+                }
+            })
+        }
     },
 };
 

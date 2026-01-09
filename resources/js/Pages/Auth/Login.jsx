@@ -39,25 +39,25 @@ export default function Login({ status, canResetPassword }) {
                 <Stack align="center" mb="xl">
                     <ActionIcon
                         variant="gradient"
-                        gradient={{ from: 'indigo', to: 'violet', deg: 135 }}
+                        gradient={{ from: 'orange', to: 'red', deg: 135 }}
                         size={60}
                         radius="md"
                     >
                         <IconBolt size={32} />
                     </ActionIcon>
                     <div style={{ textAlign: 'center' }}>
-                        <Title order={1} fw={900} style={{ letterSpacing: '-0.5px' }}>
-                            Ping<span style={{ color: 'var(--mantine-color-indigo-6)' }}>Panther</span>
+                        <Title order={1} fw={900} style={{ letterSpacing: '-1.5px', textTransform: 'uppercase' }}>
+                            Ping<span style={{ color: 'var(--mantine-color-orange-6)' }}>Panther</span>
                         </Title>
-                        <Text c="dimmed" size="sm" mt={4}>
-                            Uptime Monitoring Platform
+                        <Text c="dimmed" size="xs" fw={700} tt="uppercase" mt={4} style={{ letterSpacing: '1px' }}>
+                            Infrastructure Access Portal
                         </Text>
                     </div>
                 </Stack>
 
-                <Paper shadow="md" p={30} radius="md" withBorder>
-                    <Title order={2} ta="center" mb="md" fw={700}>
-                        Welcome back!
+                <Paper p={40} radius="md" withBorder bg="#0a0a0a">
+                    <Title order={2} ta="center" mb="xl" fw={900} tt="uppercase" style={{ letterSpacing: '0.5px' }}>
+                        System Authentication
                     </Title>
 
                     {status && (
@@ -106,14 +106,7 @@ export default function Login({ status, canResetPassword }) {
                         </Stack>
                     </form>
 
-                    <Divider label="or" labelPosition="center" my="lg" />
 
-                    <Text c="dimmed" size="sm" ta="center">
-                        Don't have an account?{' '}
-                        <Anchor component={Link} href={route('register')} fw={600}>
-                            Create account
-                        </Anchor>
-                    </Text>
                 </Paper>
             </Container>
         </>
