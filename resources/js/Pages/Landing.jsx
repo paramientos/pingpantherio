@@ -15,7 +15,9 @@ import {
     rem,
     Paper,
     RingProgress,
-    Center
+    Center,
+    Grid,
+    ActionIcon
 } from '@mantine/core';
 import {
     IconBolt,
@@ -38,7 +40,11 @@ import {
     IconBrandSlack,
     IconBrandDiscord,
     IconMail,
-    IconDeviceMobile
+    IconDeviceMobile,
+    IconCopy,
+    IconBrandUbuntu,
+    IconLock,
+    IconRocket
 } from '@tabler/icons-react';
 
 export default function Landing() {
@@ -589,6 +595,93 @@ export default function Landing() {
                         </Paper>
 
                     </SimpleGrid>
+                </Container>
+
+                {/* Installation / Self-Hosting Section */}
+                <Container size="lg" py={120} style={{ position: 'relative', zIndex: 10 }}>
+                    <Grid gutter={80} align="center">
+                        <Grid.Col span={{ base: 12, lg: 6 }}>
+                            <Badge variant="dot" color="orange" mb="md" size="lg">SELF-HOSTED DEPLOYMENT</Badge>
+                            <Title order={2} style={{ fontSize: rem(48), letterSpacing: '-2px', lineHeight: 1.1, marginBottom: rem(24) }}>
+                                Your Infrastructure, <br />
+                                <span style={{ color: 'var(--mantine-color-orange-6)' }}>Your Rules.</span>
+                            </Title>
+                            <Text size="lg" c="dimmed" mb="xl" style={{ lineHeight: 1.6 }}>
+                                Skip the SaaS overhead. Deploy PingPanther directly on your Ubuntu 24.04 servers with our optimized unattended installer.
+                                Full control, maximum privacy, zero latency.
+                            </Text>
+
+                            <Stack gap="lg">
+                                {[
+                                    { icon: IconBrandUbuntu, title: 'Ubuntu 24.04 Optimized', desc: 'Native support for PHP 8.4, Nginx, and Postgres on the latest LTS.' },
+                                    { icon: IconLock, title: 'Zero-Config SSL', desc: 'Automatic Let\'s Encrypt certificate provisioning out of the box.' },
+                                    { icon: IconBolt, title: 'Extreme Performance', desc: 'Auto-configured Redis caching, Horizon queues, and opcache.' },
+                                ].map((item, i) => (
+                                    <Group key={i} align="flex-start" gap="md">
+                                        <ThemeIcon size="xl" radius="md" variant="light" color="orange">
+                                            <item.icon size={24} />
+                                        </ThemeIcon>
+                                        <div>
+                                            <Text fw={700} size="md" tt="uppercase" style={{ letterSpacing: '0.5px' }}>{item.title}</Text>
+                                            <Text size="sm" c="dimmed">{item.desc}</Text>
+                                        </div>
+                                    </Group>
+                                ))}
+                            </Stack>
+                        </Grid.Col>
+
+                        <Grid.Col span={{ base: 12, lg: 6 }}>
+                            <Box
+                                style={{
+                                    background: '#0a0a0a',
+                                    borderRadius: '16px',
+                                    border: '1px solid rgba(255,255,255,0.1)',
+                                    boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
+                                    overflow: 'hidden'
+                                }}
+                            >
+                                {/* Terminal Header */}
+                                <Group justify="space-between" px="md" py="xs" style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                    <Group gap={8}>
+                                        <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#ff5f56' }} />
+                                        <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#ffbd2e' }} />
+                                        <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#27c93f' }} />
+                                    </Group>
+                                    <Text size="xs" c="dimmed" fw={700} style={{ fontFamily: 'var(--mantine-font-family-monospace)' }}>deploy_pingpanther.sh</Text>
+                                    <ActionIcon variant="transparent" color="gray" size="sm">
+                                        <IconCopy size={14} />
+                                    </ActionIcon>
+                                </Group>
+
+                                {/* Terminal Content */}
+                                <Box p="xl" style={{ fontFamily: 'var(--mantine-font-family-monospace)', fontSize: '13px', lineHeight: 1.6 }}>
+                                    <Group gap="xs" mb="xs">
+                                        <Text c="green.5" fw={900}>➜</Text>
+                                        <Text c="cyan.4">~</Text>
+                                        <Text c="white">curl -sSL install.sh | sudo bash</Text>
+                                    </Group>
+                                    <Text c="gray.6" mb="xs">[1/12] Updating system packages...</Text>
+                                    <Text c="gray.6" mb="xs">[2/12] Adding PHP 8.4 and Node.js repositories...</Text>
+                                    <Text c="gray.6" mb="xs">[3/12] Installing core infrastructure...</Text>
+                                    <Group gap="xs" mb="xs">
+                                        <Text c="green.4" fw={700}>✓</Text>
+                                        <Text c="gray.6">PostgreSQL Database Initialized</Text>
+                                    </Group>
+                                    <Group gap="xs" mb="xs">
+                                        <Text c="green.4" fw={700}>✓</Text>
+                                        <Text c="gray.6">Redis Cache Layer Enabled</Text>
+                                    </Group>
+                                    <Text c="gray.6" mb="xs">[11/12] Configuring Nginx & SSL...</Text>
+                                    <Text c="orange.5" fw={800} mt="lg">Detected domain: monitors.acme.com</Text>
+                                    <Text c="white" mb="md">Installing Let's Encrypt SSL... Done.</Text>
+                                    <Box py="sm" px="md" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '4px' }}>
+                                        <Text c="green.4" fw={900}>INSTALLATION COMPLETE</Text>
+                                        <Text c="gray.5" size="xs">Access: https://monitors.acme.com</Text>
+                                    </Box>
+                                </Box>
+                            </Box>
+                        </Grid.Col>
+                    </Grid>
                 </Container>
 
                 {/* Trusted By Section */}

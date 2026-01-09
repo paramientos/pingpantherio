@@ -85,15 +85,15 @@ echo -e "${YELLOW}[6/12] Installing Composer, Node.js and Yarn...${NC}"
 curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 # Node already added to repo in step 2
 apt-get install -y nodejs
-npm install --global yarn
+# Use corepack to enable yarn (avoids npm global permission issues)
+corepack enable
+corepack prepare yarn@stable --activate
 
 # 7. Setup Directory
 echo -e "${YELLOW}[7/12] Setting up project directory...${NC}"
 if [ ! -d "$INSTALL_DIR" ]; then
     mkdir -p "$INSTALL_DIR"
 fi
-# Clear directory but keep .git if exists
-# rm -rf "${INSTALL_DIR:?}"/*
 cp -R . "$INSTALL_DIR"
 cd "$INSTALL_DIR"
 
@@ -122,7 +122,7 @@ fi
 # 9. Install Dependencies
 echo -e "${YELLOW}[9/12] Installing PHP & Frontend dependencies...${NC}"
 composer install --no-dev --optimize-autoloader --no-interaction
-yarn install --frozen-lockfile
+yarn install
 yarn build
 
 # 10. Database Migrations & Permissions
@@ -139,7 +139,17 @@ php artisan route:cache
 php artisan view:cache
 php artisan event:cache
 
-chown -R www-data:www-data "$INSTALL_DIR"
+# Detect Target User (VitoDeploy support)
+if id "vito" &>/dev/null; then
+    WEB_USER="vito"
+    WEB_GROUP="vito"
+    echo -e "${BLUE}Detected 'vito' user, setting as owner.${NC}"
+else
+    WEB_USER="www-data"
+    WEB_GROUP="www-data"
+fi
+
+chown -R $WEB_USER:$WEB_GROUP "$INSTALL_DIR"
 chmod -R 775 "$INSTALL_DIR/storage" "$INSTALL_DIR/bootstrap/cache"
 
 # 11. Nginx & Firewall Configuration
