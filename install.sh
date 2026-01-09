@@ -95,6 +95,7 @@ echo -e "${YELLOW}[5/12] Configuring Database...${NC}"
 DB_EXISTS=$(sudo -u postgres psql -tAc "SELECT 1 FROM pg_database WHERE datname='$DB_NAME'")
 if [ "$DB_EXISTS" != "1" ]; then
     sudo -u postgres psql -c "CREATE USER $DB_USER WITH PASSWORD '$DB_PASS';" || true
+    sudo -u postgres psql -c "ALTER USER $DB_USER WITH PASSWORD '$DB_PASS';"
     sudo -u postgres psql -c "CREATE DATABASE $DB_NAME OWNER $DB_USER;"
     sudo -u postgres psql -d $DB_NAME -c "GRANT ALL ON SCHEMA public TO $DB_USER;"
 else
@@ -141,6 +142,13 @@ cd "$INSTALL_DIR"
 
 # 8. Environment Configuration
 echo -e "${YELLOW}[8/12] Configuring Environment...${NC}"
+
+# Check for incomplete .env from previous failed runs
+if [ -f ".env" ] && grep -q "^# DB_PASSWORD=" .env; then
+    echo -e "${YELLOW}Detected incomplete .env file (DB_PASSWORD is not set). Removing and recreating...${NC}"
+    rm .env
+fi
+
 if [ ! -f ".env" ]; then
     cp .env.example .env
     sed -i "s|APP_NAME=Laravel|APP_NAME=PingPanther|g" .env
@@ -149,7 +157,7 @@ if [ ! -f ".env" ]; then
     sed -i "s|APP_URL=http://localhost|APP_URL=http://$APP_DOMAIN|g" .env
     sed -i "s|DB_CONNECTION=sqlite|DB_CONNECTION=pgsql|g" .env
     sed -i "s|# DB_HOST=127.0.0.1|DB_HOST=127.0.0.1|g" .env
-    sed -i "s|# DB_PORT=5432|DB_PORT=5432|g" .env
+    sed -i "s|# DB_PORT=3306|DB_PORT=5432|g" .env
     sed -i "s|# DB_DATABASE=laravel|DB_DATABASE=$DB_NAME|g" .env
     sed -i "s|# DB_USERNAME=root|DB_USERNAME=$DB_USER|g" .env
     sed -i "s|# DB_PASSWORD=|DB_PASSWORD=$DB_PASS|g" .env
