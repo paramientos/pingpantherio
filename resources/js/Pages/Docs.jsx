@@ -13,7 +13,8 @@ import {
     Code,
     Divider,
     ThemeIcon,
-    Button
+    Button,
+    Badge
 } from '@mantine/core';
 import {
     IconBolt,
@@ -299,76 +300,31 @@ sudo systemctl restart pingpanther-horizon`}
                         </Text>
                     </div>
 
-                    <div>
-                        <Title order={3} size="h4" mb="md">Authentication</Title>
-                        <Text c="dimmed" mb="md">
-                            Generate an API token from <strong>Settings → API Tokens</strong>
-                        </Text>
-                        <Code block style={{ background: '#0a0a0a', padding: rem(20), fontSize: rem(13) }}>
-                            {`curl https://yourdomain.com/api/monitors \\
-  -H "Authorization: Bearer YOUR_API_TOKEN" \\
-  -H "Accept: application/json"`}
-                        </Code>
-                    </div>
+                    <Stack gap="xl">
+                        <Box ta="center" py={60}>
+                            <ThemeIcon size={80} radius="xl" variant="light" color="orange" mb="xl">
+                                <IconTerminal size={40} />
+                            </ThemeIcon>
 
-                    <div>
-                        <Title order={3} size="h4" mb="md">Endpoints</Title>
-                        <Stack gap="md">
-                            <Paper p="md" bg="rgba(255,255,255,0.01)" withBorder style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
-                                <Group justify="space-between" mb="xs">
-                                    <Text fw={700}>GET /api/monitors</Text>
-                                    <Code>List all monitors</Code>
+                            <Title order={2} mb="md">Developer API</Title>
+                            <Badge size="lg" variant="dot" color="orange" mb="xl">COMING SOON</Badge>
+
+                            <Text c="dimmed" maw={500} mx="auto" size="lg">
+                                We are working on a comprehensive REST API to allow you to manage monitors,
+                                retrieve stats, and integrate PingPanther with your own tools programmatically.
+                            </Text>
+
+                            <Paper p="xl" mt={40} bg="rgba(255,255,255,0.02)" withBorder style={{ borderColor: 'rgba(255,255,255,0.05)' }} maw={600} mx="auto">
+                                <Text fw={700} c="white" mb="md">Planned Endpoints</Text>
+                                <Group justify="center" gap="sm">
+                                    <Code>GET /api/monitors</Code>
+                                    <Code>POST /api/monitors</Code>
+                                    <Code>GET /api/incidents</Code>
+                                    <Code>GET /api/stats</Code>
                                 </Group>
-                                <Text size="sm" c="dimmed">Returns a paginated list of all your monitors.</Text>
                             </Paper>
-
-                            <Paper p="md" bg="rgba(255,255,255,0.01)" withBorder style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
-                                <Group justify="space-between" mb="xs">
-                                    <Text fw={700}>POST /api/monitors</Text>
-                                    <Code>Create monitor</Code>
-                                </Group>
-                                <Text size="sm" c="dimmed">Create a new monitor programmatically.</Text>
-                            </Paper>
-
-                            <Paper p="md" bg="rgba(255,255,255,0.01)" withBorder style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
-                                <Group justify="space-between" mb="xs">
-                                    <Text fw={700}>GET /api/incidents</Text>
-                                    <Code>List incidents</Code>
-                                </Group>
-                                <Text size="sm" c="dimmed">Retrieve all incidents with filtering options.</Text>
-                            </Paper>
-
-                            <Paper p="md" bg="rgba(255,255,255,0.01)" withBorder style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
-                                <Group justify="space-between" mb="xs">
-                                    <Text fw={700}>POST /api/heartbeat/:uuid</Text>
-                                    <Code>Send heartbeat</Code>
-                                </Group>
-                                <Text size="sm" c="dimmed">Ping endpoint for cron job monitoring.</Text>
-                            </Paper>
-                        </Stack>
-                    </div>
-
-                    <div>
-                        <Title order={3} size="h4" mb="md">Webhooks</Title>
-                        <Text c="dimmed" mb="md">
-                            Configure webhooks to receive real-time notifications:
-                        </Text>
-                        <Code block style={{ background: '#0a0a0a', padding: rem(20), fontSize: rem(13) }}>
-                            {`{
-  "event": "incident.started",
-  "monitor": {
-    "id": "uuid",
-    "name": "Production API",
-    "url": "https://api.example.com"
-  },
-  "incident": {
-    "id": "uuid",
-    "started_at": "2026-01-09T12:00:00Z",
-    "error_message": "Connection timeout"
-  }
-}`}
-                        </Code>
-                    </div>
+                        </Box>
+                    </Stack>
                 </Stack>
             )
         }

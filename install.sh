@@ -39,10 +39,10 @@ echo -e "${BLUE}>>> Starting Installation for Ubuntu 24.04 <<<${NC}\n"
 # --- Interactive Domain Setup ---
 echo -e "${YELLOW}[SETUP] Domain Configuration${NC}"
 echo ""
-read -p "Do you have a domain name for this installation? (yes/no): " has_domain
+read -p "Do you have a domain name for this installation? (yes/no): " has_domain < /dev/tty
 
 if [[ "$has_domain" =~ ^[Yy]([Ee][Ss])?$ ]]; then
-    read -p "Enter your domain name (e.g., status.example.com): " APP_DOMAIN
+    read -p "Enter your domain name (e.g., status.example.com): " APP_DOMAIN < /dev/tty
     echo -e "${GREEN}✓ Using domain: $APP_DOMAIN${NC}"
 else
     APP_DOMAIN=$(hostname -I | awk '{print $1}')
@@ -55,7 +55,7 @@ echo -e "${CYAN}Installation Summary:${NC}"
 echo -e "  Domain/IP: ${GREEN}$APP_DOMAIN${NC}"
 echo -e "  Install Path: ${GREEN}$INSTALL_DIR${NC}"
 echo ""
-read -p "Press Enter to continue or Ctrl+C to cancel..."
+read -p "Press Enter to continue or Ctrl+C to cancel..." < /dev/tty
 echo ""
 
 # --- Root Check ---
@@ -174,7 +174,7 @@ php artisan migrate --force
 # Create admin user interactively
 echo ""
 echo -e "${CYAN}=== Admin Account Setup ===${NC}"
-read -p "Enter admin email address: " ADMIN_EMAIL
+read -p "Enter admin email address: " ADMIN_EMAIL < /dev/tty
 ADMIN_PASSWORD=$(openssl rand -base64 16)
 
 php artisan user:create-admin "$ADMIN_EMAIL" "$ADMIN_PASSWORD"
