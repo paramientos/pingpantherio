@@ -74,29 +74,24 @@ export default function Login({ status, canResetPassword }) {
 
                 <Container size={440} style={{ position: 'relative', zIndex: 1, width: '100%' }}>
                     <Stack align="center" mb={40}>
-                        <Link href="/" style={{ textDecoration: 'none' }}>
-                            <Group gap="xs" style={{ cursor: 'pointer', transition: 'transform 0.2s' }}
-                                onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-                                onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                        <Group gap="xs">
+                            <ActionIcon
+                                variant="gradient"
+                                gradient={{ from: 'orange', to: 'red', deg: 135 }}
+                                size={50}
+                                radius="md"
                             >
-                                <ActionIcon
-                                    variant="gradient"
-                                    gradient={{ from: 'orange', to: 'red', deg: 135 }}
-                                    size={50}
-                                    radius="md"
-                                >
-                                    <IconBolt size={28} />
-                                </ActionIcon>
-                                <div>
-                                    <Title order={2} fw={900} style={{ letterSpacing: '-1px', lineHeight: 1 }}>
-                                        Ping<span style={{ color: 'var(--mantine-color-orange-6)' }}>Panther</span>
-                                    </Title>
-                                    <Text size="xs" c="dimmed" fw={600} ls={1} tt="uppercase">
-                                        Command Center
-                                    </Text>
-                                </div>
-                            </Group>
-                        </Link>
+                                <IconBolt size={28} />
+                            </ActionIcon>
+                            <div>
+                                <Title order={2} fw={900} style={{ letterSpacing: '-1px', lineHeight: 1 }}>
+                                    Ping<span style={{ color: 'var(--mantine-color-orange-6)' }}>Panther</span>
+                                </Title>
+                                <Text size="xs" c="dimmed" fw={600} ls={1} tt="uppercase">
+                                    Command Center
+                                </Text>
+                            </div>
+                        </Group>
                     </Stack>
 
                     <Paper
@@ -200,12 +195,6 @@ export default function Login({ status, canResetPassword }) {
                         </form>
                     </Paper>
 
-                    <Text ta="center" mt="xl" c="dimmed" size="sm">
-                        Don't have an installation?{' '}
-                        <Anchor component={Link} href="/" fw={700} c="orange">
-                            Get Started
-                        </Anchor>
-                    </Text>
                 </Container>
             </Box>
         </>

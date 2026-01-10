@@ -2,9 +2,12 @@
 trigger: always_on
 ---
 
-proje laravel 12 ile yazıldı postgres ve redis kullanıyor tasarım modern olsun betteruptime gibi 
+Laravel 12 
+Postgres 18
+Redis
+Better Uptime inspiration
 
 
-PSR-12 dikkat et
+PSR-12
 
-Laravel 12 ve IntertiaJS kullanılıyor
+Laravel 12 and IntertiaJS

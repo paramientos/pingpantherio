@@ -29,15 +29,10 @@ use Illuminate\Support\Facades\Route;
 Route::get('/status/{slug}', [StatusPageController::class, 'show'])->name('status-page.show');
 Route::get('/ping/{uuid}', [PushMonitorController::class, 'ping'])->name('push.ping');
 
-// Landing Page
+// Redirect root to dashboard
 Route::get('/', function () {
-    return inertia('Landing');
-})->name('landing');
-
-// Documentation
-Route::get('/docs', function () {
-    return inertia('Docs');
-})->name('docs');
+    return redirect()->route('dashboard');
+});
 
 Route::middleware(['auth'])->group(function (): void {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
