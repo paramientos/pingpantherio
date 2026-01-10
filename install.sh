@@ -114,10 +114,15 @@ DB_EXISTS=$(sudo -u postgres psql -tAc "SELECT 1 FROM pg_database WHERE datname=
 if [ "$DB_EXISTS" != "1" ]; then
     echo -e "${YELLOW}Creating database '$DB_NAME'...${NC}"
     sudo -u postgres psql -c "CREATE DATABASE $DB_NAME OWNER $DB_USER;"
-    sudo -u postgres psql -d $DB_NAME -c "GRANT ALL ON SCHEMA public TO $DB_USER;"
 else
     echo -e "${BLUE}Database already exists.${NC}"
 fi
+
+# Grant comprehensive permissions on public schema
+echo -e "${YELLOW}Granting schema permissions...${NC}"
+sudo -u postgres psql -d $DB_NAME -c "GRANT ALL ON SCHEMA public TO $DB_USER;"
+sudo -u postgres psql -d $DB_NAME -c "GRANT CREATE ON SCHEMA public TO $DB_USER;"
+sudo -u postgres psql -d $DB_NAME -c "ALTER SCHEMA public OWNER TO $DB_USER;"
 
 # Always update password (critical for reinstalls with new .env)
 echo -e "${YELLOW}Syncing database password...${NC}"
