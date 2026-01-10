@@ -94,9 +94,9 @@ echo -e "${YELLOW}Configuring PostgreSQL authentication...${NC}"
 PG_HBA=$(find /etc/postgresql -name pg_hba.conf | head -n 1)
 if [ -f "$PG_HBA" ]; then
     cp "$PG_HBA" "${PG_HBA}.backup"
-    # Remove existing 127.0.0.1 rules and add scram-sha-256
+    # Remove existing 127.0.0.1 rules and add md5 auth
     sed -i '/^host.*all.*all.*127.0.0.1\/32/d' "$PG_HBA"
-    echo "host    all             all             127.0.0.1/32            scram-sha-256" >> "$PG_HBA"
+    echo "host    all             all             127.0.0.1/32            md5" >> "$PG_HBA"
     systemctl reload postgresql
 fi
 
