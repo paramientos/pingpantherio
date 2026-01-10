@@ -89,6 +89,17 @@ apt-get install -y php8.4-fpm php8.4-cli php8.4-pgsql php8.4-redis \
 echo -e "${YELLOW}[4/12] Installing Web Server, Redis and Database...${NC}"
 apt-get install -y nginx redis-server postgresql postgresql-contrib
 
+# Configure PostgreSQL authentication for password-based connections
+echo -e "${YELLOW}Configuring PostgreSQL authentication...${NC}"
+PG_HBA=$(find /etc/postgresql -name pg_hba.conf | head -n 1)
+if [ -f "$PG_HBA" ]; then
+    cp "$PG_HBA" "${PG_HBA}.backup"
+    # Remove existing 127.0.0.1 rules and add scram-sha-256
+    sed -i '/^host.*all.*all.*127.0.0.1\/32/d' "$PG_HBA"
+    echo "host    all             all             127.0.0.1/32            scram-sha-256" >> "$PG_HBA"
+    systemctl reload postgresql
+fi
+
 # 5. Configure PostgreSQL
 echo -e "${YELLOW}[5/12] Configuring Database...${NC}"
 # Check if user exists
