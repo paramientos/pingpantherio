@@ -223,7 +223,7 @@ echo -e "  Email: ${GREEN}$ADMIN_EMAIL${NC}"
 echo -e "  Password: ${GREEN}$ADMIN_PASSWORD${NC}"
 echo ""
 
-php artisan horizon:install --force
+php artisan horizon:install
 
 # Optimize for production
 echo -e "${YELLOW}Optimizing application for production...${NC}"
