@@ -196,8 +196,8 @@ cp .env.example .env
 # 9. Install Dependencies
 echo -e "${YELLOW}[9/12] Installing PHP & Frontend dependencies...${NC}"
 composer install --no-dev --optimize-autoloader --no-interaction
-yarn install
-yarn build
+#yarn install
+#yarn build
 
 # Generate Application Key (now that composer install is done)
 if [ ! -f ".env" ] || ! grep -q "^APP_KEY=base64:" .env; then
@@ -216,12 +216,6 @@ read -p "Enter admin email address: " ADMIN_EMAIL < /dev/tty
 ADMIN_PASSWORD=$(openssl rand -base64 16)
 
 php artisan user:create-admin "$ADMIN_EMAIL" "$ADMIN_PASSWORD"
-
-echo -e "${GREEN}✓ Admin account created!${NC}"
-echo -e "${YELLOW}⚠ Save these credentials:${NC}"
-echo -e "  Email: ${GREEN}$ADMIN_EMAIL${NC}"
-echo -e "  Password: ${GREEN}$ADMIN_PASSWORD${NC}"
-echo ""
 
 php artisan horizon:install
 
@@ -352,9 +346,15 @@ echo -e "\n${GREEN}=============================================================
 echo -e "${GREEN}    INSTALLATION COMPLETE!${NC}"
 echo -e "${GREEN}=================================================================${NC}"
 echo -e "${CYAN}Access URL:  ${APP_URL:-http://$APP_DOMAIN}${NC}"
-echo -e "${CYAN}DB User:     $DB_USER${NC}"
-echo -e "${CYAN}DB Password: $DB_PASS${NC}"
-echo -e "${CYAN}Project Dir: $INSTALL_DIR${NC}"
+
+echo -e "${GREEN}✓ Admin account created!${NC}"
+echo -e "${YELLOW}⚠ Save these credentials:${NC}"
+echo -e "  Email: ${GREEN}$ADMIN_EMAIL${NC}"
+echo -e "  Password: ${GREEN}$ADMIN_PASSWORD${NC}"
+
+echo ""
+
 echo -e "${GREEN}=================================================================${NC}"
-echo -e "${YELLOW}Demo Admin: admin@pingpanther.io / password${NC}"
+echo -e "Please give us a star on GitHub if you find PingPanther useful!"
+echo -e "https://github.com/paramientos/pingpantherio"
 echo -e "${GREEN}=================================================================${NC}"
