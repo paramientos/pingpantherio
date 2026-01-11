@@ -16,17 +16,21 @@ import {
     Avatar,
     Tabs,
     rem,
+    MultiSelect,
+    Switch,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useDisclosure } from '@mantine/hooks';
 import { router } from '@inertiajs/react';
-import { IconPlus, IconTrash, IconMailForward, IconUsers, IconUserShield, IconShieldCheck } from '@tabler/icons-react';
+import { IconPlus, IconTrash, IconMailForward, IconUsers, IconUserShield, IconSettings, IconEye } from '@tabler/icons-react';
 import { notifications } from '@mantine/notifications';
 
-function TeamsIndex({ teams }) {
+function TeamsIndex({ teams, monitors }) {
     const [createOpened, { open: openCreate, close: closeCreate }] = useDisclosure(false);
     const [inviteOpened, { open: openInvite, close: closeInvite }] = useDisclosure(false);
+    const [monitorOpened, { open: openMonitor, close: closeMonitor }] = useDisclosure(false);
     const [selectedTeam, setSelectedTeam] = useState(null);
+    const [selectedMember, setSelectedMember] = useState(null);
 
     const createForm = useForm({
         initialValues: { name: '' },
@@ -34,6 +38,10 @@ function TeamsIndex({ teams }) {
 
     const inviteForm = useForm({
         initialValues: { email: '', role: 'member' },
+    });
+
+    const monitorForm = useForm({
+        initialValues: { monitor_ids: [] },
     });
 
     const handleCreateTeam = (values) => {
@@ -64,12 +72,41 @@ function TeamsIndex({ teams }) {
         }
     };
 
+    const handleOpenMonitorPermissions = (team, member) => {
+        setSelectedTeam(team);
+        setSelectedMember(member);
+        monitorForm.setFieldValue('monitor_ids', member.monitor_ids || []);
+        openMonitor();
+    };
+
+    const handleUpdateMonitors = (values) => {
+        router.patch(`/settings/teams/${selectedTeam.id}/members/${selectedMember.id}/monitors`, values, {
+            onSuccess: () => {
+                notifications.show({ title: 'Updated', message: 'Monitor permissions updated', color: 'green' });
+                closeMonitor();
+            }
+        });
+    };
+
+    const handleToggleRole = (teamId, userId, currentRole) => {
+        const newRole = currentRole === 'admin' ? 'member' : 'admin';
+        router.patch(`/settings/teams/${teamId}/members/${userId}/role`, { role: newRole }, {
+            onSuccess: () => notifications.show({ title: 'Updated', message: `Role changed to ${newRole}`, color: 'blue' })
+        });
+    };
+
+    const handleDeleteTeam = (teamId) => {
+        if (confirm('Are you sure you want to delete this team? This action cannot be undone.')) {
+            router.delete(`/settings/teams/${teamId}`, {
+                onSuccess: () => notifications.show({ title: 'Deleted', message: 'Team deleted successfully', color: 'red' })
+            });
+        }
+    };
+
     const getRoleBadge = (role) => {
         const config = {
-            owner: { color: 'violet', icon: IconShieldCheck, label: 'Owner' },
             admin: { color: 'blue', icon: IconUserShield, label: 'Admin' },
             member: { color: 'teal', icon: IconUsers, label: 'Member' },
-            viewer: { color: 'gray', icon: IconUsers, label: 'Viewer' },
         };
         const { color, icon: Icon, label } = config[role] || config.member;
         return (
@@ -85,10 +122,10 @@ function TeamsIndex({ teams }) {
                 <Group justify="space-between">
                     <div>
                         <Title order={4}>Team Management</Title>
-                        <Text c="dimmed" size="xs">Collaborate with your team</Text>
+                        <Text c="dimmed" size="sm">Manage teams and member access to monitors</Text>
                     </div>
                     <Button size="xs" leftSection={<IconPlus size={14} />} onClick={openCreate}>
-                        Create New Team
+                        Create Team
                     </Button>
                 </Group>
 
@@ -107,16 +144,28 @@ function TeamsIndex({ teams }) {
                                         <Text size="xs" c="dimmed">Owned by {team.owner}</Text>
                                     </div>
                                 </Group>
-                                {team.is_owner && (
-                                    <Button
-                                        variant="light"
-                                        size="xs"
-                                        leftSection={<IconMailForward size={14} />}
-                                        onClick={() => { setSelectedTeam(team); openInvite(); }}
-                                    >
-                                        Invite Member
-                                    </Button>
-                                )}
+                                <Group>
+                                    {team.is_admin && (
+                                        <Button
+                                            variant="light"
+                                            size="xs"
+                                            leftSection={<IconMailForward size={14} />}
+                                            onClick={() => { setSelectedTeam(team); openInvite(); }}
+                                        >
+                                            Invite Member
+                                        </Button>
+                                    )}
+                                    {team.is_admin && (
+                                        <ActionIcon
+                                            variant="light"
+                                            color="red"
+                                            onClick={() => handleDeleteTeam(team.id)}
+                                            title="Delete Team"
+                                        >
+                                            <IconTrash size={16} />
+                                        </ActionIcon>
+                                    )}
+                                </Group>
                             </Group>
 
                             <Tabs defaultValue="members">
@@ -131,6 +180,14 @@ function TeamsIndex({ teams }) {
 
                                 <Tabs.Panel value="members" pt="xs">
                                     <Table verticalSpacing="sm">
+                                        <Table.Thead>
+                                            <Table.Tr>
+                                                <Table.Th>Member</Table.Th>
+                                                <Table.Th>Role</Table.Th>
+                                                <Table.Th>Monitor Access</Table.Th>
+                                                <Table.Th style={{ textAlign: 'right' }}>Actions</Table.Th>
+                                            </Table.Tr>
+                                        </Table.Thead>
                                         <Table.Tbody>
                                             {team.members.map((member) => (
                                                 <Table.Tr key={member.id}>
@@ -145,13 +202,51 @@ function TeamsIndex({ teams }) {
                                                             </div>
                                                         </Group>
                                                     </Table.Td>
-                                                    <Table.Td>{getRoleBadge(member.role)}</Table.Td>
-                                                    <Table.Td style={{ textAlign: 'right' }}>
-                                                        {team.is_owner && member.role !== 'owner' && (
-                                                            <ActionIcon color="red" variant="subtle" onClick={() => handleRemoveMember(team.id, member.id)}>
-                                                                <IconTrash size={16} />
-                                                            </ActionIcon>
+                                                    <Table.Td>
+                                                        {team.is_admin ? (
+                                                            <Switch
+                                                                size="xs"
+                                                                checked={member.role === 'admin'}
+                                                                onChange={() => handleToggleRole(team.id, member.id, member.role)}
+                                                                label={member.role === 'admin' ? 'Admin' : 'Member'}
+                                                                disabled={member.id === team.owner_id}
+                                                            />
+                                                        ) : (
+                                                            getRoleBadge(member.role)
                                                         )}
+                                                    </Table.Td>
+                                                    <Table.Td>
+                                                        {member.role === 'admin' ? (
+                                                            <Badge color="green" variant="light" size="sm">All Monitors</Badge>
+                                                        ) : (
+                                                            <Badge color="gray" variant="light" size="sm">
+                                                                {member.monitor_ids?.length || 0} monitors
+                                                            </Badge>
+                                                        )}
+                                                    </Table.Td>
+                                                    <Table.Td style={{ textAlign: 'right' }}>
+                                                        <Group gap="xs" justify="flex-end">
+                                                            {team.is_admin && member.role === 'member' && (
+                                                                <ActionIcon 
+                                                                    color="blue" 
+                                                                    variant="subtle" 
+                                                                    onClick={() => handleOpenMonitorPermissions(team, member)}
+                                                                    title="Manage monitor access"
+                                                                >
+                                                                    <IconSettings size={16} />
+                                                                </ActionIcon>
+                                                            )}
+                                                            {team.is_admin && (
+                                                                <ActionIcon 
+                                                                    color="red" 
+                                                                    variant="subtle" 
+                                                                    onClick={() => handleRemoveMember(team.id, member.id)}
+                                                                    title="Remove member"
+                                                                >
+                                                                    <IconTrash size={16} />
+                                                                </ActionIcon>
+                                                            )}
+                                                        </Group>
                                                     </Table.Td>
                                                 </Table.Tr>
                                             ))}
@@ -160,26 +255,25 @@ function TeamsIndex({ teams }) {
                                 </Tabs.Panel>
 
                                 <Tabs.Panel value="invitations" pt="xs">
-                                    <Table verticalSpacing="sm">
-                                        <Table.Tbody>
-                                            {team.invitations.length === 0 ? (
-                                                <Table.Tr><Table.Td><Text size="xs" c="dimmed" ta="center" py="md">No pending invitations.</Text></Table.Td></Table.Tr>
-                                            ) : (
-                                                team.invitations.map((inv) => (
+                                    {team.invitations.length === 0 ? (
+                                        <Paper p="md" withBorder>
+                                            <Text size="sm" c="dimmed" ta="center">No pending invitations</Text>
+                                        </Paper>
+                                    ) : (
+                                        <Table verticalSpacing="sm">
+                                            <Table.Tbody>
+                                                {team.invitations.map((inv) => (
                                                     <Table.Tr key={inv.id}>
                                                         <Table.Td>
                                                             <Text size="sm" fw={500}>{inv.email}</Text>
                                                             <Text size="xs" c="dimmed">Expires {inv.expires_at}</Text>
                                                         </Table.Td>
                                                         <Table.Td>{getRoleBadge(inv.role)}</Table.Td>
-                                                        <Table.Td style={{ textAlign: 'right' }}>
-                                                            {/* Cancel invitation could be added here */}
-                                                        </Table.Td>
                                                     </Table.Tr>
-                                                ))
-                                            )}
-                                        </Table.Tbody>
-                                    </Table>
+                                                ))}
+                                            </Table.Tbody>
+                                        </Table>
+                                    )}
                                 </Tabs.Panel>
                             </Tabs>
                         </Paper>
@@ -199,17 +293,53 @@ function TeamsIndex({ teams }) {
             <Modal opened={inviteOpened} onClose={closeInvite} title={`Invite to ${selectedTeam?.name}`}>
                 <form onSubmit={inviteForm.onSubmit(handleInvite)}>
                     <Stack gap="md">
-                        <TextInput label="Email Address" placeholder="colleague@company.com" required {...inviteForm.getInputProps('email')} />
+                        <TextInput 
+                            label="Email Address" 
+                            placeholder="colleague@company.com" 
+                            required 
+                            {...inviteForm.getInputProps('email')} 
+                        />
                         <Select
                             label="Role"
+                            description="Admins have full access. Members need specific monitor permissions."
                             data={[
                                 { value: 'admin', label: 'Admin - Full access to all monitors' },
-                                { value: 'member', label: 'Member - Can edit monitors' },
-                                { value: 'viewer', label: 'Viewer - Read-only' },
+                                { value: 'member', label: 'Member - Limited access (set monitors later)' },
                             ]}
                             {...inviteForm.getInputProps('role')}
                         />
                         <Button type="submit" fullWidth mt="md">Send Invitation</Button>
+                    </Stack>
+                </form>
+            </Modal>
+
+            {/* Monitor Permissions Modal */}
+            <Modal 
+                opened={monitorOpened} 
+                onClose={closeMonitor} 
+                title={`Monitor Access for ${selectedMember?.name}`}
+                size="lg"
+            >
+                <form onSubmit={monitorForm.onSubmit(handleUpdateMonitors)}>
+                    <Stack gap="md">
+                        <Text size="sm" c="dimmed">
+                            Select which monitors {selectedMember?.name} can view and manage.
+                        </Text>
+                        <MultiSelect
+                            label="Accessible Monitors"
+                            placeholder="Select monitors"
+                            data={monitors.map(m => ({
+                                value: m.id,
+                                label: `${m.name} (${m.type})`,
+                            }))}
+                            searchable
+                            clearable
+                            {...monitorForm.getInputProps('monitor_ids')}
+                        />
+                        <Group justify="flex-end" mt="md">
+                            <Button variant="subtle" onClick={closeMonitor}>Cancel</Button>
+                            <Button type="submit">Update Permissions</Button>
+                        </Group>
                     </Stack>
                 </form>
             </Modal>

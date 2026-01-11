@@ -560,39 +560,46 @@ function MonitorShow({ monitor, heartbeats, incidents, stats, recovery_actions, 
 
                     <Grid.Col span={{ base: 12, md: 4 }}>
                         {monitor.check_ssl && monitor.ssl_expires_at && (
-                            <Card padding="xl" radius="lg" withBorder bg={monitor.ssl_days_until_expiry <= 30 ? 'red.0' : 'blue.0'}>
+                            <Card padding="xl" radius="lg" withBorder shadow="sm">
                                 <Stack gap="lg">
-                                    <Group justify="space-between">
+                                    <Group justify="space-between" align="flex-start">
                                         <ThemeIcon
                                             size="xl"
                                             radius="md"
-                                            variant="filled"
+                                            variant="light"
                                             color={monitor.ssl_days_until_expiry <= 7 ? 'red' : monitor.ssl_days_until_expiry <= 30 ? 'orange' : 'blue'}
                                         >
                                             <IconShieldLock size={24} />
                                         </ThemeIcon>
-                                        <Badge size="lg" radius="sm" variant="filled" color={monitor.ssl_days_until_expiry <= 30 ? 'red' : 'blue'}>
-                                            SECURE
+                                        <Badge 
+                                            size="lg" 
+                                            radius="sm" 
+                                            variant="light" 
+                                            color={monitor.ssl_days_until_expiry <= 30 ? 'red' : 'blue'}
+                                        >
+                                            {monitor.ssl_days_until_expiry <= 30 ? 'CRITICAL' : 'SECURE'}
                                         </Badge>
                                     </Group>
 
                                     <div>
-                                        <Text fw={900} size="xl" mb={4}>SSL Certificate</Text>
-                                        <Text size="sm" c="dimmed" fw={500}>{monitor.ssl_issuer}</Text>
+                                        <Text fw={800} size="xl" mb={4}>SSL Certificate</Text>
+                                        <Text size="sm" c="dimmed" fw={500}>{monitor.ssl_issuer || 'Unknown Issuer'}</Text>
                                     </div>
 
-                                    <Divider />
+                                    <Divider variant="dashed" />
 
-                                    <Group justify="space-between">
+                                    <Group justify="space-between" align="flex-end">
                                         <div>
-                                            <Text size="xs" c="dimmed" fw={700} tt="uppercase">Expires In</Text>
-                                            <Text fw={900} size="h3" c={monitor.ssl_days_until_expiry <= 30 ? 'red' : 'blue'}>
+                                            <Text size="xs" c="dimmed" fw={700} tt="uppercase" mb={4}>Expires In</Text>
+                                            <Text fw={900} size="h3" c={monitor.ssl_days_until_expiry <= 30 ? 'red' : 'blue'} style={{ lineHeight: 1 }}>
                                                 {monitor.ssl_days_until_expiry} Days
                                             </Text>
                                         </div>
                                         <div style={{ textAlign: 'right' }}>
-                                            <Text size="xs" c="dimmed" fw={700} tt="uppercase">Valid Until</Text>
-                                            <Text fw={700} size="sm">{new Date(monitor.ssl_expires_at).toLocaleDateString()}</Text>
+                                            <Text size="xs" c="dimmed" fw={700} tt="uppercase" mb={4}>Valid Until</Text>
+                                            <Text fw={700} size="sm" style={{ lineHeight: 1 }}>
+                                                {new Date(monitor.ssl_expires_at).toLocaleDateString()}
+                                            </Text>
                                         </div>
                                     </Group>
                                 </Stack>

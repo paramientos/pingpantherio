@@ -37,7 +37,8 @@ import '@mantine/spotlight/styles.css';
 function AppLayout({ children }) {
     const [opened, { toggle }] = useDisclosure();
     const { auth, url } = usePage().props;
-    const scrollAreaRef = React.useRef(null);
+    // Create a ref specifically for the active link
+    const activeRef = React.useRef(null);
 
     useEffect(() => {
         const handleOpenSpotlight = () => {
@@ -51,32 +52,17 @@ function AppLayout({ children }) {
         };
     }, []);
 
-    // Auto-scroll to active menu item
+    // Auto-scroll to active menu item using the direct ref
     useEffect(() => {
+        // Small delay to ensure rendering is complete
         const timer = setTimeout(() => {
-            if (scrollAreaRef.current) {
-                const viewport = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
-                if (viewport) {
-                    // Find active link by checking Mantine's active class
-                    const activeLink = viewport.querySelector('.mantine-NavLink-root[data-active="true"]')
-                        || viewport.querySelector('.mantine-NavLink-root.mantine-active');
-
-                    if (activeLink) {
-                        const viewportRect = viewport.getBoundingClientRect();
-                        const linkRect = activeLink.getBoundingClientRect();
-                        const scrollTop = viewport.scrollTop;
-
-                        // Calculate position to center the active item
-                        const targetScroll = scrollTop + linkRect.top - viewportRect.top - (viewportRect.height / 2) + (linkRect.height / 2);
-
-                        viewport.scrollTo({
-                            top: targetScroll,
-                            behavior: 'smooth'
-                        });
-                    }
-                }
+            if (activeRef.current) {
+                activeRef.current.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center',
+                });
             }
-        }, 200);
+        }, 100);
 
         return () => clearTimeout(timer);
     }, [url]);
@@ -186,6 +172,36 @@ function AppLayout({ children }) {
         },
     ];
 
+    // Helper function to render NavLinks with consistent logic
+    const renderNavLinks = (items) => {
+        return items.map((item) => {
+            const isActive = item.href === '/console'
+                ? url === '/console' || url === '/'
+                : url.startsWith(item.href);
+
+            return (
+                <NavLink
+                    key={item.href}
+                    // If this link is active, attach the ref to it
+                    ref={isActive ? activeRef : null}
+                    component={Link}
+                    href={item.href}
+                    label={item.label}
+                    leftSection={<item.icon size={20} stroke={1.5} />}
+                    active={isActive}
+                    variant="filled"
+                    mb={4}
+                    styles={{
+                        root: {
+                            borderRadius: '8px',
+                            fontWeight: isActive ? 700 : 500,
+                        },
+                    }}
+                />
+            );
+        });
+    };
+
     return (
         <AppShell
             header={{ height: 64 }}
@@ -277,135 +293,31 @@ function AppLayout({ children }) {
             </AppShell.Header>
 
             <AppShell.Navbar p="md">
-                <AppShell.Section grow component={ScrollArea} ref={scrollAreaRef}>
+                <AppShell.Section grow component={ScrollArea}>
                     <Text size="10px" fw={800} c="dimmed" tt="uppercase" mb="xs" px="sm" style={{ letterSpacing: '1px' }}>
                         Operational Telemetry
                     </Text>
-                    {monitoringItems.map((item) => {
-                        const isActive = item.href === '/console'
-                            ? url === '/console' || url === '/'
-                            : url.startsWith(item.href);
-
-                        return (
-                            <NavLink
-                                key={item.href}
-                                component={Link}
-                                href={item.href}
-                                label={item.label}
-                                leftSection={<item.icon size={20} stroke={1.5} />}
-                                active={isActive}
-                                variant="filled"
-                                mb={4}
-                                styles={{
-                                    root: {
-                                        borderRadius: '8px',
-                                        fontWeight: isActive ? 700 : 500,
-                                    },
-                                }}
-                            />
-                        );
-                    })}
+                    {renderNavLinks(monitoringItems)}
 
                     <Text size="10px" fw={800} c="dimmed" tt="uppercase" mt="xl" mb="xs" px="sm" style={{ letterSpacing: '1px' }}>
                         Global Infrastructure
                     </Text>
-                    {infrastructureItems.map((item) => {
-                        const isActive = url.startsWith(item.href);
-                        return (
-                            <NavLink
-                                key={item.href}
-                                component={Link}
-                                href={item.href}
-                                label={item.label}
-                                leftSection={<item.icon size={20} stroke={1.5} />}
-                                active={isActive}
-                                variant="filled"
-                                mb={4}
-                                styles={{
-                                    root: {
-                                        borderRadius: '8px',
-                                        fontWeight: isActive ? 700 : 500,
-                                    },
-                                }}
-                            />
-                        );
-                    })}
+                    {renderNavLinks(infrastructureItems)}
 
                     <Text size="10px" fw={800} c="dimmed" tt="uppercase" mt="xl" mb="xs" px="sm" style={{ letterSpacing: '1px' }}>
                         Intelligence & Recon
                     </Text>
-                    {analysisItems.map((item) => {
-                        const isActive = url.startsWith(item.href);
-                        return (
-                            <NavLink
-                                key={item.href}
-                                component={Link}
-                                href={item.href}
-                                label={item.label}
-                                leftSection={<item.icon size={20} stroke={1.5} />}
-                                active={isActive}
-                                variant="filled"
-                                mb={4}
-                                styles={{
-                                    root: {
-                                        borderRadius: '8px',
-                                        fontWeight: isActive ? 700 : 500,
-                                    },
-                                }}
-                            />
-                        );
-                    })}
+                    {renderNavLinks(analysisItems)}
 
                     <Text size="10px" fw={800} c="dimmed" tt="uppercase" mt="xl" mb="xs" px="sm" style={{ letterSpacing: '1px' }}>
                         Deployment & Alerting
                     </Text>
-                    {configurationItems.map((item) => {
-                        const isActive = url.startsWith(item.href);
-                        return (
-                            <NavLink
-                                key={item.href}
-                                component={Link}
-                                href={item.href}
-                                label={item.label}
-                                leftSection={<item.icon size={20} stroke={1.5} />}
-                                active={isActive}
-                                variant="filled"
-                                mb={4}
-                                styles={{
-                                    root: {
-                                        borderRadius: '8px',
-                                        fontWeight: isActive ? 700 : 500,
-                                    },
-                                }}
-                            />
-                        );
-                    })}
+                    {renderNavLinks(configurationItems)}
 
                     <Text size="10px" fw={800} c="dimmed" tt="uppercase" mt="xl" mb="xs" px="sm" style={{ letterSpacing: '1px' }}>
                         Core Configuration
                     </Text>
-
-                    {settingsItems.map((item) => {
-                        const isActive = url.startsWith(item.href);
-                        return (
-                            <NavLink
-                                key={item.href}
-                                component={Link}
-                                href={item.href}
-                                label={item.label}
-                                leftSection={<item.icon size={20} stroke={1.5} />}
-                                active={isActive}
-                                variant="filled"
-                                mb={4}
-                                styles={{
-                                    root: {
-                                        borderRadius: '8px',
-                                        fontWeight: isActive ? 700 : 500,
-                                    },
-                                }}
-                            />
-                        );
-                    })}
+                    {renderNavLinks(settingsItems)}
                 </AppShell.Section>
 
                 <AppShell.Section>

@@ -19,16 +19,24 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property string|null $error_message
+ * @property string|null $screenshot_path
+ * @property string|null $html_snapshot
+ * @property array<array-key, mixed>|null $response_headers
  * @property-read \App\Models\Monitor $monitor
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\IncidentUpdate> $updates
+ * @property-read int|null $updates_count
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Incident newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Incident newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Incident query()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Incident whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Incident whereDescription($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Incident whereErrorMessage($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Incident whereHtmlSnapshot($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Incident whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Incident whereMonitorId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Incident whereResolvedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Incident whereResponseHeaders($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Incident whereScreenshotPath($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Incident whereStartedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Incident whereStatus($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Incident whereTitle($value)

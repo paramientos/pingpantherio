@@ -56,6 +56,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\RecoveryAction> $recoveryActions
  * @property-read int|null $recovery_actions_count
  * @property-read \App\Models\SlaConfig|null $slaConfig
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Team> $teams
+ * @property-read int|null $teams_count
  * @property-read \App\Models\User $user
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor newQuery()
@@ -187,5 +189,12 @@ class Monitor extends Model
     public function dependents(): HasMany
     {
         return $this->hasMany(MonitorDependency::class, 'depends_on_monitor_id');
+    }
+
+    public function teams(): BelongsToMany
+    {
+        return $this->belongsToMany(Team::class, 'monitor_team_user')
+            ->withPivot('user_id')
+            ->withTimestamps();
     }
 }

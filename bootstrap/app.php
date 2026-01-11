@@ -9,6 +9,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
+use App\Console\Commands\PruneOldData;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -20,6 +21,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->job(new CheckMonitors)->everyMinute();
         $schedule->job(new CheckSslCertificates)->daily();
         $schedule->job(new CheckDomainExpirations)->daily();
+
+        $schedule->command(PruneOldData::class)->daily();
     })
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [

@@ -68,9 +68,11 @@ Route::middleware(['auth'])->group(function (): void {
     Route::resource('settings/webhooks', \App\Http\Controllers\WebhookController::class);
     Route::resource('settings/api-keys', ApiKeyController::class)->only(['index', 'store', 'destroy']);
     Route::get('/settings/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
-    Route::resource('settings/teams', TeamController::class)->only(['index', 'store']);
+    Route::resource('settings/teams', TeamController::class)->only(['index', 'store', 'destroy']);
     Route::post('/settings/teams/{team}/invite', [TeamController::class, 'invite'])->name('teams.invite');
     Route::delete('/settings/teams/{team}/members/{user}', [TeamController::class, 'removeMember'])->name('teams.members.destroy');
+    Route::patch('/settings/teams/{team}/members/{user}/monitors', [TeamController::class, 'updateMemberMonitors'])->name('teams.members.monitors.update');
+    Route::patch('/settings/teams/{team}/members/{user}/role', [TeamController::class, 'updateMemberRole'])->name('teams.members.role.update');
     Route::get('/invitations/{token}/accept', [TeamController::class, 'acceptInvite'])->name('invitations.accept');
     Route::get('/settings', fn () => redirect()->route('settings.notifications'));
     Route::get('/settings/notifications', [\App\Http\Controllers\SettingsController::class, 'notifications'])->name('settings.notifications');
