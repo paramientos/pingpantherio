@@ -1,11 +1,11 @@
 import React from 'react';
 import SettingsLayout from './SettingsLayout';
-import { Stack, TextInput, Button, Title, Text, Divider, Group, Paper, Alert } from '@mantine/core';
-import { useForm, usePage } from '@inertiajs/react';
+import { Stack, TextInput, Button, Title, Text, Divider, Group, Paper, Alert, Card, Badge } from '@mantine/core';
+import { useForm, usePage, router } from '@inertiajs/react';
 import { notifications } from '@mantine/notifications';
-import { IconAlertCircle } from '@tabler/icons-react';
+import { IconAlertCircle, IconAlertTriangle, IconMail } from '@tabler/icons-react';
 
-export default function Profile({ user }) {
+export default function Profile({ user, pendingInvitations }) {
     const { props } = usePage();
 
     const profileForm = useForm({
@@ -56,9 +56,75 @@ export default function Profile({ user }) {
         });
     };
 
+    const handleAcceptInvite = (token) => {
+        router.get(route('invitations.accept', { token }));
+    };
+
+    const handleRejectInvite = (token) => {
+        router.post(route('invitations.reject', { token }));
+    };
+
     return (
         <SettingsLayout activeTab="profile">
             <Stack gap="xl">
+                {/* Password Change Required Alert */}
+                {user.must_change_password && (
+                    <Alert 
+                        variant="light" 
+                        color="red" 
+                        title="Password Change Required" 
+                        icon={<IconAlertTriangle />}
+                        withCloseButton={false}
+                    >
+                        For your security, you must change your password. Please update your password below.
+                    </Alert>
+                )}
+
+                {/* Pending Team Invitations */}
+                {pendingInvitations && pendingInvitations.length > 0 && (
+                    <Alert 
+                        variant="light" 
+                        color="indigo" 
+                        title="Team Invitations" 
+                        icon={<IconMail />}
+                        withCloseButton={false}
+                    >
+                        <Stack gap="md" mt="sm">
+                            <Text size="sm">You have been invited to join the following teams:</Text>
+                            {pendingInvitations.map((inv) => (
+                                <Card key={inv.id} withBorder p="md" radius="md">
+                                    <Group justify="space-between" align="center">
+                                        <div>
+                                            <Group gap="xs" mb={4}>
+                                                <Text fw={700} size="sm">{inv.team_name}</Text>
+                                                <Badge size="sm" variant="light" color="indigo">{inv.role}</Badge>
+                                            </Group>
+                                            <Text size="xs" c="dimmed">Accept to join this team and access monitors</Text>
+                                        </div>
+                                        <Group gap="xs">
+                                            <Button 
+                                                variant="light" 
+                                                color="red" 
+                                                size="xs" 
+                                                onClick={() => handleRejectInvite(inv.token)}
+                                            >
+                                                Reject
+                                            </Button>
+                                            <Button 
+                                                color="green" 
+                                                size="xs" 
+                                                onClick={() => handleAcceptInvite(inv.token)}
+                                            >
+                                                Accept
+                                            </Button>
+                                        </Group>
+                                    </Group>
+                                </Card>
+                            ))}
+                        </Stack>
+                    </Alert>
+                )}
+
                 {/* Profile Information */}
                 <form onSubmit={updateProfile}>
                     <Stack gap="lg">

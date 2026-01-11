@@ -96,7 +96,7 @@ export default function UsersIndex({ users, roles }) {
         form.reset();
     };
 
-    const handleDelete = (user) => {handleOCreate
+    const handleDelete = (user) => {
         if (confirm(`Are you sure you want to delete ${user.name}?`)) {
             router.delete(`/settings/users/${user.id}`, {
                 onSuccess: () => notifications.show({ title: 'Deleted', message: 'User removed', color: 'red' })

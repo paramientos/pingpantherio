@@ -13,8 +13,19 @@ class PostMortemController extends Controller
 {
     public function index(): Response
     {
+        $user = auth()->user();
+        
         $postMortems = PostMortem::with(['incident.monitor'])
-            ->whereHas('incident.monitor', fn ($q) => $q->where('user_id', auth()->id()))
+            ->whereHas('incident.monitor', function ($q) use ($user) {
+                if ($user->role !== \App\Enums\Role::ADMIN && $user->teams()->exists()) {
+                    $teamIds = $user->teams()->pluck('teams.id');
+                    $q->whereHas('teams', function ($subQ) use ($teamIds) {
+                        $subQ->whereIn('teams.id', $teamIds);
+                    });
+                } elseif ($user->role !== \App\Enums\Role::ADMIN) {
+                    $q->where('user_id', $user->id);
+                }
+            })
             ->latest()
             ->get();
 
@@ -36,6 +47,8 @@ class PostMortemController extends Controller
 
     public function store(Request $request)
     {
+        $this->authorizeWrite();
+
         $validated = $request->validate([
             'incident_id' => 'required|exists:incidents,id',
             'title' => 'required|string|max:255',
@@ -73,6 +86,8 @@ class PostMortemController extends Controller
 
     public function destroy(PostMortem $postMortem)
     {
+        $this->authorizeWrite();
+
         if ($postMortem->incident->monitor->user_id !== auth()->id()) {
             abort(HttpResponse::HTTP_FORBIDDEN, 'You are not allowed to delete this post-mortem report.');
         }

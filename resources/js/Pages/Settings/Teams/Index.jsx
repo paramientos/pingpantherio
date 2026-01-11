@@ -143,7 +143,12 @@ function TeamsIndex({ teams, monitors, allUsers }) {
                                 <Group>
                                     <Avatar color="indigo" radius="md">{team.name.substring(0, 2).toUpperCase()}</Avatar>
                                     <div>
-                                        <Text fw={700} size="lg">{team.name}</Text>
+                                        <Group gap="xs">
+                                            <Text fw={700} size="lg">{team.name}</Text>
+                                            <Badge size="sm" variant="light" color="gray">
+                                                {team.monitors_count} {team.monitors_count === 1 ? 'Monitor' : 'Monitors'}
+                                            </Badge>
+                                        </Group>
                                         <Text size="xs" c="dimmed">Owned by {team.owner}</Text>
                                     </div>
                                 </Group>

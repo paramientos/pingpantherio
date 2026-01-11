@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { AppShell, Burger, Group, NavLink, Avatar, Menu, Text, rem, ActionIcon, ScrollArea, Divider, ThemeIcon } from '@mantine/core';
+import { AppShell, Burger, Group, NavLink, Avatar, Menu, Text, rem, ActionIcon, ScrollArea, Divider, ThemeIcon, Badge, Indicator } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { Link, usePage, router } from '@inertiajs/react';
 import { Alert } from '@mantine/core';
@@ -28,6 +28,7 @@ import {
     IconHierarchy2,
     IconSwords,
     IconFileText,
+    IconMail,
     IconBook,
     IconCalendarStats,
     IconFocusCentered,
@@ -38,7 +39,6 @@ import '@mantine/spotlight/styles.css';
 function AppLayout({ children }) {
     const [opened, { toggle }] = useDisclosure();
     const { auth, url } = usePage().props;
-    // Create a ref specifically for the active link
     const activeRef = React.useRef(null);
 
     useEffect(() => {
@@ -53,9 +53,7 @@ function AppLayout({ children }) {
         };
     }, []);
 
-    // Auto-scroll to active menu item using the direct ref
     useEffect(() => {
-        // Small delay to ensure rendering is complete
         const timer = setTimeout(() => {
             if (activeRef.current) {
                 activeRef.current.scrollIntoView({
@@ -177,7 +175,6 @@ function AppLayout({ children }) {
         },
     ];
 
-    // Helper function to render NavLinks with consistent logic
     const renderNavLinks = (items) => {
         return items.map((item) => {
             const isActive = item.href === '/console'
@@ -187,7 +184,6 @@ function AppLayout({ children }) {
             return (
                 <NavLink
                     key={item.href}
-                    // If this link is active, attach the ref to it
                     ref={isActive ? activeRef : null}
                     component={Link}
                     href={item.href}
@@ -256,9 +252,17 @@ function AppLayout({ children }) {
                             <Menu shadow="md" width={220} position="bottom-end">
                                 <Menu.Target>
                                     <Group style={{ cursor: 'pointer' }} gap="sm" px="sm" py={6}>
-                                        <Avatar color="primary" radius="xl" size="sm" variant="filled">
-                                            {auth.user.name.substring(0, 2).toUpperCase()}
-                                        </Avatar>
+                                        <Indicator 
+                                            inline 
+                                            label={auth.pending_invitations_count} 
+                                            size={16} 
+                                            color="indigo"
+                                            disabled={!auth.pending_invitations_count || auth.pending_invitations_count === 0}
+                                        >
+                                            <Avatar color="primary" radius="xl" size="sm" variant="filled">
+                                                {auth.user.name.substring(0, 2).toUpperCase()}
+                                            </Avatar>
+                                        </Indicator>
                                         <div style={{ flex: 1 }} visibleFrom="sm">
                                             <Text size="sm" fw={600} style={{ lineHeight: 1 }}>
                                                 {auth.user.name}
@@ -272,6 +276,20 @@ function AppLayout({ children }) {
 
                                 <Menu.Dropdown>
                                     <Menu.Label>Account</Menu.Label>
+                                    {auth.pending_invitations_count > 0 && (
+                                        <Menu.Item
+                                            leftSection={<IconMail style={{ width: rem(16), height: rem(16) }} />}
+                                            component={Link}
+                                            href="/settings/profile"
+                                            rightSection={
+                                                <ThemeIcon size="xs" radius="xl" color="indigo">
+                                                    <Text size="xs" fw={700}>{auth.pending_invitations_count}</Text>
+                                                </ThemeIcon>
+                                            }
+                                        >
+                                            Team Invitations
+                                        </Menu.Item>
+                                    )}
                                     <Menu.Item
                                         leftSection={<IconSettings style={{ width: rem(16), height: rem(16) }} />}
                                         component={Link}
@@ -339,11 +357,18 @@ function AppLayout({ children }) {
                         You are not a member of any team. To access the system fully, you must be added to a team by an administrator.
                     </Alert>
                 )}
+
                 {auth.user && auth.user.role !== 'admin' && auth.has_team && !auth.team_has_monitors && (
                     <Alert variant="light" color="blue" title="No Monitors Configured" icon={<IconAlertTriangle />} mb="md" withCloseButton={false}>
                         Your team does not have any monitors configured yet. Please ask your team administrator to add monitors.
                     </Alert>
                 )}
+
+                {/* {auth.user && auth.user.role !== 'admin' && auth.user.must_change_password && (
+                    <Alert variant="light" color="orange" title="Password Change Required" icon={<IconAlertTriangle />} mb="md" withCloseButton={false}>
+                        For your security, you must change your password. Please update your password in the profile settings.
+                    </Alert>
+                )} */}
                 {children}
             </AppShell.Main>
 

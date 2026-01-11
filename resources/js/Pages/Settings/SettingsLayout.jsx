@@ -49,49 +49,50 @@ export default function SettingsLayout({ children, activeTab }) {
                             >
                                 Security
                             </Tabs.Tab>
-                            <Tabs.Tab
-                                value="webhooks"
-                                leftSection={<IconWebhook style={{ width: rem(16), height: rem(16) }} />}
-                                component={Link}
-                                href="/settings/webhooks"
-                            >
-                                Webhooks
-                            </Tabs.Tab>
-                            <Tabs.Tab
-                                value="api-keys"
-                                leftSection={<IconKey style={{ width: rem(16), height: rem(16) }} />}
-                                component={Link}
-                                href="/settings/api-keys"
-                            >
-                                API Keys
-                            </Tabs.Tab>
-                            <Tabs.Tab
-                                value="audit-logs"
-                                leftSection={<IconHistory style={{ width: rem(16), height: rem(16) }} />}
-                                component={Link}
-                                href="/settings/audit-logs"
-                            >
-                                Audit Logs
-                            </Tabs.Tab>
                             {usePage().props.auth.user.role === 'admin' && (
-                                <Tabs.Tab
-                                    value="users"
-                                    leftSection={<IconUserCircle style={{ width: rem(16), height: rem(16) }} />}
-                                    component={Link}
-                                    href="/settings/users"
-                                >
-                                    Users
-                                </Tabs.Tab>
+                                <>
+                                    <Tabs.Tab
+                                        value="webhooks"
+                                        leftSection={<IconWebhook style={{ width: rem(16), height: rem(16) }} />}
+                                        component={Link}
+                                        href="/settings/webhooks"
+                                    >
+                                        Webhooks
+                                    </Tabs.Tab>
+                                    <Tabs.Tab
+                                        value="api-keys"
+                                        leftSection={<IconKey style={{ width: rem(16), height: rem(16) }} />}
+                                        component={Link}
+                                        href="/settings/api-keys"
+                                    >
+                                        API Keys
+                                    </Tabs.Tab>
+                                    <Tabs.Tab
+                                        value="audit-logs"
+                                        leftSection={<IconHistory style={{ width: rem(16), height: rem(16) }} />}
+                                        component={Link}
+                                        href="/settings/audit-logs"
+                                    >
+                                        Audit Logs
+                                    </Tabs.Tab>
+                                    <Tabs.Tab
+                                        value="users"
+                                        leftSection={<IconUserCircle style={{ width: rem(16), height: rem(16) }} />}
+                                        component={Link}
+                                        href="/settings/users"
+                                    >
+                                        Users
+                                    </Tabs.Tab>
+                                    <Tabs.Tab
+                                        value="team"
+                                        leftSection={<IconUsers style={{ width: rem(16), height: rem(16) }} />}
+                                        component={Link}
+                                        href="/settings/teams"
+                                    >
+                                        Team
+                                    </Tabs.Tab>
+                                </>
                             )}
-
-                            <Tabs.Tab
-                                value="team"
-                                leftSection={<IconUsers style={{ width: rem(16), height: rem(16) }} />}
-                                component={Link}
-                                href="/settings/teams"
-                            >
-                                Team
-                            </Tabs.Tab>
                         </Tabs.List>
 
                         <Paper withBorder p="xl" radius="md">

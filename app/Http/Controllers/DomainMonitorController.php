@@ -12,8 +12,25 @@ class DomainMonitorController extends Controller
 {
     public function index(): Response
     {
-        $domains = DomainMonitor::where('user_id', auth()->id())
-            ->latest()
+        $user = auth()->user();
+        $query = DomainMonitor::query();
+
+        if ($user->role === \App\Enums\Role::ADMIN) {
+        } elseif ($user->teams()->exists()) {
+            $teamUserIds = $user->teams()
+                ->with('users')
+                ->get()
+                ->pluck('users')
+                ->flatten()
+                ->pluck('id')
+
+                ->unique();
+            $query->whereIn('user_id', $teamUserIds);
+        } else {
+            $query->where('user_id', $user->id);
+        }
+
+        $domains = $query->latest()
             ->get()
             ->map(fn ($domain) => [
                 'id' => $domain->getKey(),
@@ -24,13 +41,18 @@ class DomainMonitorController extends Controller
                 'last_checked' => $domain->last_checked_at?->diffForHumans(),
             ]);
 
+        $isReadOnly = $user->role === 'user' || $user->role === 'member';
+
         return Inertia::render('Domains/Index', [
             'domains' => $domains,
+            'isReadOnly' => $isReadOnly,
         ]);
     }
 
     public function store(Request $request)
     {
+        $this->authorizeWrite();
+
         $validated = $request->validate([
             'domain' => 'required|string|max:255',
         ]);
@@ -49,6 +71,8 @@ class DomainMonitorController extends Controller
 
     public function destroy(DomainMonitor $domain)
     {
+        $this->authorizeWrite();
+
         $domain->delete();
 
         return redirect()->route('domains.index');

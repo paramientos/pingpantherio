@@ -51,6 +51,8 @@ class EscalationPolicyController extends Controller
 
     public function store(Request $request)
     {
+        $this->authorizeWrite();
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -116,6 +118,8 @@ class EscalationPolicyController extends Controller
 
     public function update(Request $request, EscalationPolicy $escalationPolicy)
     {
+        $this->authorizeWrite();
+
         if ($escalationPolicy->user_id !== auth()->user()->id) {
             abort(403);
         }
@@ -151,6 +155,8 @@ class EscalationPolicyController extends Controller
 
     public function destroy(EscalationPolicy $escalationPolicy)
     {
+        $this->authorizeWrite();
+
         if ($escalationPolicy->user_id !== auth()->user()->id) {
             abort(403);
         }

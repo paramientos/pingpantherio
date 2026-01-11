@@ -15,10 +15,23 @@ class ProfileController extends Controller
 {
     public function edit(Request $request): Response
     {
+        $pendingInvitations = \App\Models\Invitation::where('email', $request->user()->email)
+            ->with('team')
+            ->get()
+            ->map(function ($invitation) {
+                return [
+                    'id' => $invitation->id,
+                    'team_name' => $invitation->team->name,
+                    'role' => $invitation->role,
+                    'token' => $invitation->token,
+                ];
+            });
+
         return Inertia::render('Settings/Profile', [
             'user' => $request->user(),
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => session('status'),
+            'pendingInvitations' => $pendingInvitations,
         ]);
     }
 

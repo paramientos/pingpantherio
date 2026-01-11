@@ -16,8 +16,10 @@ class ForcePasswordChange
             !$request->is('profile*') && 
             !$request->is('logout') && 
             !$request->is('settings/security') && 
+            !$request->is('invitations/*') && 
             !$request->routeIs('password.update') &&
-            !$request->routeIs('profile.update')
+            !$request->routeIs('profile.update') &&
+            !$request->routeIs('invitations.*')
         ) {
             return redirect()->route('settings.profile')
                 ->with('warning', 'Please change your password for your security.');

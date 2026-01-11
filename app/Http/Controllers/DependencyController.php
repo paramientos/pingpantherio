@@ -50,6 +50,8 @@ class DependencyController extends Controller
 
     public function store(Request $request)
     {
+        $this->authorizeWrite();
+
         $validated = $request->validate([
             'monitor_id' => 'required|exists:monitors,id',
             'depends_on_monitor_id' => 'required|exists:monitors,id|different:monitor_id',
@@ -72,6 +74,8 @@ class DependencyController extends Controller
 
     public function destroy(MonitorDependency $dependency)
     {
+        $this->authorizeWrite();
+
         if ($dependency->monitor->user_id !== auth()->id()) {
             abort(403);
         }

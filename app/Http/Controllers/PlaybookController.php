@@ -31,6 +31,8 @@ class PlaybookController extends Controller
 
     public function store(Request $request)
     {
+        $this->authorizeWrite();
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'content' => 'required|string',
@@ -55,6 +57,8 @@ class PlaybookController extends Controller
 
     public function update(Request $request, Playbook $playbook)
     {
+        $this->authorizeWrite();
+
         if ($playbook->user_id !== auth()->id()) {
             abort(HttpResponse::HTTP_FORBIDDEN, 'You are not allowed to edit this playbook.');
         }
@@ -85,6 +89,8 @@ class PlaybookController extends Controller
 
     public function destroy(Playbook $playbook)
     {
+        $this->authorizeWrite();
+
         if ($playbook->user_id !== auth()->id()) {
             abort(HttpResponse::HTTP_FORBIDDEN, 'You are not allowed to delete this playbook.');
         }

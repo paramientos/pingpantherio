@@ -13,8 +13,22 @@ class SlaController extends Controller
 {
     public function index(): Response
     {
+        $user = auth()->user();
+        $monitorQuery = Monitor::query();
+
+        if ($user->role !== \App\Enums\Role::ADMIN && $user->teams()->exists()) {
+            $teamIds = $user->teams()->pluck('teams.id');
+            $monitorQuery->whereHas('teams', function ($q) use ($teamIds) {
+                $q->whereIn('teams.id', $teamIds);
+            });
+        } elseif ($user->role !== \App\Enums\Role::ADMIN) {
+            $monitorQuery->where('user_id', $user->id);
+        }
+
+        $monitorIds = $monitorQuery->pluck('id');
+
         $slas = SlaConfig::with('monitor')
-            ->whereHas('monitor', fn($q) => $q->where('user_id', auth()->user()->id))
+            ->whereIn('monitor_id', $monitorIds)
             ->where('is_active', true)
             ->get()
             ->map(function ($sla) {
@@ -37,7 +51,15 @@ class SlaController extends Controller
                 ];
             });
 
-        $monitors = Monitor::where('user_id', auth()->user()->id)
+        $monitors = Monitor::query()
+            ->when($user->role !== \App\Enums\Role::ADMIN && $user->teams()->exists(), function ($q) use ($teamIds) {
+                $q->whereHas('teams', function ($subQ) use ($teamIds) {
+                    $subQ->whereIn('teams.id', $teamIds);
+                });
+            })
+            ->when($user->role !== \App\Enums\Role::ADMIN && !$user->teams()->exists(), function ($q) use ($user) {
+                $q->where('user_id', $user->id);
+            })
             ->whereDoesntHave('slaConfig')
             ->get()
             ->map(fn ($m) => [
@@ -53,6 +75,8 @@ class SlaController extends Controller
 
     public function store(Request $request)
     {
+        $this->authorizeWrite();
+
         $validated = $request->validate([
             'monitor_id' => 'required|exists:monitors,id',
             'name' => 'required|string|max:255',
@@ -69,6 +93,8 @@ class SlaController extends Controller
 
     public function destroy(SlaConfig $slaConfig)
     {
+        $this->authorizeWrite();
+
         // Check ownership
         if ($slaConfig->monitor->user_id !== auth()->user()->id) {
             abort(HttpResponse::HTTP_FORBIDDEN, 'You are not allowed to delete this SLA configuration.');

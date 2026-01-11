@@ -12,7 +12,20 @@ class MaintenanceWindowController extends Controller
 {
     public function index(): Response
     {
-        $monitors = Monitor::where('user_id', auth()->id())->get();
+        $user = auth()->user();
+        $query = Monitor::query();
+
+        if ($user->role !== \App\Enums\Role::ADMIN && $user->teams()->exists()) {
+            $teamIds = $user->teams()->pluck('teams.id');
+            
+            $query->whereHas('teams', function ($q) use ($teamIds) {
+                $q->whereIn('teams.id', $teamIds);
+            });
+        } elseif ($user->role !== \App\Enums\Role::ADMIN) {
+            $query->where('user_id', $user->id);
+        }
+
+        $monitors = $query->get();
 
         $windows = MaintenanceWindow::whereIn('monitor_id', $monitors->pluck('id'))
             ->with('monitor')
@@ -38,8 +51,19 @@ class MaintenanceWindowController extends Controller
 
     public function create(): Response
     {
-        $monitors = Monitor::where('user_id', auth()->id())
-            ->get()
+        $user = auth()->user();
+        $query = Monitor::query();
+
+        if ($user->role !== \App\Enums\Role::ADMIN && $user->teams()->exists()) {
+            $teamIds = $user->teams()->pluck('teams.id');
+            $query->whereHas('teams', function ($q) use ($teamIds) {
+                $q->whereIn('teams.id', $teamIds);
+            });
+        } elseif ($user->role !== \App\Enums\Role::ADMIN) {
+            $query->where('user_id', $user->id);
+        }
+
+        $monitors = $query->get()
             ->map(fn ($m) => [
                 'value' => $m->getKey(),
                 'label' => $m->name,
@@ -52,6 +76,8 @@ class MaintenanceWindowController extends Controller
 
     public function store(Request $request)
     {
+        $this->authorizeWrite();
+
         $validated = $request->validate([
             'monitor_id' => 'required|exists:monitors,id',
             'name' => 'required|string|max:255',
@@ -68,6 +94,8 @@ class MaintenanceWindowController extends Controller
 
     public function destroy(MaintenanceWindow $maintenanceWindow)
     {
+        $this->authorizeWrite();
+
         $maintenanceWindow->delete();
 
         return redirect()->route('maintenance-windows.index');

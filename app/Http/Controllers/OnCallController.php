@@ -40,6 +40,8 @@ class OnCallController extends Controller
 
     public function store(Request $request)
     {
+        $this->authorizeWrite();
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'timezone' => 'required|string',
@@ -68,6 +70,8 @@ class OnCallController extends Controller
 
     public function destroy(OnCallSchedule $on_call)
     {
+        $this->authorizeWrite();
+
         if ($on_call->user_id !== auth()->id()) {
             abort(\Symfony\Component\HttpFoundation\Response::HTTP_FORBIDDEN);
         }

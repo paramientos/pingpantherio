@@ -13,12 +13,25 @@ class MonitorController extends Controller
 {
     public function index(): Response
     {
-        $monitors = Monitor::with(['user', 'heartbeats' => function ($query) {
+        $user = auth()->user();
+        
+        $query = Monitor::with(['user', 'heartbeats' => function ($query) {
             $query->latest()->limit(10);
-        }])
-            ->latest()
+        }]);
+
+        if ($user->role !== \App\Enums\Role::ADMIN && $user->teams()->exists()) {
+            $teamIds = $user->teams()->pluck('teams.id');
+            
+            $query->whereHas('teams', function ($q) use ($teamIds) {
+                $q->whereIn('teams.id', $teamIds);
+            });
+        } else {
+            $query->where('user_id', $user->id);
+        }
+
+        $monitors = $query->latest()
             ->get()
-            ->map(fn($monitor) => [
+            ->map(fn(Monitor $monitor) => [
                 'id' => $monitor->getKey(),
                 'name' => $monitor->name,
                 'url' => $monitor->url,
@@ -45,11 +58,25 @@ class MonitorController extends Controller
                 'value' => $p->id,
                 'label' => $p->name,
             ]),
+
+            'isReadOnly' => $user->role === 'user' || $user->role === 'member',
         ]);
     }
 
     public function show(Monitor $monitor): Response
     {
+        $user = auth()->user();
+        
+        // Authorization check
+        if ($user->role !== \App\Enums\Role::ADMIN) {
+            $isOwner = $monitor->user_id === $user->id;
+            $isInTeam = $monitor->teams()->whereHas('users', fn($q) => $q->where('users.id', $user->id))->exists();
+            
+            if (!$isOwner && !$isInTeam) {
+                abort(403, 'Unauthorized access to monitor.');
+            }
+        }
+
         $monitor->load(['heartbeats' => function ($query) {
             $query->latest()->limit(100);
         }, 'incidents' => function ($query) {
@@ -131,11 +158,13 @@ class MonitorController extends Controller
             ]),
             'responseDistribution' => $this->getResponseDistribution($monitor),
             'uptimeTrend' => $this->getUptimeTrend($monitor, 7),
+            'isReadOnly' => $user->role === 'user' || $user->role === 'member',
         ]);
     }
 
     public function store(Request $request)
     {
+        $this->authorizeWrite();
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'url' => 'nullable|url|max:500',
@@ -173,6 +202,7 @@ class MonitorController extends Controller
 
     public function check(Monitor $monitor)
     {
+        $this->authorizeWrite();
         // Check the monitor immediately
         (new CheckMonitors($monitor))->handle();
 
@@ -189,6 +219,7 @@ class MonitorController extends Controller
 
     public function update(Request $request, Monitor $monitor)
     {
+        $this->authorizeWrite();
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'url' => 'nullable|url|max:500',
@@ -223,6 +254,7 @@ class MonitorController extends Controller
 
     public function destroy(Monitor $monitor)
     {
+        $this->authorizeWrite();
         $monitor->delete();
 
         return redirect()->route('monitors.index');

@@ -9,7 +9,6 @@ use App\Models\User;
 use App\Notifications\TeamInvitationNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -41,6 +40,7 @@ class TeamController extends Controller
                         'role' => $user->pivot->role,
                     ]),
                     'monitor_ids' => $team->monitors->pluck('id')->toArray(),
+                    'monitors_count' => $team->monitors->count(),
                     'invitations' => $team->invitations->map(fn ($inv) => [
                         'id' => $inv->id,
                         'email' => $inv->email,
@@ -68,6 +68,7 @@ class TeamController extends Controller
 
     public function store(Request $request)
     {
+        $this->authorizeWrite();
         $validated = $request->validate([
             'name' => 'required|string|max:255',
         ]);
@@ -84,12 +85,12 @@ class TeamController extends Controller
 
     public function destroy(Team $team)
     {
+        $this->authorizeWrite();
         if ($team->owner_id !== auth()->id()) {
             abort(HttpResponse::HTTP_FORBIDDEN, 'Only the team owner can delete this team.');
         }
 
         DB::transaction(function () use ($team) {
-            DB::table('monitor_team_user')->where('team_id', $team->id)->delete();
 
             $team->invitations()->delete();
 
@@ -103,6 +104,7 @@ class TeamController extends Controller
 
     public function invite(Request $request, Team $team)
     {
+        $this->authorizeWrite();
         $userRole = $team->users()->where('user_id', auth()->id())->first()?->pivot?->role;
 
         if ($team->owner_id !== auth()->id() && $userRole !== 'admin') {
@@ -146,6 +148,7 @@ class TeamController extends Controller
 
         if ($team->users()->where('user_id', auth()->id())->exists()) {
             $invitation->delete();
+
             return redirect()->route('dashboard')->with('message', 'You are already a member of this team.');
         }
 
@@ -173,6 +176,7 @@ class TeamController extends Controller
 
     public function removeMember(Team $team, string $userId)
     {
+        $this->authorizeWrite();
         $userRole = $team->users()->where('user_id', auth()->id())->first()?->pivot?->role;
 
         if ($team->owner_id !== auth()->id() && $userRole !== 'admin') {
@@ -183,11 +187,6 @@ class TeamController extends Controller
             return back()->with('error', 'You cannot remove the owner.');
         }
 
-        DB::table('monitor_team_user')
-            ->where('team_id', $team->id)
-            ->where('user_id', $userId)
-            ->delete();
-
         $team->users()->detach($userId);
 
         return back()->with('message', 'Member removed successfully');
@@ -195,6 +194,7 @@ class TeamController extends Controller
 
     public function updateTeamMonitors(Request $request, Team $team)
     {
+        $this->authorizeWrite();
         $userRole = $team->users()->where('user_id', auth()->id())->first()?->pivot?->role;
 
         if ($team->owner_id !== auth()->id() && $userRole !== 'admin') {
@@ -206,13 +206,20 @@ class TeamController extends Controller
             'monitor_ids.*' => 'exists:monitors,id',
         ]);
 
-        $team->monitors()->sync($validated['monitor_ids']);
+        // Prepare sync data with UUIDs for pivot table
+        $syncData = [];
+        foreach ($validated['monitor_ids'] as $monitorId) {
+            $syncData[$monitorId] = ['id' => \Illuminate\Support\Str::uuid()->toString()];
+        }
+
+        $team->monitors()->sync($syncData);
 
         return back()->with('message', 'Team monitors updated successfully');
     }
 
     public function updateMemberRole(Request $request, Team $team, string $userId)
     {
+        $this->authorizeWrite();
         if ($team->owner_id !== auth()->id()) {
             abort(HttpResponse::HTTP_FORBIDDEN, 'Only the team owner can change member roles.');
         }
@@ -232,6 +239,7 @@ class TeamController extends Controller
 
     public function resendInvitation(Team $team, $invitationId)
     {
+        $this->authorizeWrite();
         $userRole = $team->users()->where('user_id', auth()->id())->first()?->pivot?->role;
 
         if ($team->owner_id !== auth()->id() && $userRole !== 'admin') {

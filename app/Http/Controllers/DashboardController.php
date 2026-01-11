@@ -15,11 +15,27 @@ class DashboardController extends Controller
 {
     public function index(): Response
     {
-        $monitors = Monitor::where('user_id', auth()->id())->get();
+        $user = auth()->user();
+        $query = Monitor::query();
+
+        if ($user->role === \App\Enums\Role::ADMIN) {
+            // Admins see all monitors
+        } elseif ($user->teams()->exists()) {
+            // Team members see monitors of their teams
+            $teamIds = $user->teams()->pluck('teams.id');
+            $query->whereHas('teams', function ($q) use ($teamIds) {
+                $q->whereIn('teams.id', $teamIds);
+            });
+        } else {
+            // Personal users see only their own monitors
+            $query->where('user_id', $user->id);
+        }
+
+        $monitors = $query->get();
 
         $stats = [
-            'uptime_24h' => $this->calculateGlobalUptime(24),
-            'uptime_7d' => $this->calculateGlobalUptime(168),
+            'uptime_24h' => $this->calculateGlobalUptime($monitors, 24),
+            'uptime_7d' => $this->calculateGlobalUptime($monitors, 168),
             'avg_response' => floor(Heartbeat::whereIn('monitor_id', $monitors->pluck('id'))
                 ->where('checked_at', '>=', now()->subHours(24))
                 ->avg('response_time')),
@@ -49,7 +65,7 @@ class DashboardController extends Controller
         $slowestMonitors = $this->getSlowestMonitors($monitors);
         $recentIncidents = $this->getRecentIncidents($monitors);
 
-        $invitations = Invitation::where('email', auth()->user()->email)
+        $invitations = Invitation::where('email', $user->email)
             ->where('expires_at', '>', now())
             ->with('team')
             ->get()
@@ -68,15 +84,13 @@ class DashboardController extends Controller
             'incidentTimeline' => $incidentTimeline,
             'slowestMonitors' => $slowestMonitors,
             'recentIncidents' => $recentIncidents,
-            'hasTeam' => auth()->user()->teams()->exists(),
+            'hasTeam' => $user->teams()->exists(),
             'pendingInvitations' => $invitations,
         ]);
     }
 
-    protected function calculateGlobalUptime(int $hours): float
+    protected function calculateGlobalUptime($monitors, int $hours): float
     {
-        $monitors = Monitor::where('user_id', auth()->id())->get();
-
         if ($monitors->isEmpty()) {
             return 100.0;
         }

@@ -37,6 +37,8 @@ class AlertChannelController extends Controller
 
     public function store(Request $request)
     {
+        $this->authorizeWrite();
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'type' => 'required|in:email,slack,discord,telegram,webhook',
@@ -67,6 +69,8 @@ class AlertChannelController extends Controller
 
     public function update(Request $request, AlertChannel $alertChannel)
     {
+        $this->authorizeWrite();
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'type' => 'required|in:email,slack,discord,telegram,webhook',
@@ -81,6 +85,8 @@ class AlertChannelController extends Controller
 
     public function destroy(AlertChannel $alertChannel)
     {
+        $this->authorizeWrite();
+
         $alertChannel->delete();
 
         return redirect()->route('alert-channels.index');

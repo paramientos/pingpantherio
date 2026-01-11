@@ -21,10 +21,13 @@ class TeamAccessMiddleware
                 !$request->is('profile*') && 
                 !$request->is('logout') && 
                 !$request->is('settings/security') && 
+                !$request->is('invitations/*') && 
                 !$request->routeIs('password.update') && 
-                !$request->routeIs('profile.update')
+                !$request->routeIs('profile.update') &&
+                !$request->routeIs('settings.notifications*') &&
+                !$request->routeIs('invitations.*')
             ) {
-                return $next($request);
+                return redirect()->route('profile.edit');
             }
         }
 
