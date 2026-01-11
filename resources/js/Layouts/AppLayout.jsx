@@ -250,83 +250,131 @@ function AppLayout({ children }) {
                     <Text size="10px" fw={800} c="dimmed" tt="uppercase" mb="xs" px="sm" style={{ letterSpacing: '1px' }}>
                         Operational Telemetry
                     </Text>
-                    {monitoringItems.map((item) => (
-                        <NavLink
-                            key={item.href}
-                            component={Link}
-                            href={item.href}
-                            label={item.label}
-                            leftSection={<item.icon size={20} stroke={1.5} />}
-                            active={url === item.href || (item.href !== '/' && url.startsWith(item.href))}
-                            variant="subtle"
-                            mb={4}
-                        />
-                    ))}
+                    {monitoringItems.map((item) => {
+                        const isActive = item.href === '/console'
+                            ? url === '/console' || url === '/'
+                            : url.startsWith(item.href);
+
+                        return (
+                            <NavLink
+                                key={item.href}
+                                component={Link}
+                                href={item.href}
+                                label={item.label}
+                                leftSection={<item.icon size={20} stroke={1.5} />}
+                                active={isActive}
+                                variant="filled"
+                                mb={4}
+                                styles={{
+                                    root: {
+                                        borderRadius: '8px',
+                                        fontWeight: isActive ? 700 : 500,
+                                    },
+                                }}
+                            />
+                        );
+                    })}
 
                     <Text size="10px" fw={800} c="dimmed" tt="uppercase" mt="xl" mb="xs" px="sm" style={{ letterSpacing: '1px' }}>
                         Global Infrastructure
                     </Text>
-                    {infrastructureItems.map((item) => (
-                        <NavLink
-                            key={item.href}
-                            component={Link}
-                            href={item.href}
-                            label={item.label}
-                            leftSection={<item.icon size={20} stroke={1.5} />}
-                            active={url.startsWith(item.href)}
-                            variant="subtle"
-                            mb={4}
-                        />
-                    ))}
+                    {infrastructureItems.map((item) => {
+                        const isActive = url.startsWith(item.href);
+                        return (
+                            <NavLink
+                                key={item.href}
+                                component={Link}
+                                href={item.href}
+                                label={item.label}
+                                leftSection={<item.icon size={20} stroke={1.5} />}
+                                active={isActive}
+                                variant="filled"
+                                mb={4}
+                                styles={{
+                                    root: {
+                                        borderRadius: '8px',
+                                        fontWeight: isActive ? 700 : 500,
+                                    },
+                                }}
+                            />
+                        );
+                    })}
 
                     <Text size="10px" fw={800} c="dimmed" tt="uppercase" mt="xl" mb="xs" px="sm" style={{ letterSpacing: '1px' }}>
                         Intelligence & Recon
                     </Text>
-                    {analysisItems.map((item) => (
-                        <NavLink
-                            key={item.href}
-                            component={Link}
-                            href={item.href}
-                            label={item.label}
-                            leftSection={<item.icon size={20} stroke={1.5} />}
-                            active={url.startsWith(item.href)}
-                            variant="subtle"
-                            mb={4}
-                        />
-                    ))}
+                    {analysisItems.map((item) => {
+                        const isActive = url.startsWith(item.href);
+                        return (
+                            <NavLink
+                                key={item.href}
+                                component={Link}
+                                href={item.href}
+                                label={item.label}
+                                leftSection={<item.icon size={20} stroke={1.5} />}
+                                active={isActive}
+                                variant="filled"
+                                mb={4}
+                                styles={{
+                                    root: {
+                                        borderRadius: '8px',
+                                        fontWeight: isActive ? 700 : 500,
+                                    },
+                                }}
+                            />
+                        );
+                    })}
 
                     <Text size="10px" fw={800} c="dimmed" tt="uppercase" mt="xl" mb="xs" px="sm" style={{ letterSpacing: '1px' }}>
                         Deployment & Alerting
                     </Text>
-                    {configurationItems.map((item) => (
-                        <NavLink
-                            key={item.href}
-                            component={Link}
-                            href={item.href}
-                            label={item.label}
-                            leftSection={<item.icon size={20} stroke={1.5} />}
-                            active={url.startsWith(item.href)}
-                            variant="subtle"
-                            mb={4}
-                        />
-                    ))}
+                    {configurationItems.map((item) => {
+                        const isActive = url.startsWith(item.href);
+                        return (
+                            <NavLink
+                                key={item.href}
+                                component={Link}
+                                href={item.href}
+                                label={item.label}
+                                leftSection={<item.icon size={20} stroke={1.5} />}
+                                active={isActive}
+                                variant="filled"
+                                mb={4}
+                                styles={{
+                                    root: {
+                                        borderRadius: '8px',
+                                        fontWeight: isActive ? 700 : 500,
+                                    },
+                                }}
+                            />
+                        );
+                    })}
 
                     <Text size="10px" fw={800} c="dimmed" tt="uppercase" mt="xl" mb="xs" px="sm" style={{ letterSpacing: '1px' }}>
                         Core Configuration
                     </Text>
 
-                    {settingsItems.map((item) => (
-                        <NavLink
-                            key={item.href}
-                            component={Link}
-                            href={item.href}
-                            label={item.label}
-                            leftSection={<item.icon size={20} stroke={1.5} />}
-                            active={url.startsWith(item.href)}
-                            variant="subtle"
-                            mb={4}
-                        />
-                    ))}
+                    {settingsItems.map((item) => {
+                        const isActive = url.startsWith(item.href);
+                        return (
+                            <NavLink
+                                key={item.href}
+                                component={Link}
+                                href={item.href}
+                                label={item.label}
+                                leftSection={<item.icon size={20} stroke={1.5} />}
+                                active={isActive}
+                                variant="filled"
+                                mb={4}
+                                styles={{
+                                    root: {
+                                        borderRadius: '8px',
+                                        fontWeight: isActive ? 700 : 500,
+                                    },
+                                }}
+                            />
+                        );
+                    })}
                 </AppShell.Section>
 
                 <AppShell.Section>
