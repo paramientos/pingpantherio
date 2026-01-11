@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Enums\MonitorStatus;
-use App\Models\Monitor;
 use App\Models\Heartbeat;
 use App\Models\Incident;
+use App\Models\Monitor;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -72,6 +72,7 @@ class DashboardController extends Controller
 
             if ($heartbeats->isEmpty()) {
                 $totalUptime += 100;
+
                 continue;
             }
 
@@ -171,10 +172,10 @@ class DashboardController extends Controller
                 'response_time' => round($avgResponse ?? 0, 2),
             ];
         })
-        ->sortByDesc('response_time')
-        ->take(5)
-        ->values()
-        ->toArray();
+            ->sortByDesc('response_time')
+            ->take(5)
+            ->values()
+            ->toArray();
     }
 
     protected function getRecentIncidents($monitors): array

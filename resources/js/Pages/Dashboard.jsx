@@ -101,88 +101,6 @@ function Dashboard({ stats, uptimeData, responseTimeData, monitorDistribution, i
                     ))}
                 </Grid>
 
-                <Grid>
-                    <Grid.Col span={{ base: 12, md: 8 }}>
-                        <Card padding="xl" h="100%">
-                            <Group justify="space-between" mb="xl">
-                                <div>
-                                    <Title order={4} fw={800} tt="uppercase" style={{ letterSpacing: '0.5px' }}>
-                                        Regional Latency
-                                    </Title>
-                                    <Text size="xs" c="dimmed" fw={700}>
-                                        NETWORK PROPAGATION DELAY
-                                    </Text>
-                                </div>
-                            </Group>
-                            <ResponsiveContainer width="100%" height={300}>
-                                <AreaChart data={defaultUptimeData}>
-                                    <defs>
-                                        <linearGradient id="colorUptime" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="var(--mantine-color-green-6)" stopOpacity={0.3} />
-                                            <stop offset="95%" stopColor="var(--mantine-color-green-6)" stopOpacity={0} />
-                                        </linearGradient>
-                                    </defs>
-                                    <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
-                                    <XAxis dataKey="time" stroke={textColor} fontSize={10} fw={700} />
-                                    <YAxis stroke={textColor} fontSize={10} fw={700} domain={[90, 100]} />
-                                    <Tooltip
-                                        contentStyle={{
-                                            backgroundColor: tooltipBg,
-                                            border: `1px solid ${tooltipBorder}`,
-                                            borderRadius: '8px',
-                                            color: tooltipColor
-                                        }}
-                                        itemStyle={{ color: tooltipColor }}
-                                    />
-                                    <Area
-                                        type="monotone"
-                                        dataKey="uptime"
-                                        stroke="var(--mantine-color-green-6)"
-                                        strokeWidth={3}
-                                        fillOpacity={1}
-                                        fill="url(#colorUptime)"
-                                        isAnimationActive={false}
-                                    />
-                                </AreaChart>
-                            </ResponsiveContainer>
-                        </Card>
-                    </Grid.Col>
-
-                    <Grid.Col span={{ base: 12, md: 4 }}>
-                        <Card padding="xl" h="100%">
-                            <Title order={4} fw={800} tt="uppercase" mb="xs" style={{ letterSpacing: '0.5px' }}>
-                                Response Dynamics
-                            </Title>
-                            <Text size="xs" c="dimmed" fw={700} mb="xl">
-                                PACKET ROUND-TRIP PERFORMANCE
-                            </Text>
-                            <ResponsiveContainer width="100%" height={300}>
-                                <LineChart data={defaultResponseData}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
-                                    <XAxis dataKey="time" stroke={textColor} fontSize={10} fw={700} />
-                                    <YAxis stroke={textColor} fontSize={10} fw={700} />
-                                    <Tooltip
-                                        contentStyle={{
-                                            backgroundColor: tooltipBg,
-                                            border: `1px solid ${tooltipBorder}`,
-                                            borderRadius: '8px',
-                                            color: tooltipColor
-                                        }}
-                                        itemStyle={{ color: tooltipColor }}
-                                    />
-                                    <Line
-                                        type="monotone"
-                                        dataKey="response"
-                                        stroke="var(--mantine-color-blue-6)"
-                                        strokeWidth={3}
-                                        dot={false}
-                                        isAnimationActive={false}
-                                    />
-                                </LineChart>
-                            </ResponsiveContainer>
-                        </Card>
-                    </Grid.Col>
-                </Grid>
 
                 <Grid>
                     <Grid.Col span={{ base: 12, md: 4 }}>
@@ -336,6 +254,90 @@ function Dashboard({ stats, uptimeData, responseTimeData, monitorDistribution, i
                         </Card>
                     </Grid.Col>
                 </Grid>
+
+                <Grid>
+                    <Grid.Col span={{ base: 12, md: 8 }}>
+                        <Card padding="xl" h="100%">
+                            <Group justify="space-between" mb="xl">
+                                <div>
+                                    <Title order={4} fw={800} tt="uppercase" style={{ letterSpacing: '0.5px' }}>
+                                        Regional Latency
+                                    </Title>
+                                    <Text size="xs" c="dimmed" fw={700}>
+                                        NETWORK PROPAGATION DELAY
+                                    </Text>
+                                </div>
+                            </Group>
+                            <ResponsiveContainer width="100%" height={300}>
+                                <AreaChart data={defaultUptimeData}>
+                                    <defs>
+                                        <linearGradient id="colorUptime" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="var(--mantine-color-green-6)" stopOpacity={0.3} />
+                                            <stop offset="95%" stopColor="var(--mantine-color-green-6)" stopOpacity={0} />
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
+                                    <XAxis dataKey="time" stroke={textColor} fontSize={10} fw={700} />
+                                    <YAxis stroke={textColor} fontSize={10} fw={700} domain={[90, 100]} />
+                                    <Tooltip
+                                        contentStyle={{
+                                            backgroundColor: tooltipBg,
+                                            border: `1px solid ${tooltipBorder}`,
+                                            borderRadius: '8px',
+                                            color: tooltipColor
+                                        }}
+                                        itemStyle={{ color: tooltipColor }}
+                                    />
+                                    <Area
+                                        type="monotone"
+                                        dataKey="uptime"
+                                        stroke="var(--mantine-color-green-6)"
+                                        strokeWidth={3}
+                                        fillOpacity={1}
+                                        fill="url(#colorUptime)"
+                                        isAnimationActive={false}
+                                    />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </Card>
+                    </Grid.Col>
+
+                    <Grid.Col span={{ base: 12, md: 4 }}>
+                        <Card padding="xl" h="100%">
+                            <Title order={4} fw={800} tt="uppercase" mb="xs" style={{ letterSpacing: '0.5px' }}>
+                                Response Dynamics
+                            </Title>
+                            <Text size="xs" c="dimmed" fw={700} mb="xl">
+                                PACKET ROUND-TRIP PERFORMANCE
+                            </Text>
+                            <ResponsiveContainer width="100%" height={300}>
+                                <LineChart data={defaultResponseData}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
+                                    <XAxis dataKey="time" stroke={textColor} fontSize={10} fw={700} />
+                                    <YAxis stroke={textColor} fontSize={10} fw={700} />
+                                    <Tooltip
+                                        contentStyle={{
+                                            backgroundColor: tooltipBg,
+                                            border: `1px solid ${tooltipBorder}`,
+                                            borderRadius: '8px',
+                                            color: tooltipColor
+                                        }}
+                                        itemStyle={{ color: tooltipColor }}
+                                    />
+                                    <Line
+                                        type="monotone"
+                                        dataKey="response"
+                                        stroke="var(--mantine-color-blue-6)"
+                                        strokeWidth={3}
+                                        dot={false}
+                                        isAnimationActive={false}
+                                    />
+                                </LineChart>
+                            </ResponsiveContainer>
+                        </Card>
+                    </Grid.Col>
+                </Grid>
+
             </Stack>
         </AppLayout>
     );

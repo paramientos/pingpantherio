@@ -129,6 +129,8 @@ class MonitorController extends Controller
                 'value' => $p->id,
                 'label' => $p->name,
             ]),
+            'responseDistribution' => $this->getResponseDistribution($monitor),
+            'uptimeTrend' => $this->getUptimeTrend($monitor, 7),
         ]);
     }
 
@@ -240,5 +242,59 @@ class MonitorController extends Controller
         $totalCount = $heartbeats->count();
 
         return round(($upCount / $totalCount) * 100, 2);
+    }
+
+    protected function getResponseDistribution(Monitor $monitor): array
+    {
+        $heartbeats = $monitor->heartbeats()
+            ->where('checked_at', '>=', now()->subHours(24))
+            ->where('is_up', true)
+            ->get();
+
+        $distribution = [
+            ['range' => '0-100ms', 'count' => 0],
+            ['range' => '100-300ms', 'count' => 0],
+            ['range' => '300-500ms', 'count' => 0],
+            ['range' => '500-1000ms', 'count' => 0],
+            ['range' => '1000ms+', 'count' => 0],
+        ];
+
+        foreach ($heartbeats as $hb) {
+            $time = $hb->response_time;
+            if ($time < 100) $distribution[0]['count']++;
+            elseif ($time < 300) $distribution[1]['count']++;
+            elseif ($time < 500) $distribution[2]['count']++;
+            elseif ($time < 1000) $distribution[3]['count']++;
+            else $distribution[4]['count']++;
+        }
+
+        return $distribution;
+    }
+
+    protected function getUptimeTrend(Monitor $monitor, int $days): array
+    {
+        $data = [];
+
+        for ($i = $days - 1; $i >= 0; $i--) {
+            $date = now()->subDays($i)->startOfDay();
+            $endDate = $date->copy()->endOfDay();
+
+            $heartbeats = \App\Models\Heartbeat::where('monitor_id', $monitor->id)
+                ->whereBetween('checked_at', [$date, $endDate])
+                ->get();
+
+            $uptime = 100;
+            if ($heartbeats->isNotEmpty()) {
+                $upCount = $heartbeats->where('is_up', true)->count();
+                $uptime = round(($upCount / $heartbeats->count()) * 100, 2);
+            }
+
+            $data[] = [
+                'date' => $date->format('M d'),
+                'uptime' => $uptime,
+            ];
+        }
+
+        return $data;
     }
 }

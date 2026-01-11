@@ -62,6 +62,10 @@ import { notifications } from '@mantine/notifications';
 import {
     AreaChart,
     Area,
+    BarChart,
+    Bar,
+    LineChart,
+    Line,
     XAxis,
     YAxis,
     CartesianGrid,
@@ -69,7 +73,7 @@ import {
     ResponsiveContainer
 } from 'recharts';
 
-function MonitorShow({ monitor, heartbeats, incidents, stats, recovery_actions, playbooks }) {
+function MonitorShow({ monitor, heartbeats, incidents, stats, recovery_actions, playbooks, responseDistribution, uptimeTrend }) {
     const [opened, { open, close }] = useDisclosure(false);
     const [playbookModalOpened, { open: openPlaybookModal, close: closePlaybookModal }] = useDisclosure(false);
     const [testModalOpened, { open: openTestModal, close: closeTestModal }] = useDisclosure(false);
@@ -251,7 +255,7 @@ function MonitorShow({ monitor, heartbeats, incidents, stats, recovery_actions, 
                     </Group>
                 </Group>
 
-                <SimpleGrid cols={{ base: 1, sm: 2, md: 4 }} spacing="lg">
+                <SimpleGrid cols={{ base: 1, sm: 2, md: 6 }} spacing="lg">
                     <Card padding="xl" radius="lg" withBorder style={{ overflow: 'visible' }}>
                         <div style={{ position: 'absolute', top: -10, right: 20 }}>
                             <RingProgress
@@ -271,7 +275,25 @@ function MonitorShow({ monitor, heartbeats, incidents, stats, recovery_actions, 
                         </div>
                         <Text size="xs" c="dimmed" fw={700} tt="uppercase" mb={4}>Uptime (24h)</Text>
                         <Text size="h2" fw={900} style={{ lineHeight: 1 }}>{stats.uptime_24h}%</Text>
-                        <Text size="xs" c="green" fw={600} mt={8}>Steady as a rock</Text>
+                        <Text size="xs" c="green" fw={600} mt={8}>Last day</Text>
+                    </Card>
+
+                    <Card padding="xl" radius="lg" withBorder>
+                        <ThemeIcon color="teal" variant="light" size="xl" radius="md" mb="md">
+                            <IconCheck size={24} />
+                        </ThemeIcon>
+                        <Text size="xs" c="dimmed" fw={700} tt="uppercase" mb={4}>Uptime (7d)</Text>
+                        <Text size="h2" fw={900} style={{ lineHeight: 1 }}>{stats.uptime_7d}%</Text>
+                        <Text size="xs" c="dimmed" fw={500} mt={8}>Last week</Text>
+                    </Card>
+
+                    <Card padding="xl" radius="lg" withBorder>
+                        <ThemeIcon color="cyan" variant="light" size="xl" radius="md" mb="md">
+                            <IconActivity size={24} />
+                        </ThemeIcon>
+                        <Text size="xs" c="dimmed" fw={700} tt="uppercase" mb={4}>Uptime (30d)</Text>
+                        <Text size="h2" fw={900} style={{ lineHeight: 1 }}>{stats.uptime_30d}%</Text>
+                        <Text size="xs" c="dimmed" fw={500} mt={8}>Last month</Text>
                     </Card>
 
                     <Card padding="xl" radius="lg" withBorder>
@@ -403,6 +425,85 @@ function MonitorShow({ monitor, heartbeats, incidents, stats, recovery_actions, 
                         </ResponsiveContainer>
                     </div>
                 </Card>
+
+                <Grid>
+                    <Grid.Col span={{ base: 12, md: 6 }}>
+                        <Card padding="xl" radius="lg" withBorder shadow="sm">
+                            <Group justify="space-between" mb="xl">
+                                <div>
+                                    <Title order={4} fw={800}>Response Time Distribution</Title>
+                                    <Text size="sm" c="dimmed">Last 24 hours breakdown</Text>
+                                </div>
+                                <ThemeIcon color="blue" variant="light" size="lg">
+                                    <IconClock size={20} />
+                                </ThemeIcon>
+                            </Group>
+                            <ResponsiveContainer width="100%" height={300}>
+                                <BarChart data={responseDistribution || []}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f3f5" />
+                                    <XAxis dataKey="range" fontSize={12} tickLine={false} axisLine={false} tick={{ fill: '#adb5bd' }} />
+                                    <YAxis fontSize={12} tickLine={false} axisLine={false} tick={{ fill: '#adb5bd' }} />
+                                    <Tooltip
+                                        content={({ active, payload }) => {
+                                            if (active && payload && payload.length) {
+                                                return (
+                                                    <Paper shadow="xl" p="md" withBorder radius="md">
+                                                        <Text size="xs" c="dimmed" fw={700} tt="uppercase">{payload[0].payload.range}</Text>
+                                                        <Text size="lg" fw={900} c="blue">{payload[0].value} checks</Text>
+                                                    </Paper>
+                                                );
+                                            }
+                                            return null;
+                                        }}
+                                    />
+                                    <Bar dataKey="count" fill="var(--mantine-color-blue-6)" radius={[8, 8, 0, 0]} />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </Card>
+                    </Grid.Col>
+
+                    <Grid.Col span={{ base: 12, md: 6 }}>
+                        <Card padding="xl" radius="lg" withBorder shadow="sm">
+                            <Group justify="space-between" mb="xl">
+                                <div>
+                                    <Title order={4} fw={800}>Uptime Trend (7 Days)</Title>
+                                    <Text size="sm" c="dimmed">Daily uptime percentage</Text>
+                                </div>
+                                <ThemeIcon color="teal" variant="light" size="lg">
+                                    <IconActivity size={20} />
+                                </ThemeIcon>
+                            </Group>
+                            <ResponsiveContainer width="100%" height={300}>
+                                <LineChart data={uptimeTrend || []}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f3f5" />
+                                    <XAxis dataKey="date" fontSize={12} tickLine={false} axisLine={false} tick={{ fill: '#adb5bd' }} />
+                                    <YAxis domain={[90, 100]} fontSize={12} tickLine={false} axisLine={false} tick={{ fill: '#adb5bd' }} />
+                                    <Tooltip
+                                        content={({ active, payload }) => {
+                                            if (active && payload && payload.length) {
+                                                return (
+                                                    <Paper shadow="xl" p="md" withBorder radius="md">
+                                                        <Text size="xs" c="dimmed" fw={700} tt="uppercase">{payload[0].payload.date}</Text>
+                                                        <Text size="lg" fw={900} c="teal">{payload[0].value}% uptime</Text>
+                                                    </Paper>
+                                                );
+                                            }
+                                            return null;
+                                        }}
+                                    />
+                                    <Line
+                                        type="monotone"
+                                        dataKey="uptime"
+                                        stroke="var(--mantine-color-teal-6)"
+                                        strokeWidth={3}
+                                        dot={{ fill: 'var(--mantine-color-teal-6)', r: 4 }}
+                                        activeDot={{ r: 6 }}
+                                    />
+                                </LineChart>
+                            </ResponsiveContainer>
+                        </Card>
+                    </Grid.Col>
+                </Grid>
 
                 <Grid>
                     <Grid.Col span={{ base: 12, md: 8 }}>
