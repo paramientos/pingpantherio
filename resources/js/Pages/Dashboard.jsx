@@ -1,13 +1,74 @@
 import React from 'react';
 import AppLayout from '@/Layouts/AppLayout';
-import { Title, Text, Grid, Card, Group, Badge, Stack, Paper, ThemeIcon, useMantineTheme, Table, Anchor } from '@mantine/core';
-import { IconArrowUp, IconClock, IconAlertTriangle, IconCheck, IconTrendingUp, IconActivity } from '@tabler/icons-react';
+import { Title, Text, Grid, Card, Group, Badge, Stack, Paper, ThemeIcon, useMantineTheme, Table, Anchor, Alert, Center, Button } from '@mantine/core';
+import { IconArrowUp, IconClock, IconAlertTriangle, IconCheck, IconTrendingUp, IconActivity, IconLock } from '@tabler/icons-react';
 import { LineChart, Line, AreaChart, Area, PieChart, Pie, BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 
-function Dashboard({ stats, uptimeData, responseTimeData, monitorDistribution, incidentTimeline, slowestMonitors, recentIncidents }) {
+function Dashboard({ stats, uptimeData, responseTimeData, monitorDistribution, incidentTimeline, slowestMonitors, recentIncidents, hasTeam, pendingInvitations }) {
     const theme = useMantineTheme();
+    const { auth } = usePage().props;
     const isDark = theme.colorScheme === 'dark';
+
+    const handleAcceptInvite = (token) => {
+        router.get(route('invitations.accept', { token }));
+    };
+
+    const handleRejectInvite = (token) => {
+        router.post(route('invitations.reject', { token }));
+    };
+
+    if (auth.user.role !== 'admin' && !hasTeam) {
+        return (
+            <AppLayout>
+                <Center style={{ height: '70vh' }}>
+                    <Stack align="center" gap="md" style={{ maxWidth: 450 }}>
+                        {pendingInvitations && pendingInvitations.length > 0 ? (
+                            <Paper p="xl" withBorder radius="md" bg="rgba(255,255,255,0.02)">
+                                <Stack align="center" gap="md">
+                                    <ThemeIcon size={60} radius="xl" color="indigo" variant="light">
+                                        <IconUsers size={30} />
+                                    </ThemeIcon>
+                                    <Title order={3} ta="center">Team Invitation Received</Title>
+                                    <Text c="dimmed" ta="center">
+                                        You have been invited to a team. You must accept the invitation to access the system.
+                                    </Text>
+                                    
+                                    {pendingInvitations.map((inv) => (
+                                        <Card key={inv.id} withBorder w="100%" p="md">
+                                            <Group justify="space-between">
+                                                <div>
+                                                    <Text fw={700}>{inv.team_name}</Text>
+                                                    <Text size="xs" c="dimmed">Role: {inv.role}</Text>
+                                                </div>
+                                                <Group gap="xs">
+                                                    <Button variant="light" color="red" size="xs" onClick={() => handleRejectInvite(inv.token)}>Reject</Button>
+                                                    <Button color="green" size="xs" onClick={() => handleAcceptInvite(inv.token)}>Accept</Button>
+                                                </Group>
+                                            </Group>
+                                        </Card>
+                                    ))}
+                                </Stack>
+                            </Paper>
+                        ) : (
+                            <Stack align="center" gap="md">
+                                <ThemeIcon size={80} radius="xl" color="orange" variant="light">
+                                    <IconLock size={40} />
+                                </ThemeIcon>
+                                <Title order={2} ta="center">Access Restricted</Title>
+                                <Text c="dimmed" ta="center">
+                                    You are not a member of any team. To access the system fully, you must be added to a team by an administrator.
+                                </Text>
+                                <Button component={Link} href="/settings/profile" variant="light">
+                                    Profile Settings
+                                </Button>
+                            </Stack>
+                        )}
+                    </Stack>
+                </Center>
+            </AppLayout>
+        );
+    }
 
     console.log(stats)
 
@@ -61,6 +122,29 @@ function Dashboard({ stats, uptimeData, responseTimeData, monitorDistribution, i
     return (
         <AppLayout>
             <Stack gap="xl">
+                {pendingInvitations && pendingInvitations.length > 0 && (
+                    <Alert 
+                        variant="light" 
+                        color="indigo" 
+                        title="Pending Team Invitations" 
+                        icon={<IconUsers size={18} />}
+                        withCloseButton
+                    >
+                        <Stack gap="xs">
+                            <Text size="sm">You have received invitations from the following teams:</Text>
+                            {pendingInvitations.map((inv) => (
+                                <Group key={inv.id} justify="space-between">
+                                    <Text size="sm" fw={700}>{inv.team_name} ({inv.role})</Text>
+                                    <Group gap="xs">
+                                        <Button variant="subtle" color="red" size="xs" onClick={() => handleRejectInvite(inv.token)}>Reject</Button>
+                                        <Button variant="light" color="green" size="xs" onClick={() => handleAcceptInvite(inv.token)}>Accept</Button>
+                                    </Group>
+                                </Group>
+                            ))}
+                        </Stack>
+                    </Alert>
+                )}
+
                 <Group justify="space-between" align="flex-end">
                     <div>
                         <Title order={1} fw={900} style={{ letterSpacing: '-1.5px', textTransform: 'uppercase' }}>

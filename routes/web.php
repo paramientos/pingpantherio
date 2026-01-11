@@ -49,31 +49,43 @@ Route::middleware(['auth'])->group(function (): void {
     Route::resource('playbooks', PlaybookController::class);
     Route::resource('on-call', OnCallController::class);
     Route::get('/incidents/{incident}/post-mortem/create', [PostMortemController::class, 'create'])->name('post-mortems.create-for-incident');
+   
     Route::resource('monitors', MonitorController::class)->except(['create', 'edit']);
     Route::post('/monitors/{monitor}/check', [MonitorController::class, 'check'])->name('monitors.check');
     Route::post('/monitors/{monitor}/recovery-actions', [\App\Http\Controllers\RecoveryActionController::class, 'store'])->name('monitors.recovery-actions.store');
+  
     Route::delete('/recovery-actions/{recoveryAction}', [\App\Http\Controllers\RecoveryActionController::class, 'destroy'])->name('recovery-actions.destroy');
     Route::resource('status-pages', StatusPageManagementController::class);
     Route::resource('alert-channels', AlertChannelController::class);
+  
     Route::get('/incidents', [IncidentController::class, 'index'])->name('incidents.index');
     Route::post('/incidents/{incident}/updates', [\App\Http\Controllers\IncidentUpdateController::class, 'store'])->name('incidents.updates.store');
+  
     Route::resource('maintenance-windows', MaintenanceWindowController::class)->only(['index', 'create', 'store', 'destroy']);
+  
     Route::resource('reports', ReportController::class);
     Route::get('/reports-analytics', [ReportController::class, 'analytics'])->name('reports.analytics');
+  
     Route::get('/war-room', [\App\Http\Controllers\WarRoomController::class, 'index'])->name('war-room.index');
     Route::get('/reports-export-pdf', [ReportController::class, 'exportPdf'])->name('reports.export-pdf');
     Route::resource('alert-rules', AlertRuleController::class);
-    // Route::resource('custom-dashboards', CustomDashboardController::class);
+    
     Route::resource('domains', DomainMonitorController::class)->only(['index', 'store', 'destroy']);
+    
     Route::resource('settings/webhooks', \App\Http\Controllers\WebhookController::class);
     Route::resource('settings/api-keys', ApiKeyController::class)->only(['index', 'store', 'destroy']);
     Route::get('/settings/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
+    Route::resource('settings/users', \App\Http\Controllers\UserController::class);
     Route::resource('settings/teams', TeamController::class)->only(['index', 'store', 'destroy']);
     Route::post('/settings/teams/{team}/invite', [TeamController::class, 'invite'])->name('teams.invite');
+    Route::post('/settings/teams/{team}/leave', [TeamController::class, 'leave'])->name('teams.leave');
+    Route::delete('/settings/teams/{team}/invitations/{invitation}', [TeamController::class, 'revokeInvitation'])->name('teams.invitations.revoke');
+    Route::post('/settings/teams/{team}/invitations/{invitation}/resend', [TeamController::class, 'resendInvitation'])->name('teams.invitations.resend');
     Route::delete('/settings/teams/{team}/members/{user}', [TeamController::class, 'removeMember'])->name('teams.members.destroy');
-    Route::patch('/settings/teams/{team}/members/{user}/monitors', [TeamController::class, 'updateMemberMonitors'])->name('teams.members.monitors.update');
+    Route::patch('/settings/teams/{team}/monitors', [TeamController::class, 'updateTeamMonitors'])->name('teams.monitors.update');
     Route::patch('/settings/teams/{team}/members/{user}/role', [TeamController::class, 'updateMemberRole'])->name('teams.members.role.update');
     Route::get('/invitations/{token}/accept', [TeamController::class, 'acceptInvite'])->name('invitations.accept');
+    Route::post('/invitations/{token}/reject', [TeamController::class, 'rejectInvite'])->name('invitations.reject');
     Route::get('/settings', fn () => redirect()->route('settings.notifications'));
     Route::get('/settings/notifications', [\App\Http\Controllers\SettingsController::class, 'notifications'])->name('settings.notifications');
     Route::post('/settings/notifications', [\App\Http\Controllers\SettingsController::class, 'updateNotifications'])->name('settings.notifications.update');

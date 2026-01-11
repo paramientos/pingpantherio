@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { AppShell, Burger, Group, NavLink, Avatar, Menu, Text, rem, ActionIcon, ScrollArea, Divider, ThemeIcon } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { Link, usePage, router } from '@inertiajs/react';
+import { Alert } from '@mantine/core';
 import {
     IconChartPie,
     IconDeviceDesktop,
@@ -105,6 +106,10 @@ function AppLayout({ children }) {
         { label: 'API Keys', icon: IconKey, href: '/settings/api-keys' },
         { label: 'Audit Logs', icon: IconHistory, href: '/settings/audit-logs' },
     ];
+
+    if (auth.user.role === 'admin') {
+        settingsItems.push({ label: 'Users', icon: IconUsers, href: '/settings/users' });
+    }
 
     const spotlightActions = [
         {
@@ -329,6 +334,16 @@ function AppLayout({ children }) {
             </AppShell.Navbar>
 
             <AppShell.Main>
+                {auth.user && auth.user.role !== 'admin' && !auth.has_team && (
+                    <Alert variant="light" color="orange" title="Access Restricted" icon={<IconAlertTriangle />} mb="md" withCloseButton={false}>
+                        You are not a member of any team. To access the system fully, you must be added to a team by an administrator.
+                    </Alert>
+                )}
+                {auth.user && auth.user.role !== 'admin' && auth.has_team && !auth.team_has_monitors && (
+                    <Alert variant="light" color="blue" title="No Monitors Configured" icon={<IconAlertTriangle />} mb="md" withCloseButton={false}>
+                        Your team does not have any monitors configured yet. Please ask your team administrator to add monitors.
+                    </Alert>
+                )}
                 {children}
             </AppShell.Main>
 

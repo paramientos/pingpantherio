@@ -33,6 +33,8 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'auth' => [
                 'user' => $request->user(),
+                'has_team' => $request->user() ? $request->user()->teams()->exists() : false,
+                'team_has_monitors' => $request->user() ? $request->user()->teams()->whereHas('monitors')->exists() : false,
             ],
             'flash' => [
                 'message' => $request->session()->get('message'),

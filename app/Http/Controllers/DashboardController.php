@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Enums\MonitorStatus;
 use App\Models\Heartbeat;
 use App\Models\Incident;
+use App\Models\Invitation;
 use App\Models\Monitor;
+use Carbon\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -47,6 +49,17 @@ class DashboardController extends Controller
         $slowestMonitors = $this->getSlowestMonitors($monitors);
         $recentIncidents = $this->getRecentIncidents($monitors);
 
+        $invitations = Invitation::where('email', auth()->user()->email)
+            ->where('expires_at', '>', now())
+            ->with('team')
+            ->get()
+            ->map(fn($inv) => [
+                'id' => $inv->id,
+                'token' => $inv->token,
+                'team_name' => $inv->team->name,
+                'role' => $inv->role,
+            ]);
+
         return Inertia::render('Dashboard', [
             'stats' => $stats,
             'uptimeData' => $uptimeData,
@@ -55,6 +68,8 @@ class DashboardController extends Controller
             'incidentTimeline' => $incidentTimeline,
             'slowestMonitors' => $slowestMonitors,
             'recentIncidents' => $recentIncidents,
+            'hasTeam' => auth()->user()->teams()->exists(),
+            'pendingInvitations' => $invitations,
         ]);
     }
 

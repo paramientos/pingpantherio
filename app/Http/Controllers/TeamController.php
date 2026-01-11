@@ -22,7 +22,7 @@ class TeamController extends Controller
     {
         $teams = Team::where('owner_id', auth()->id())
             ->orWhereHas('users', fn ($q) => $q->where('user_id', auth()->id()))
-            ->with(['users', 'invitations', 'owner'])
+            ->with(['users', 'invitations', 'owner', 'monitors'])
             ->get()
             ->map(function ($team) {
                 $userRole = $team->users->where('id', auth()->id())->first()?->pivot?->role;
@@ -33,21 +33,14 @@ class TeamController extends Controller
                     'name' => $team->name,
                     'owner' => $team->owner->name,
                     'is_admin' => $isAdmin,
-                    'members' => $team->users->map(function ($user) use ($team) {
-                        $monitorIds = DB::table('monitor_team_user')
-                            ->where('team_id', $team->id)
-                            ->where('user_id', $user->id)
-                            ->pluck('monitor_id')
-                            ->toArray();
-
-                        return [
-                            'id' => $user->getKey(),
-                            'name' => $user->name,
-                            'email' => $user->email,
-                            'role' => $user->pivot->role,
-                            'monitor_ids' => $monitorIds,
-                        ];
-                    }),
+                    'owner_id' => $team->owner_id,
+                    'members' => $team->users->map(fn ($user) => [
+                        'id' => $user->getKey(),
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'role' => $user->pivot->role,
+                    ]),
+                    'monitor_ids' => $team->monitors->pluck('id')->toArray(),
                     'invitations' => $team->invitations->map(fn ($inv) => [
                         'id' => $inv->id,
                         'email' => $inv->email,
@@ -62,9 +55,14 @@ class TeamController extends Controller
             ->orderBy('name')
             ->get();
 
+        $allUsers = User::orderBy('name')
+            ->select('id', 'name', 'email')
+            ->get();
+
         return Inertia::render('Settings/Teams/Index', [
             'teams' => $teams,
             'monitors' => $monitors,
+            'allUsers' => $allUsers,
         ]);
     }
 
@@ -112,9 +110,7 @@ class TeamController extends Controller
         }
 
         $validated = $request->validate([
-            'email' => 'required|email',
-            'name' => 'nullable|string|max:255',
-            'password' => 'nullable|string|min:8',
+            'email' => 'required|email|exists:users,email',
             'role' => 'required|in:admin,member',
         ]);
 
@@ -123,23 +119,7 @@ class TeamController extends Controller
         }
 
         if ($team->invitations()->where('email', $validated['email'])->where('expires_at', '>', now())->exists()) {
-            return back()->withErrors(['email' => 'An invitation has already been sent to this email address and is still pending.']);
-        }
-
-        // Find or create user
-        $user = User::where('email', $validated['email'])->first();
-        if (!$user) {
-            $request->validate([
-                'name' => 'required|string|max:255',
-                'password' => 'required|string|min:8',
-            ]);
-
-            User::create([
-                'name' => $validated['name'],
-                'email' => $validated['email'],
-                'password' => Hash::make($validated['password']),
-                'must_change_password' => true,
-            ]);
+            return back()->withErrors(['email' => 'An invitation has already been sent to this user and is still pending.']);
         }
 
         $invitation = Invitation::create([
@@ -152,12 +132,13 @@ class TeamController extends Controller
 
         Notification::route('mail', $validated['email'])->notify(new TeamInvitationNotification($invitation));
 
-        return back()->with('message', 'Invitation sent successfully. User created if they did not exist.');
+        return back()->with('message', 'Invitation sent successfully.');
     }
 
     public function acceptInvite(string $token)
     {
         $invitation = Invitation::with('team')->where('token', $token)
+            ->where('email', auth()->user()->email)
             ->where('expires_at', '>', now())
             ->firstOrFail();
 
@@ -165,8 +146,7 @@ class TeamController extends Controller
 
         if ($team->users()->where('user_id', auth()->id())->exists()) {
             $invitation->delete();
-
-            return redirect()->route('teams.index')->with('message', 'You are already a member of this team.');
+            return redirect()->route('dashboard')->with('message', 'You are already a member of this team.');
         }
 
         $team->users()->attach(auth()->id(), [
@@ -176,7 +156,19 @@ class TeamController extends Controller
 
         $invitation->delete();
 
-        return redirect()->route('teams.index')->with('message', 'Welcome to the team!');
+        return redirect()->route('dashboard')->with('message', 'Welcome to the team!');
+    }
+
+    public function rejectInvite(string $token)
+    {
+        $invitation = Invitation::where('token', $token)
+            ->where('email', auth()->user()->email)
+            ->where('expires_at', '>', now())
+            ->firstOrFail();
+
+        $invitation->delete();
+
+        return redirect()->route('dashboard')->with('message', 'Invitation rejected.');
     }
 
     public function removeMember(Team $team, string $userId)
@@ -201,12 +193,12 @@ class TeamController extends Controller
         return back()->with('message', 'Member removed successfully');
     }
 
-    public function updateMemberMonitors(Request $request, Team $team, string $userId)
+    public function updateTeamMonitors(Request $request, Team $team)
     {
         $userRole = $team->users()->where('user_id', auth()->id())->first()?->pivot?->role;
 
         if ($team->owner_id !== auth()->id() && $userRole !== 'admin') {
-            abort(HttpResponse::HTTP_FORBIDDEN, 'You are not allowed to manage member permissions.');
+            abort(HttpResponse::HTTP_FORBIDDEN, 'You are not allowed to manage team monitors.');
         }
 
         $validated = $request->validate([
@@ -214,23 +206,9 @@ class TeamController extends Controller
             'monitor_ids.*' => 'exists:monitors,id',
         ]);
 
-        DB::table('monitor_team_user')
-            ->where('team_id', $team->id)
-            ->where('user_id', $userId)
-            ->delete();
+        $team->monitors()->sync($validated['monitor_ids']);
 
-        foreach ($validated['monitor_ids'] as $monitorId) {
-            DB::table('monitor_team_user')->insert([
-                'id' => Str::uuid(),
-                'monitor_id' => $monitorId,
-                'team_id' => $team->id,
-                'user_id' => $userId,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        }
-
-        return back()->with('message', 'Monitor permissions updated successfully');
+        return back()->with('message', 'Team monitors updated successfully');
     }
 
     public function updateMemberRole(Request $request, Team $team, string $userId)
@@ -250,5 +228,25 @@ class TeamController extends Controller
         $team->users()->updateExistingPivot($userId, ['role' => $validated['role']]);
 
         return back()->with('message', 'Member role updated successfully');
+    }
+
+    public function resendInvitation(Team $team, $invitationId)
+    {
+        $userRole = $team->users()->where('user_id', auth()->id())->first()?->pivot?->role;
+
+        if ($team->owner_id !== auth()->id() && $userRole !== 'admin') {
+            abort(HttpResponse::HTTP_FORBIDDEN, 'You are not allowed to manage invitations for this team.');
+        }
+
+        $invitation = $team->invitations()->findOrFail($invitationId);
+
+        $invitation->update([
+            'token' => Str::random(32),
+            'expires_at' => now()->addDays(7),
+        ]);
+
+        Notification::route('mail', $invitation->email)->notify(new TeamInvitationNotification($invitation));
+
+        return back()->with('message', 'Invitation resent successfully.');
     }
 }

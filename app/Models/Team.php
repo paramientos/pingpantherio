@@ -57,8 +57,7 @@ class Team extends Model
 
     public function monitors(): BelongsToMany
     {
-        return $this->belongsToMany(Monitor::class, 'monitor_team_user')
-            ->withPivot('user_id')
+        return $this->belongsToMany(Monitor::class, 'team_monitor')
             ->withTimestamps();
     }
 }

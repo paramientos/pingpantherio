@@ -2,6 +2,8 @@
 trigger: always_on
 ---
 
+Platform language should be in English
+
 Laravel 12 
 Postgres 18
 Redis

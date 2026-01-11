@@ -1,7 +1,7 @@
 import React from 'react';
 import AppLayout from '@/Layouts/AppLayout';
 import { Tabs, Container, Paper, Title, Text, Stack, Switch, Group, Button, Divider, rem } from '@mantine/core';
-import { IconBell, IconUser, IconLock, IconShield, IconDeviceDesktop, IconKey, IconHistory, IconWebhook, IconUsers } from '@tabler/icons-react';
+import { IconBell, IconUser, IconLock, IconShield, IconDeviceDesktop, IconKey, IconHistory, IconWebhook, IconUsers, IconUserCircle } from '@tabler/icons-react';
 import { Link, useForm, usePage } from '@inertiajs/react';
 import { notifications as mantineNotifications } from '@mantine/notifications';
 
@@ -50,14 +50,6 @@ export default function SettingsLayout({ children, activeTab }) {
                                 Security
                             </Tabs.Tab>
                             <Tabs.Tab
-                                value="team"
-                                leftSection={<IconUsers style={{ width: rem(16), height: rem(16) }} />}
-                                component={Link}
-                                href="/settings/teams"
-                            >
-                                Team
-                            </Tabs.Tab>
-                            <Tabs.Tab
                                 value="webhooks"
                                 leftSection={<IconWebhook style={{ width: rem(16), height: rem(16) }} />}
                                 component={Link}
@@ -80,6 +72,25 @@ export default function SettingsLayout({ children, activeTab }) {
                                 href="/settings/audit-logs"
                             >
                                 Audit Logs
+                            </Tabs.Tab>
+                            {usePage().props.auth.user.role === 'admin' && (
+                                <Tabs.Tab
+                                    value="users"
+                                    leftSection={<IconUserCircle style={{ width: rem(16), height: rem(16) }} />}
+                                    component={Link}
+                                    href="/settings/users"
+                                >
+                                    Users
+                                </Tabs.Tab>
+                            )}
+
+                            <Tabs.Tab
+                                value="team"
+                                leftSection={<IconUsers style={{ width: rem(16), height: rem(16) }} />}
+                                component={Link}
+                                href="/settings/teams"
+                            >
+                                Team
                             </Tabs.Tab>
                         </Tabs.List>
 

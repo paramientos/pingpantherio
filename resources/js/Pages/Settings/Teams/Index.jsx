@@ -25,10 +25,11 @@ import { router } from '@inertiajs/react';
 import { IconPlus, IconTrash, IconMailForward, IconUsers, IconUserShield, IconSettings, IconEye } from '@tabler/icons-react';
 import { notifications } from '@mantine/notifications';
 
-function TeamsIndex({ teams, monitors }) {
+function TeamsIndex({ teams, monitors, allUsers }) {
     const [createOpened, { open: openCreate, close: closeCreate }] = useDisclosure(false);
     const [inviteOpened, { open: openInvite, close: closeInvite }] = useDisclosure(false);
     const [monitorOpened, { open: openMonitor, close: closeMonitor }] = useDisclosure(false);
+    const [teamMonitorOpened, { open: openTeamMonitor, close: closeTeamMonitor }] = useDisclosure(false);
     const [selectedTeam, setSelectedTeam] = useState(null);
     const [selectedMember, setSelectedMember] = useState(null);
 
@@ -75,18 +76,17 @@ function TeamsIndex({ teams, monitors }) {
         }
     };
 
-    const handleOpenMonitorPermissions = (team, member) => {
+    const handleOpenTeamMonitorPermissions = (team) => {
         setSelectedTeam(team);
-        setSelectedMember(member);
-        monitorForm.setFieldValue('monitor_ids', member.monitor_ids || []);
-        openMonitor();
+        monitorForm.setFieldValue('monitor_ids', team.monitor_ids || []);
+        openTeamMonitor();
     };
 
-    const handleUpdateMonitors = (values) => {
-        router.patch(`/settings/teams/${selectedTeam.id}/members/${selectedMember.id}/monitors`, values, {
+    const handleUpdateTeamMonitors = (values) => {
+        router.patch(`/settings/teams/${selectedTeam.id}/monitors`, values, {
             onSuccess: () => {
-                notifications.show({ title: 'Updated', message: 'Monitor permissions updated', color: 'green' });
-                closeMonitor();
+                notifications.show({ title: 'Updated', message: 'Team monitor permissions updated', color: 'green' });
+                closeTeamMonitor();
             }
         });
     };
@@ -148,6 +148,16 @@ function TeamsIndex({ teams, monitors }) {
                                     </div>
                                 </Group>
                                 <Group>
+                                    {team.is_admin && (
+                                        <Button
+                                            variant="light"
+                                            size="xs"
+                                            leftSection={<IconSettings size={14} />}
+                                            onClick={() => handleOpenTeamMonitorPermissions(team)}
+                                        >
+                                            Team Monitors
+                                        </Button>
+                                    )}
                                     {team.is_admin && (
                                         <Button
                                             variant="light"
@@ -218,27 +228,8 @@ function TeamsIndex({ teams, monitors }) {
                                                             getRoleBadge(member.role)
                                                         )}
                                                     </Table.Td>
-                                                    <Table.Td>
-                                                        {member.role === 'admin' ? (
-                                                            <Badge color="green" variant="light" size="sm">All Monitors</Badge>
-                                                        ) : (
-                                                            <Badge color="gray" variant="light" size="sm">
-                                                                {member.monitor_ids?.length || 0} monitors
-                                                            </Badge>
-                                                        )}
-                                                    </Table.Td>
                                                     <Table.Td style={{ textAlign: 'right' }}>
                                                         <Group gap="xs" justify="flex-end">
-                                                            {team.is_admin && member.role === 'member' && (
-                                                                <ActionIcon 
-                                                                    color="blue" 
-                                                                    variant="subtle" 
-                                                                    onClick={() => handleOpenMonitorPermissions(team, member)}
-                                                                    title="Manage monitor access"
-                                                                >
-                                                                    <IconSettings size={16} />
-                                                                </ActionIcon>
-                                                            )}
                                                             {team.is_admin && (
                                                                 <ActionIcon 
                                                                     color="red" 
@@ -296,24 +287,28 @@ function TeamsIndex({ teams, monitors }) {
             <Modal opened={inviteOpened} onClose={closeInvite} title={`Invite to ${selectedTeam?.name}`}>
                 <form onSubmit={inviteForm.onSubmit(handleInvite)}>
                     <Stack gap="md">
-                        <TextInput 
-                            label="Email Address" 
-                            placeholder="colleague@company.com" 
-                            required 
-                            {...inviteForm.getInputProps('email')} 
-                        />
-                        <TextInput 
-                            label="Full Name" 
-                            placeholder="John Doe" 
-                            description="Only required if the user doesn't exist yet"
-                            {...inviteForm.getInputProps('name')} 
-                        />
-                        <TextInput 
-                            label="Temporary Password" 
-                            placeholder="Min 8 characters" 
-                            type="password"
-                            description="Only required if the user doesn't exist yet"
-                            {...inviteForm.getInputProps('password')} 
+                        <Select
+                            label="Select User"
+                            placeholder="Search by name or email"
+                            data={allUsers
+                                .filter(user => {
+                                    if (!selectedTeam) return true;
+                                    
+                                    // Check if user is already a member
+                                    const isMember = selectedTeam.members.some(m => m.email === user.email);
+                                    
+                                    // Check if user has a pending invitation
+                                    const hasPendingInvitation = selectedTeam.invitations.some(i => i.email === user.email);
+                                    
+                                    return !isMember && !hasPendingInvitation;
+                                })
+                                .map(user => ({
+                                    value: user.email,
+                                    label: `${user.name} (${user.email})`
+                                }))}
+                            searchable
+                            required
+                            {...inviteForm.getInputProps('email')}
                         />
                         <Select
                             label="Role"
@@ -329,17 +324,17 @@ function TeamsIndex({ teams, monitors }) {
                 </form>
             </Modal>
 
-            {/* Monitor Permissions Modal */}
+            {/* Team Monitor Permissions Modal */}
             <Modal 
-                opened={monitorOpened} 
-                onClose={closeMonitor} 
-                title={`Monitor Access for ${selectedMember?.name}`}
+                opened={teamMonitorOpened} 
+                onClose={closeTeamMonitor} 
+                title={`Monitors for Team: ${selectedTeam?.name}`}
                 size="lg"
             >
-                <form onSubmit={monitorForm.onSubmit(handleUpdateMonitors)}>
+                <form onSubmit={monitorForm.onSubmit(handleUpdateTeamMonitors)}>
                     <Stack gap="md">
                         <Text size="sm" c="dimmed">
-                            Select which monitors {selectedMember?.name} can view and manage.
+                            Select which monitors all members of this team can view and manage.
                         </Text>
                         <MultiSelect
                             label="Accessible Monitors"
@@ -353,7 +348,7 @@ function TeamsIndex({ teams, monitors }) {
                             {...monitorForm.getInputProps('monitor_ids')}
                         />
                         <Group justify="flex-end" mt="md">
-                            <Button variant="subtle" onClick={closeMonitor}>Cancel</Button>
+                            <Button variant="subtle" onClick={closeTeamMonitor}>Cancel</Button>
                             <Button type="submit">Update Permissions</Button>
                         </Group>
                     </Stack>
