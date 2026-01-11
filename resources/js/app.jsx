@@ -61,6 +61,14 @@ const baseTheme = {
                     borderBottom: '1px solid rgba(255,255,255,0.08)',
                 }
             })
+        },
+        Modal: {
+            defaultProps: {
+                overlayProps: {
+                    backgroundOpacity: 0.55,
+                    blur: 3,
+                },
+            },
         }
     },
 };

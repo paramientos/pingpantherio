@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property array<array-key, mixed>|null $settings
+ * @property bool $must_change_password
  * @property-read \Illuminate\Notifications\DatabaseNotificationCollection<int, \Illuminate\Notifications\DatabaseNotification> $notifications
  * @property-read int|null $notifications_count
  * @method static \Database\Factories\UserFactory factory($count = null, $state = [])
@@ -28,6 +29,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereEmail($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereEmailVerifiedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereMustChangePassword($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereName($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User wherePassword($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User wherePermissions($value)
@@ -57,6 +59,7 @@ class User extends Authenticatable
         'role',
         'permissions',
         'settings',
+        'must_change_password',
     ];
 
     /**
@@ -82,6 +85,7 @@ class User extends Authenticatable
             'role' => Role::class,
             'permissions' => 'array',
             'settings' => 'array',
+            'must_change_password' => 'boolean',
         ];
     }
 }

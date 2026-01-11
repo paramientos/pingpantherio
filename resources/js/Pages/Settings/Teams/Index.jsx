@@ -37,7 +37,7 @@ function TeamsIndex({ teams, monitors }) {
     });
 
     const inviteForm = useForm({
-        initialValues: { email: '', role: 'member' },
+        initialValues: { email: '', name: '', password: '', role: 'member' },
     });
 
     const monitorForm = useForm({
@@ -60,6 +60,9 @@ function TeamsIndex({ teams, monitors }) {
                 notifications.show({ title: 'Sent', message: 'Invitation sent to ' + values.email, color: 'blue' });
                 closeInvite();
                 inviteForm.reset();
+            },
+            onError: (errors) => {
+                notifications.show({ title: 'Error', message: errors.email, color: 'red' });
             }
         });
     };
@@ -298,6 +301,19 @@ function TeamsIndex({ teams, monitors }) {
                             placeholder="colleague@company.com" 
                             required 
                             {...inviteForm.getInputProps('email')} 
+                        />
+                        <TextInput 
+                            label="Full Name" 
+                            placeholder="John Doe" 
+                            description="Only required if the user doesn't exist yet"
+                            {...inviteForm.getInputProps('name')} 
+                        />
+                        <TextInput 
+                            label="Temporary Password" 
+                            placeholder="Min 8 characters" 
+                            type="password"
+                            description="Only required if the user doesn't exist yet"
+                            {...inviteForm.getInputProps('password')} 
                         />
                         <Select
                             label="Role"

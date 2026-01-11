@@ -5,39 +5,41 @@ namespace App\Http\Controllers;
 use App\Models\Invitation;
 use App\Models\Monitor;
 use App\Models\Team;
+use App\Models\User;
 use App\Notifications\TeamInvitationNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
-use \Symfony\Component\HttpFoundation\Response as HttpResponse;
+use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 class TeamController extends Controller
 {
     public function index(): Response
     {
         $teams = Team::where('owner_id', auth()->id())
-            ->orWhereHas('users', fn($q) => $q->where('user_id', auth()->id()))
+            ->orWhereHas('users', fn ($q) => $q->where('user_id', auth()->id()))
             ->with(['users', 'invitations', 'owner'])
             ->get()
-            ->map(function($team) {
+            ->map(function ($team) {
                 $userRole = $team->users->where('id', auth()->id())->first()?->pivot?->role;
                 $isAdmin = $team->owner_id === auth()->id() || $userRole === 'admin';
-                
+
                 return [
                     'id' => $team->getKey(),
                     'name' => $team->name,
                     'owner' => $team->owner->name,
                     'is_admin' => $isAdmin,
-                    'members' => $team->users->map(function($user) use ($team) {
+                    'members' => $team->users->map(function ($user) use ($team) {
                         $monitorIds = DB::table('monitor_team_user')
                             ->where('team_id', $team->id)
                             ->where('user_id', $user->id)
                             ->pluck('monitor_id')
                             ->toArray();
-                        
+
                         return [
                             'id' => $user->getKey(),
                             'name' => $user->name,
@@ -46,7 +48,7 @@ class TeamController extends Controller
                             'monitor_ids' => $monitorIds,
                         ];
                     }),
-                    'invitations' => $team->invitations->map(fn($inv) => [
+                    'invitations' => $team->invitations->map(fn ($inv) => [
                         'id' => $inv->id,
                         'email' => $inv->email,
                         'role' => $inv->role,
@@ -89,16 +91,12 @@ class TeamController extends Controller
         }
 
         DB::transaction(function () use ($team) {
-            // Delete monitor permissions associated with this team
             DB::table('monitor_team_user')->where('team_id', $team->id)->delete();
-            
-            // Delete invitations
+
             $team->invitations()->delete();
-            
-            // Detach all users
+
             $team->users()->detach();
-            
-            // Delete the team itself
+
             $team->delete();
         });
 
@@ -115,8 +113,34 @@ class TeamController extends Controller
 
         $validated = $request->validate([
             'email' => 'required|email',
+            'name' => 'nullable|string|max:255',
+            'password' => 'nullable|string|min:8',
             'role' => 'required|in:admin,member',
         ]);
+
+        if ($team->users()->where('email', $validated['email'])->exists()) {
+            return back()->withErrors(['email' => 'This user is already a member of the team.']);
+        }
+
+        if ($team->invitations()->where('email', $validated['email'])->where('expires_at', '>', now())->exists()) {
+            return back()->withErrors(['email' => 'An invitation has already been sent to this email address and is still pending.']);
+        }
+
+        // Find or create user
+        $user = User::where('email', $validated['email'])->first();
+        if (!$user) {
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'password' => 'required|string|min:8',
+            ]);
+
+            User::create([
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'password' => Hash::make($validated['password']),
+                'must_change_password' => true,
+            ]);
+        }
 
         $invitation = Invitation::create([
             'team_id' => $team->getKey(),
@@ -128,7 +152,7 @@ class TeamController extends Controller
 
         Notification::route('mail', $validated['email'])->notify(new TeamInvitationNotification($invitation));
 
-        return back()->with('message', 'Invitation sent successfully');
+        return back()->with('message', 'Invitation sent successfully. User created if they did not exist.');
     }
 
     public function acceptInvite(string $token)
@@ -141,12 +165,13 @@ class TeamController extends Controller
 
         if ($team->users()->where('user_id', auth()->id())->exists()) {
             $invitation->delete();
+
             return redirect()->route('teams.index')->with('message', 'You are already a member of this team.');
         }
 
         $team->users()->attach(auth()->id(), [
             'role' => $invitation->role,
-            'id' => Str::uuid()
+            'id' => Str::uuid(),
         ]);
 
         $invitation->delete();
@@ -157,7 +182,7 @@ class TeamController extends Controller
     public function removeMember(Team $team, string $userId)
     {
         $userRole = $team->users()->where('user_id', auth()->id())->first()?->pivot?->role;
-        
+
         if ($team->owner_id !== auth()->id() && $userRole !== 'admin') {
             abort(HttpResponse::HTTP_FORBIDDEN, 'You are not allowed to remove members from this team.');
         }
@@ -179,7 +204,7 @@ class TeamController extends Controller
     public function updateMemberMonitors(Request $request, Team $team, string $userId)
     {
         $userRole = $team->users()->where('user_id', auth()->id())->first()?->pivot?->role;
-        
+
         if ($team->owner_id !== auth()->id() && $userRole !== 'admin') {
             abort(HttpResponse::HTTP_FORBIDDEN, 'You are not allowed to manage member permissions.');
         }
