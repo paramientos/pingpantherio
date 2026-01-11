@@ -129,16 +129,105 @@ function WebhooksIndex({ webhooks }) {
                 </Paper>
 
                 <Paper p="md" radius="md" withBorder>
-                    <Group align="flex-start">
-                        <IconWebhook size={24} style={{ color: 'var(--mantine-primary-color-filled)' }} />
-                        <div style={{ flex: 1 }}>
-                            <Text fw={600} size="sm">Webhook Documentation</Text>
-                            <Text size="xs" c="dimmed" mt={4}>
-                                We send a JSON payload with <Code>X-PingPanther-Signature</Code> header.
-                                Verify it using HMAC-SHA256 with your secret token.
-                            </Text>
+                    <Stack gap="md">
+                        <Group align="flex-start">
+                            <IconWebhook size={24} style={{ color: 'var(--mantine-primary-color-filled)' }} />
+                            <div style={{ flex: 1 }}>
+                                <Text fw={600} size="sm">Webhook Security & Verification</Text>
+                                <Text size="xs" c="dimmed" mt={4}>
+                                    All webhook requests include a signature for verification
+                                </Text>
+                            </div>
+                        </Group>
+
+                        <div>
+                            <Text size="sm" fw={500} mb="xs">Request Headers</Text>
+                            <Code block>
+                                {`X-PingPanther-Event: incident.started
+X-PingPanther-Signature: abc123...
+X-PingPanther-Delivery: unique-job-id`}
+                            </Code>
                         </div>
-                    </Group>
+
+                        <div>
+                            <Text size="sm" fw={500} mb="xs">Payload Example</Text>
+                            <Code block>
+                                {`{
+  "event": "incident.started",
+  "timestamp": 1736598000,
+  "data": {
+    "monitor_id": 1,
+    "monitor_name": "API Server",
+    "error": "Connection timeout"
+  }
+}`}
+                            </Code>
+                        </div>
+
+                        <div>
+                            <Text size="sm" fw={500} mb="xs">Signature Verification (Node.js)</Text>
+                            <Code block>
+                                {`const crypto = require('crypto');
+
+function verifySignature(req, secret) {
+  const signature = req.headers['x-pingpanther-signature'];
+  const timestamp = req.body.timestamp;
+  const payload = JSON.stringify(req.body);
+  
+  const expected = crypto
+    .createHmac('sha256', secret)
+    .update(timestamp + '.' + payload)
+    .digest('hex');
+  
+  return signature === expected;
+}`}
+                            </Code>
+                        </div>
+
+                        <div>
+                            <Text size="sm" fw={500} mb="xs">Signature Verification (PHP)</Text>
+                            <Code block>
+                                {`$signature = $_SERVER['HTTP_X_PINGPANTHER_SIGNATURE'];
+$payload = file_get_contents('php://input');
+$data = json_decode($payload, true);
+$timestamp = $data['timestamp'];
+
+$expected = hash_hmac(
+    'sha256',
+    $timestamp . '.' . $payload,
+    $secretToken
+);
+
+if (!hash_equals($expected, $signature)) {
+    http_response_code(401);
+    exit('Invalid signature');
+}`}
+                            </Code>
+                        </div>
+
+                        <div>
+                            <Text size="sm" fw={500} mb="xs">Signature Verification (Python)</Text>
+                            <Code block>
+                                {`import hmac
+import hashlib
+import json
+
+def verify_signature(request, secret):
+    signature = request.headers.get('X-PingPanther-Signature')
+    payload = request.get_data(as_text=True)
+    data = json.loads(payload)
+    timestamp = data['timestamp']
+    
+    expected = hmac.new(
+        secret.encode(),
+        f"{timestamp}.{payload}".encode(),
+        hashlib.sha256
+    ).hexdigest()
+    
+    return hmac.compare_digest(signature, expected)`}
+                            </Code>
+                        </div>
+                    </Stack>
                 </Paper>
             </Stack>
 
