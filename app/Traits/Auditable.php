@@ -32,7 +32,6 @@ trait Auditable
         $oldValues = $event === 'updated' ? array_intersect_key($model->getOriginal(), $model->getChanges()) : null;
         $newValues = $event === 'updated' ? $model->getChanges() : $model->getAttributes();
 
-        // Şifre veya gizli anahtar gibi alanları loglamayalım
         $forbidden = ['password', 'key', 'token', 'remember_token'];
 
         if ($oldValues) {

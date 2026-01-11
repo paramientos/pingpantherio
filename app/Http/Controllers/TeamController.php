@@ -2,30 +2,30 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Team;
 use App\Models\Invitation;
+use App\Models\Team;
 use App\Notifications\TeamInvitationNotification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Notification;
+use \Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 class TeamController extends Controller
 {
     public function index(): Response
     {
-        // Kullanıcının sahip olduğu veya üyesi olduğu tüm ekipler
         $teams = Team::where('owner_id', auth()->id())
             ->orWhereHas('users', fn($q) => $q->where('user_id', auth()->id()))
             ->with(['users', 'invitations', 'owner'])
             ->get()
-            ->map(fn ($team) => [
+            ->map(fn($team) => [
                 'id' => $team->getKey(),
                 'name' => $team->name,
                 'owner' => $team->owner->name,
                 'is_owner' => $team->owner_id === auth()->id(),
-                'members' => $team->users->map(fn ($user) => [
+                'members' => $team->users->map(fn($user) => [
                     'id' => $user->getKey(),
                     'name' => $user->name,
                     'email' => $user->email,
@@ -55,7 +55,6 @@ class TeamController extends Controller
             'name' => $validated['name'],
         ]);
 
-        // Sahibi üyeler tablosuna da ekleyelim (Opsiyonel ama RBAC için iyi olur)
         $team->users()->attach(auth()->id(), ['role' => 'owner', 'id' => Str::uuid()]);
 
         return back()->with('message', 'Team created successfully');
@@ -63,10 +62,10 @@ class TeamController extends Controller
 
     public function invite(Request $request, Team $team)
     {
-        // Sadece admin veya owner davet edebilir
         $userRole = $team->users()->where('user_id', auth()->id())->first()?->pivot?->role;
+
         if ($team->owner_id !== auth()->id() && $userRole !== 'admin') {
-            abort(403);
+            abort(HttpResponse::HTTP_FORBIDDEN, 'You are not allowed to invite members to this team.');
         }
 
         $validated = $request->validate([
@@ -82,9 +81,7 @@ class TeamController extends Controller
             'expires_at' => now()->addDays(7),
         ]);
 
-        // E-posta gönder
-        Notification::route('mail', $validated['email'])
-            ->notify(new TeamInvitationNotification($invitation));
+        Notification::route('mail', $validated['email'])->notify(new TeamInvitationNotification($invitation));
 
         return back()->with('message', 'Invitation sent successfully');
     }
@@ -97,7 +94,6 @@ class TeamController extends Controller
 
         $team = $invitation->team;
 
-        // Kullanıcı zaten üyeyse
         if ($team->users()->where('user_id', auth()->id())->exists()) {
             $invitation->delete();
             return redirect()->route('teams.index')->with('message', 'You are already a member of this team.');
@@ -116,7 +112,7 @@ class TeamController extends Controller
     public function removeMember(Team $team, string $userId)
     {
         if ($team->owner_id !== auth()->id() && $team->users()->where('user_id', auth()->id())->wherePivot('role', 'admin')->doesntExist()) {
-            abort(403);
+            abort(HttpResponse::HTTP_FORBIDDEN, 'You are not allowed to remove members from this team.');
         }
 
         if ($team->owner_id === $userId) {

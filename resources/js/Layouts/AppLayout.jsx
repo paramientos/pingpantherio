@@ -37,6 +37,7 @@ import '@mantine/spotlight/styles.css';
 function AppLayout({ children }) {
     const [opened, { toggle }] = useDisclosure();
     const { auth, url } = usePage().props;
+    const scrollAreaRef = React.useRef(null);
 
     useEffect(() => {
         const handleOpenSpotlight = () => {
@@ -49,6 +50,36 @@ function AppLayout({ children }) {
             window.removeEventListener('open-spotlight', handleOpenSpotlight);
         };
     }, []);
+
+    // Auto-scroll to active menu item
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (scrollAreaRef.current) {
+                const viewport = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
+                if (viewport) {
+                    // Find active link by checking Mantine's active class
+                    const activeLink = viewport.querySelector('.mantine-NavLink-root[data-active="true"]')
+                        || viewport.querySelector('.mantine-NavLink-root.mantine-active');
+
+                    if (activeLink) {
+                        const viewportRect = viewport.getBoundingClientRect();
+                        const linkRect = activeLink.getBoundingClientRect();
+                        const scrollTop = viewport.scrollTop;
+
+                        // Calculate position to center the active item
+                        const targetScroll = scrollTop + linkRect.top - viewportRect.top - (viewportRect.height / 2) + (linkRect.height / 2);
+
+                        viewport.scrollTo({
+                            top: targetScroll,
+                            behavior: 'smooth'
+                        });
+                    }
+                }
+            }
+        }, 200);
+
+        return () => clearTimeout(timer);
+    }, [url]);
 
 
     const monitoringItems = [
@@ -246,7 +277,7 @@ function AppLayout({ children }) {
             </AppShell.Header>
 
             <AppShell.Navbar p="md">
-                <AppShell.Section grow component={ScrollArea}>
+                <AppShell.Section grow component={ScrollArea} ref={scrollAreaRef}>
                     <Text size="10px" fw={800} c="dimmed" tt="uppercase" mb="xs" px="sm" style={{ letterSpacing: '1px' }}>
                         Operational Telemetry
                     </Text>

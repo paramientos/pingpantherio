@@ -7,6 +7,7 @@ use App\Models\PostMortem;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use \Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 class PostMortemController extends Controller
 {
@@ -25,7 +26,7 @@ class PostMortemController extends Controller
     public function create(Incident $incident): Response
     {
         if ($incident->monitor->user_id !== auth()->id()) {
-            abort(403);
+            abort(HttpResponse::HTTP_FORBIDDEN, 'You are not allowed to create a post-mortem report for this incident.');
         }
 
         return Inertia::render('PostMortems/Create', [
@@ -47,7 +48,7 @@ class PostMortemController extends Controller
 
         $incident = Incident::findOrFail($validated['incident_id']);
         if ($incident->monitor->user_id !== auth()->id()) {
-            abort(403);
+            abort(HttpResponse::HTTP_FORBIDDEN, 'You are not allowed to create a post-mortem report for this incident.');
         }
 
         PostMortem::create([
@@ -62,7 +63,7 @@ class PostMortemController extends Controller
     public function show(PostMortem $postMortem): Response
     {
         if ($postMortem->incident->monitor->user_id !== auth()->id()) {
-            abort(403);
+            abort(HttpResponse::HTTP_FORBIDDEN, 'You are not allowed to view this post-mortem report.');
         }
 
         return Inertia::render('PostMortems/Show', [
@@ -73,7 +74,7 @@ class PostMortemController extends Controller
     public function destroy(PostMortem $postMortem)
     {
         if ($postMortem->incident->monitor->user_id !== auth()->id()) {
-            abort(403);
+            abort(HttpResponse::HTTP_FORBIDDEN, 'You are not allowed to delete this post-mortem report.');
         }
 
         $postMortem->delete();

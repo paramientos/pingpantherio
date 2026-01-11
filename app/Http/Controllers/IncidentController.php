@@ -33,13 +33,16 @@ class IncidentController extends Controller
 
         $stats = [
             'total' => Incident::whereIn('monitor_id', $monitors->pluck('id'))->count(),
+
             'active' => Incident::whereIn('monitor_id', $monitors->pluck('id'))
                 ->whereNull('resolved_at')
                 ->count(),
+
             'resolved_today' => Incident::whereIn('monitor_id', $monitors->pluck('id'))
                 ->whereNotNull('resolved_at')
                 ->whereDate('resolved_at', today())
                 ->count(),
+
             'avg_resolution_time' => $this->calculateAvgResolutionTime($monitors),
         ];
 
@@ -60,6 +63,7 @@ class IncidentController extends Controller
         }
 
         $totalSeconds = 0;
+        
         foreach ($resolved as $incident) {
             $totalSeconds += $incident->started_at->diffInSeconds($incident->resolved_at);
         }

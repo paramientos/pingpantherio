@@ -25,6 +25,7 @@ class RecoveryActionController extends Controller
     public function destroy(RecoveryAction $recoveryAction)
     {
         $recoveryAction->delete();
+
         return back()->with('message', 'Recovery action deleted');
     }
 }

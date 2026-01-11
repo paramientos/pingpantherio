@@ -57,10 +57,10 @@ class ReportController extends Controller
             'is_active' => 'boolean',
         ]);
 
-        $report = Report::create([
+         Report::create([
             ...$validated,
             'user_id' => auth()->id(),
-            'next_send_at' => now()->addDay(), // Basit mantık
+            'next_send_at' => now()->addDay(),
         ]);
 
         return redirect()->route('reports.index')
@@ -79,7 +79,7 @@ class ReportController extends Controller
         $monitorId = $request->get('monitor_id');
 
         $query = Monitor::where('user_id', auth()->user()->id);
-        
+
         if ($monitorId) {
             $query->where('id', $monitorId);
         }
@@ -143,7 +143,7 @@ class ReportController extends Controller
         $monitorId = $request->get('monitor_id');
 
         $query = Monitor::where('user_id', auth()->user()->id);
-        
+
         if ($monitorId) {
             $query->where('id', $monitorId);
         }

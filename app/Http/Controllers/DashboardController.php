@@ -30,9 +30,11 @@ class DashboardController extends Controller
             'incidents' => Incident::whereIn('monitor_id', $monitors->pluck('id'))
                 ->whereNull('resolved_at')
                 ->count(),
+
             'incidents_24h' => Incident::whereIn('monitor_id', $monitors->pluck('id'))
                 ->where('started_at', '>=', now()->subHours(24))
                 ->count(),
+
             'incidents_7d' => Incident::whereIn('monitor_id', $monitors->pluck('id'))
                 ->where('started_at', '>=', now()->subDays(7))
                 ->count(),
@@ -65,6 +67,7 @@ class DashboardController extends Controller
         }
 
         $totalUptime = 0;
+
         foreach ($monitors as $monitor) {
             $heartbeats = $monitor->heartbeats()
                 ->where('checked_at', '>=', now()->subHours($hours))
@@ -97,6 +100,7 @@ class DashboardController extends Controller
                 ->get();
 
             $uptime = 100;
+
             if ($heartbeats->isNotEmpty()) {
                 $upCount = $heartbeats->where('is_up', true)->count();
                 $uptime = round(($upCount / $heartbeats->count()) * 100, 2);

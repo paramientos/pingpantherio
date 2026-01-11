@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Monitor;
 use App\Models\Heartbeat;
-use Illuminate\Http\Request;
+use App\Models\Monitor;
 
 class PushMonitorController extends Controller
 {
@@ -16,14 +15,12 @@ class PushMonitorController extends Controller
             return response()->json(['error' => 'Monitor type mismatch'], 400);
         }
 
-        // Monitörü güncelle
         $monitor->update([
             'status' => 'up',
             'last_ping_at' => now(),
             'last_checked_at' => now(),
         ]);
 
-        // Heartbeat kaydı
         Heartbeat::create([
             'monitor_id' => $monitor->id,
             'is_up' => true,

@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Support\Str;
+use \Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 class WebhookController extends Controller
 {
@@ -38,7 +39,7 @@ class WebhookController extends Controller
     public function destroy(Webhook $webhook)
     {
         if ($webhook->user_id !== auth()->id()) {
-            abort(403);
+            abort(HttpResponse::HTTP_FORBIDDEN, 'You are not allowed to delete this webhook.');
         }
 
         $webhook->delete();

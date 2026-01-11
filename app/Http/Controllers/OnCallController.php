@@ -27,7 +27,7 @@ class OnCallController extends Controller
                 ];
             });
 
-        $teamMembers = User::all()->map(fn ($u) => [
+        $teamMembers = User::all()->map(fn($u) => [
             'value' => $u->id,
             'label' => $u->name,
         ]);
@@ -69,7 +69,7 @@ class OnCallController extends Controller
     public function destroy(OnCallSchedule $on_call)
     {
         if ($on_call->user_id !== auth()->id()) {
-            abort(403);
+            abort(\Symfony\Component\HttpFoundation\Response::HTTP_FORBIDDEN);
         }
 
         $on_call->delete();

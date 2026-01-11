@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\MonitorStatus;
-use App\Jobs\CheckSslCertificates;
+use App\Jobs\CheckMonitors;
 use App\Models\Monitor;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -14,11 +14,11 @@ class MonitorController extends Controller
     public function index(): Response
     {
         $monitors = Monitor::with(['user', 'heartbeats' => function ($query) {
-                $query->latest()->limit(10);
-            }])
+            $query->latest()->limit(10);
+        }])
             ->latest()
             ->get()
-            ->map(fn ($monitor) => [
+            ->map(fn($monitor) => [
                 'id' => $monitor->getKey(),
                 'name' => $monitor->name,
                 'url' => $monitor->url,
@@ -33,7 +33,7 @@ class MonitorController extends Controller
                 'last_ping_at' => $monitor->last_ping_at?->diffForHumans(),
                 'last_checked_at' => $monitor->last_checked_at?->diffForHumans(),
                 'created_at' => $monitor->created_at->format('M d, Y'),
-                'recent_heartbeats' => $monitor->heartbeats->map(fn ($h) => [
+                'recent_heartbeats' => $monitor->heartbeats->map(fn($h) => [
                     'is_up' => $h->is_up,
                     'checked_at' => $h->checked_at?->format('Y-m-d H:i:s'),
                 ]),
@@ -41,7 +41,7 @@ class MonitorController extends Controller
 
         return Inertia::render('Monitors/Index', [
             'monitors' => $monitors,
-            'escalationPolicies' => \App\Models\EscalationPolicy::where('user_id', auth()->id())->get()->map(fn ($p) => [
+            'escalationPolicies' => \App\Models\EscalationPolicy::where('user_id', auth()->id())->get()->map(fn($p) => [
                 'value' => $p->id,
                 'label' => $p->name,
             ]),
@@ -80,7 +80,7 @@ class MonitorController extends Controller
                 'playbook' => $monitor->playbook,
                 'created_at' => $monitor->created_at->format('M d, Y'),
             ],
-            'heartbeats' => $monitor->heartbeats->map(fn ($h) => [
+            'heartbeats' => $monitor->heartbeats->map(fn($h) => [
                 'id' => $h->getKey(),
                 'is_up' => $h->is_up,
                 'status_code' => $h->status_code,
@@ -88,7 +88,7 @@ class MonitorController extends Controller
                 'error' => $h->error,
                 'checked_at' => $h->checked_at?->format('Y-m-d H:i:s'),
             ]),
-            'incidents' => $monitor->incidents->map(fn ($i) => [
+            'incidents' => $monitor->incidents->map(fn($i) => [
                 'id' => $i->getKey(),
                 'started_at' => $i->started_at->format('Y-m-d H:i:s'),
                 'resolved_at' => $i->resolved_at?->format('Y-m-d H:i:s'),
@@ -121,11 +121,11 @@ class MonitorController extends Controller
                 'delay_seconds' => $ra->delay_seconds,
                 'is_active' => $ra->is_active,
             ]),
-            'escalationPolicies' => \App\Models\EscalationPolicy::where('user_id', auth()->id())->get()->map(fn ($p) => [
+            'escalationPolicies' => \App\Models\EscalationPolicy::where('user_id', auth()->id())->get()->map(fn($p) => [
                 'value' => $p->id,
                 'label' => $p->name,
             ]),
-            'playbooks' => \App\Models\Playbook::where('user_id', auth()->id())->get()->map(fn ($p) => [
+            'playbooks' => \App\Models\Playbook::where('user_id', auth()->id())->get()->map(fn($p) => [
                 'value' => $p->id,
                 'label' => $p->name,
             ]),
@@ -155,14 +155,14 @@ class MonitorController extends Controller
             'playbook_id' => 'nullable|exists:playbooks,id',
         ]);
 
-        if (isset($validated['headers']) && ! empty($validated['headers'])) {
+        if (isset($validated['headers']) && !empty($validated['headers'])) {
             $validated['headers'] = json_decode($validated['headers'], true);
         }
 
         $monitor = Monitor::create([
             ...$validated,
             'user_id' => auth()->id(),
-            'uuid' => $validated['type'] === 'push' ? (string) \Illuminate\Support\Str::uuid() : null,
+            'uuid' => $validated['type'] === 'push' ? (string)\Illuminate\Support\Str::uuid() : null,
             'status' => MonitorStatus::PENDING,
         ]);
 
@@ -173,8 +173,8 @@ class MonitorController extends Controller
 
     public function check(Monitor $monitor)
     {
-        // Run synchronously to get immediate result
-        (new \App\Jobs\CheckMonitors($monitor))->handle();
+        // Check the monitor immediately
+        (new CheckMonitors($monitor))->handle();
 
         $lastHeartbeat = $monitor->heartbeats()->latest()->first();
 
@@ -208,12 +208,12 @@ class MonitorController extends Controller
             'playbook_id' => 'nullable|exists:playbooks,id',
         ]);
 
-        if (isset($validated['headers']) && ! empty($validated['headers'])) {
+        if (!empty($validated['headers'])) {
             $validated['headers'] = json_decode($validated['headers'], true);
         }
 
-        if ($monitor->type !== 'push' && $validated['type'] === 'push' && ! $monitor->uuid) {
-            $validated['uuid'] = (string) \Illuminate\Support\Str::uuid();
+        if ($monitor->type !== 'push' && $validated['type'] === 'push' && !$monitor->uuid) {
+            $validated['uuid'] = (string)\Illuminate\Support\Str::uuid();
         }
 
         $monitor->update($validated);
@@ -261,6 +261,7 @@ class MonitorController extends Controller
 
         foreach ($heartbeats as $hb) {
             $time = $hb->response_time;
+
             if ($time < 100) $distribution[0]['count']++;
             elseif ($time < 300) $distribution[1]['count']++;
             elseif ($time < 500) $distribution[2]['count']++;

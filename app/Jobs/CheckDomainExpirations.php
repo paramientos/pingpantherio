@@ -41,7 +41,6 @@ class CheckDomainExpirations implements ShouldQueue
     protected function processDomain(DomainMonitor $domainMonitor): void
     {
         try {
-            // 1. Yol: Kütüphaneyi kullanarak WHOIS (Port 43) dene
             $whois = Factory::get()->createWhois();
             $info = $whois->loadDomainInfo($domainMonitor->domain);
 
@@ -56,12 +55,9 @@ class CheckDomainExpirations implements ShouldQueue
                 return;
             }
         } catch (\Exception $e) {
-            // Port 43 kapalıysa veya sunucu ulaşılamazsa buraya düşer
             Log::warning("WHOIS Port 43 unreachable for {$domainMonitor->domain}, falling back to RDAP (HTTPS)...");
         }
 
-        // 2. Yol (Enterprise Fallback): RDAP Protokolü (Port 443 - HTTPS)
-        // Bu yol firewall engellerine takılmaz.
         $this->processRdapFallback($domainMonitor);
     }
 
@@ -75,14 +71,12 @@ class CheckDomainExpirations implements ShouldQueue
                 $expirationDate = null;
                 $registrar = 'Unknown';
 
-                // Expiration tespiti
                 foreach ($data['events'] ?? [] as $event) {
                     if ($event['eventAction'] === 'expiration') {
                         $expirationDate = Carbon::parse($event['eventDate']);
                     }
                 }
 
-                // Registrar tespiti
                 foreach ($data['entities'] ?? [] as $entity) {
                     if (in_array('registrar', $entity['roles'] ?? [])) {
                         $registrar = $entity['vcardArray'][1][1][3] ?? 'Unknown';
@@ -124,6 +118,7 @@ class CheckDomainExpirations implements ShouldQueue
         }
 
         $daysLeft = (int) now()->diffInDays($domain->expires_at, false);
+
         if (in_array($daysLeft, [30, 15, 7, 3, 1, 0])) {
             $domain->user->notify(new DomainExpiryAlert($domain, $daysLeft));
         }

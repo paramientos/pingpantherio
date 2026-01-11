@@ -39,7 +39,6 @@ class ExecuteRecoveryAction implements ShouldQueue
                     throw new \Exception('Recovery webhook failed: '.$output);
                 }
             }
-            // SSH desteği ileride eklenebilir
 
             $log->update([
                 'status' => 'success',

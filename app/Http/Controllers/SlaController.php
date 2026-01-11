@@ -7,6 +7,7 @@ use App\Models\SlaConfig;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use \Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 class SlaController extends Controller
 {
@@ -70,7 +71,7 @@ class SlaController extends Controller
     {
         // Check ownership
         if ($slaConfig->monitor->user_id !== auth()->user()->id) {
-            abort(403);
+            abort(HttpResponse::HTTP_FORBIDDEN, 'You are not allowed to delete this SLA configuration.');
         }
 
         $slaConfig->delete();

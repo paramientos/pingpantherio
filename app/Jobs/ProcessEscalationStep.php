@@ -62,8 +62,7 @@ class ProcessEscalationStep implements ShouldQueue
         // Schedule next step if exists
         if (isset($rules[$this->stepIndex + 1])) {
             $nextRule = $rules[$this->stepIndex + 1];
-            
-            // Dispatch next step after delay_minutes
+
             self::dispatch($this->incident, $this->stepIndex + 1)
                 ->delay(now()->addMinutes($nextRule->delay_minutes));
         }

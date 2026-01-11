@@ -7,6 +7,7 @@ use App\Models\Playbook;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use \Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 class PlaybookController extends Controller
 {
@@ -55,7 +56,7 @@ class PlaybookController extends Controller
     public function update(Request $request, Playbook $playbook)
     {
         if ($playbook->user_id !== auth()->id()) {
-            abort(403);
+            abort(HttpResponse::HTTP_FORBIDDEN, 'You are not allowed to edit this playbook.');
         }
 
         $validated = $request->validate([
@@ -85,7 +86,7 @@ class PlaybookController extends Controller
     public function destroy(Playbook $playbook)
     {
         if ($playbook->user_id !== auth()->id()) {
-            abort(403);
+            abort(HttpResponse::HTTP_FORBIDDEN, 'You are not allowed to delete this playbook.');
         }
 
         $playbook->delete();

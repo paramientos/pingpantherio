@@ -39,7 +39,6 @@ class DispatchWebhook implements ShouldQueue
             'X-PingPanther-Delivery' => $this->job->getJobId(),
         ];
 
-        // Eğer secret token varsa HMAC-SHA256 ile imzala
         if ($this->webhook->secret_token) {
             $signature = hash_hmac('sha256', $timestamp.'.'.$body, $this->webhook->secret_token);
             $headers['X-PingPanther-Signature'] = $signature;

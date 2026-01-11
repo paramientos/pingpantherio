@@ -13,6 +13,7 @@ class DependencyController extends Controller
     public function index(): Response
     {
         $user = auth()->user();
+
         $monitors = Monitor::where('user_id', $user->id)
             ->with(['dependencies.dependsOnMonitor', 'dependents.monitor'])
             ->get()

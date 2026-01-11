@@ -7,11 +7,14 @@ use App\Enums\MonitorStatus;
 use App\Models\Heartbeat;
 use App\Models\Incident;
 use App\Models\Monitor;
+use App\Models\RecoveryAction;
+use App\Models\Webhook;
 use App\Notifications\IncidentAlert;
 use App\Traits\SendsAlerts;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Http;
@@ -131,7 +134,6 @@ class CheckMonitors implements ShouldQueue
 
     protected function checkPush(Monitor $monitor): array
     {
-        // Eğer hiç ping gelmemişse ve monitor yeni oluşturulmuşsa
         if (! $monitor->last_ping_at) {
             $isUp = $monitor->created_at->diffInMinutes(now()) <= $monitor->grace_period;
 
@@ -185,8 +187,7 @@ class CheckMonitors implements ShouldQueue
                 'html_snapshot' => ! $isUp ? $response->body() : null,
                 'response_headers' => $response->headers(),
             ];
-        } catch (\Illuminate\Http\Client\ConnectionException $e) {
-            // Connection errors (DNS, timeout, SSL, etc.)
+        } catch (ConnectionException $e) {
             return [
                 'is_up' => false,
                 'status_code' => null,
@@ -207,9 +208,6 @@ class CheckMonitors implements ShouldQueue
         }
     }
 
-    /**
-     * Get a user-friendly error message based on HTTP status code
-     */
     protected function getHttpErrorMessage(int $statusCode, $response): string
     {
         return match (true) {
@@ -230,9 +228,6 @@ class CheckMonitors implements ShouldQueue
         };
     }
 
-    /**
-     * Parse cURL/connection errors into user-friendly messages
-     */
     protected function parseConnectionError(string $error): string
     {
         return match (true) {
@@ -339,20 +334,18 @@ class CheckMonitors implements ShouldQueue
                 $monitor->user->notify(new IncidentAlert($monitor, $incident, 'started'));
             }
 
-            // Webhook Tetikle
             $this->triggerWebhooks($monitor->user, 'incident.started', [
                 'monitor' => $monitor->only(['id', 'name', 'url', 'type']),
                 'incident' => $incident->only(['id', 'started_at', 'error_message']),
             ]);
 
-            // Self-healing: Otomatik Kurtarma Eylemlerini Tetikle
             $this->triggerRecoveryActions($monitor, $incident);
         }
     }
 
     protected function triggerRecoveryActions($monitor, $incident): void
     {
-        $actions = \App\Models\RecoveryAction::where('monitor_id', $monitor->id)
+        $actions = RecoveryAction::where('monitor_id', $monitor->id)
             ->where('is_active', true)
             ->get();
 
@@ -364,13 +357,13 @@ class CheckMonitors implements ShouldQueue
 
     protected function triggerWebhooks($user, string $event, array $payload): void
     {
-        $webhooks = \App\Models\Webhook::where('user_id', $user->id)
+        $webhooks = Webhook::where('user_id', $user->id)
             ->where('is_active', true)
             ->get();
 
         foreach ($webhooks as $webhook) {
             if (in_array($event, $webhook->events)) {
-                dispatch(new \App\Jobs\DispatchWebhook($webhook, $event, $payload));
+                dispatch(new DispatchWebhook($webhook, $event, $payload));
             }
         }
     }
@@ -399,7 +392,6 @@ class CheckMonitors implements ShouldQueue
                 $monitor->user->notify(new IncidentAlert($monitor, $incident, 'resolved'));
             }
 
-            // Webhook Tetikle
             $this->triggerWebhooks($monitor->user, 'incident.resolved', [
                 'monitor' => $monitor->only(['id', 'name', 'url', 'type']),
                 'incident' => $incident->only(['id', 'started_at', 'resolved_at']),
@@ -415,12 +407,8 @@ class CheckMonitors implements ShouldQueue
     protected function takeScreenshot(string $url): ?string
     {
         try {
-            // Using a free screenshot API for demo purposes
-            // In a real production environment, you would use spatie/browsershot (Puppeteer)
             $apiUrl = 'https://api.screenshotmachine.com/?key=FREE&url='.urlencode($url).'&dimension=1024x768';
 
-            // We return the external URL as the screenshot path for now.
-            // In production, we would download it to storage/private and return the local path.
             return $apiUrl;
         } catch (\Exception $e) {
             Log::error('Failed to take screenshot: '.$e->getMessage());
