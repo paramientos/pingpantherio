@@ -19,11 +19,12 @@ import {
     Table,
     Avatar,
 } from '@mantine/core';
-import { useForm, router } from '@inertiajs/react';
+import { useForm, router, usePage } from '@inertiajs/react';
 import { IconPlus, IconTrash, IconCalendarStats, IconUserCheck, IconClock } from '@tabler/icons-react';
 import { notifications } from '@mantine/notifications';
 
 export default function OnCallIndex({ schedules, teamMembers }) {
+    const { auth } = usePage().props;
     const [opened, setOpened] = useState(false);
     const { data, setData, post, processing, reset, errors } = useForm({
         name: '',
@@ -82,9 +83,12 @@ export default function OnCallIndex({ schedules, teamMembers }) {
                             Manage team rotations and ensure someone is always ready to respond to alerts.
                         </Text>
                     </div>
-                    <Button leftSection={<IconPlus size={16} />} onClick={() => setOpened(true)}>
-                        Create Schedule
-                    </Button>
+
+                    {auth.is_admin && (
+                        <Button leftSection={<IconPlus size={16} />} onClick={() => setOpened(true)}>
+                            Create Schedule
+                        </Button>
+                    )}
                 </Group>
 
                 <Grid gutter="md">
@@ -141,7 +145,10 @@ export default function OnCallIndex({ schedules, teamMembers }) {
                                 <Text size="sm" c="dimmed" mb="xl">
                                     Set up rotations to automatically manage alert assignments among your team.
                                 </Text>
-                                <Button variant="light" onClick={() => setOpened(true)}>Set up first schedule</Button>
+
+                                {auth.is_admin && (
+                                    <Button variant="light" onClick={() => setOpened(true)}>Set up first schedule</Button>
+                                )}
                             </Card>
                         </Grid.Col>
                     )}

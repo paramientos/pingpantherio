@@ -1,6 +1,6 @@
 import React from 'react';
 import AppLayout from '@/Layouts/AppLayout';
-import { Link, router } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import {
     Title,
     Text,
@@ -17,6 +17,8 @@ import { IconPlus, IconTrash, IconBellRinging, IconSettingsAutomation } from '@t
 import { notifications } from '@mantine/notifications';
 
 function AlertRulesIndex({ rules }) {
+    const { auth } = usePage().props;
+
     const handleDelete = (id) => {
         if (confirm('Are you sure you want to delete this alert rule?')) {
             router.delete(`/alert-rules/${id}`, {
@@ -43,6 +45,8 @@ function AlertRulesIndex({ rules }) {
                             Create complex alert rules with thresholds and durations
                         </Text>
                     </div>
+
+                    {auth.is_admin && (
                     <Button
                         component={Link}
                         href="/alert-rules/create"
@@ -50,6 +54,7 @@ function AlertRulesIndex({ rules }) {
                     >
                         Create Alert Rule
                     </Button>
+                    )}
                 </Group>
 
                 <Card padding="0" radius="md">

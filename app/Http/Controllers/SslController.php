@@ -11,7 +11,23 @@ class SslController extends Controller
 {
     public function index(): Response
     {
-        $monitors = Monitor::where('check_ssl', true)
+       $user = auth()->user();
+        
+        $query = Monitor::with(['user', 'heartbeats' => function ($query) {
+            $query->latest()->limit(10);
+        }]);
+
+        if ($user->role->isUser() && $user->teams()->exists()) {
+            $teamIds = $user->teams()->pluck('teams.id');
+            
+            $query->whereHas('teams', function ($q) use ($teamIds) {
+                $q->whereIn('teams.id', $teamIds);
+            });
+        } else {
+            $query->where('user_id', $user->id);
+        }
+
+        $monitors = $query->where('check_ssl', true)
             ->whereNotNull('ssl_expires_at')
             ->orderBy('ssl_days_until_expiry', 'asc')
             ->get()

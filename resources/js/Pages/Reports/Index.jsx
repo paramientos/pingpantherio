@@ -1,6 +1,6 @@
 import React from 'react';
 import AppLayout from '@/Layouts/AppLayout';
-import { Link, router } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import {
     Title,
     Text,
@@ -17,6 +17,8 @@ import { IconPlus, IconDots, IconTrash, IconFileAnalytics, IconMail, IconClock }
 import { notifications } from '@mantine/notifications';
 
 function ReportsIndex({ reports }) {
+    const { auth } = usePage().props;
+
     const handleDelete = (id) => {
         if (confirm('Are you sure you want to delete this report schedule?')) {
             router.delete(`/reports/${id}`, {

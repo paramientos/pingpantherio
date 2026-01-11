@@ -1,6 +1,6 @@
 import React from 'react';
 import AppLayout from '@/Layouts/AppLayout';
-import { Link, router } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import {
     Title,
     Text,
@@ -19,6 +19,8 @@ import { IconPlus, IconDots, IconEdit, IconTrash, IconMail, IconBrandSlack, Icon
 import { notifications } from '@mantine/notifications';
 
 function AlertChannelsIndex({ channels }) {
+    const { auth } = usePage().props;
+
     const getTypeIcon = (type) => {
         const icons = {
             email: IconMail,
@@ -67,6 +69,7 @@ function AlertChannelsIndex({ channels }) {
                             Configure notification channels for your monitors
                         </Text>
                     </div>
+                    {auth.is_admin && (
                     <Button
                         component={Link}
                         href="/alert-channels/create"
@@ -74,6 +77,7 @@ function AlertChannelsIndex({ channels }) {
                     >
                         Add Channel
                     </Button>
+                    )}
                 </Group>
 
                 <Card padding="0" radius="md">
@@ -96,6 +100,8 @@ function AlertChannelsIndex({ channels }) {
                                             <Text c="dimmed" size="lg">
                                                 No alert channels yet
                                             </Text>
+
+                                            {auth.is_admin && (
                                             <Button
                                                 component={Link}
                                                 href="/alert-channels/create"
@@ -103,6 +109,7 @@ function AlertChannelsIndex({ channels }) {
                                             >
                                                 Add Your First Channel
                                             </Button>
+                                            )}
                                         </Stack>
                                     </Table.Td>
                                 </Table.Tr>

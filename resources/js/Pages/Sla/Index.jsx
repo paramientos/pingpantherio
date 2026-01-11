@@ -19,11 +19,12 @@ import {
     Divider,
     Alert,
 } from '@mantine/core';
-import { useForm, router } from '@inertiajs/react';
+import { useForm, router, usePage } from '@inertiajs/react';
 import { IconPlus, IconTrash, IconCheck, IconX, IconAlertTriangle, IconTarget, IconClock } from '@tabler/icons-react';
 import { notifications } from '@mantine/notifications';
 
 export default function SlaIndex({ slas, monitors }) {
+    const { auth } = usePage().props;
     const [opened, setOpened] = useState(false);
     const { data, setData, post, processing, reset, errors } = useForm({
         monitor_id: '',
@@ -84,9 +85,12 @@ export default function SlaIndex({ slas, monitors }) {
                             Monitor service level agreements and uptime targets
                         </Text>
                     </div>
+
+                    {auth.is_admin && (
                     <Button leftSection={<IconPlus size={16} />} onClick={() => setOpened(true)}>
                         Add SLA
                     </Button>
+                    )}
                 </Group>
 
                 {criticalSlas.length > 0 && (
@@ -194,7 +198,10 @@ export default function SlaIndex({ slas, monitors }) {
                                 <Text size="sm" c="dimmed" mb="xl">
                                     Set uptime targets and track compliance for your critical services.
                                 </Text>
-                                <Button variant="light" onClick={() => setOpened(true)}>Create your first SLA</Button>
+
+                                {auth.is_admin && (
+                                    <Button variant="light" onClick={() => setOpened(true)}>Create your first SLA</Button>
+                                )}
                             </Card>
                         </Grid.Col>
                     )}

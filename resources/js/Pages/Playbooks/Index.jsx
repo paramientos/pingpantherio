@@ -17,11 +17,12 @@ import {
     Divider,
     ActionIcon,
 } from '@mantine/core';
-import { useForm, router } from '@inertiajs/react';
+import { useForm, router, usePage } from '@inertiajs/react';
 import { IconPlus, IconTrash, IconFileText, IconDeviceFloppy, IconChevronRight } from '@tabler/icons-react';
 import { notifications } from '@mantine/notifications';
 
 export default function PlaybookIndex({ playbooks, monitors }) {
+    const { auth } = usePage().props;
     const [opened, setOpened] = useState(false);
     const [editingPlaybook, setEditingPlaybook] = useState(null);
 
@@ -85,9 +86,12 @@ export default function PlaybookIndex({ playbooks, monitors }) {
                             Step-by-step guides for your team to handle monitor failures efficiently.
                         </Text>
                     </div>
-                    <Button leftSection={<IconPlus size={16} />} onClick={() => { setEditingPlaybook(null); reset(); setOpened(true); }}>
-                        Create Playbook
-                    </Button>
+
+                    {auth.is_admin && (
+                        <Button leftSection={<IconPlus size={16} />} onClick={() => { setEditingPlaybook(null); reset(); setOpened(true); }}>
+                            Create Playbook
+                        </Button>
+                    )}
                 </Group>
 
                 <Grid gutter="md">
@@ -127,7 +131,10 @@ export default function PlaybookIndex({ playbooks, monitors }) {
                                 <Text size="sm" c="dimmed" mb="xl">
                                     Document how to resolve incidents and attach them to your monitors.
                                 </Text>
-                                <Button variant="light" onClick={() => setOpened(true)}>Create your first playbook</Button>
+
+                                {auth.is_admin && (
+                                    <Button variant="light" onClick={() => setOpened(true)}>Create your first playbook</Button>
+                                )}
                             </Card>
                         </Grid.Col>
                     )}

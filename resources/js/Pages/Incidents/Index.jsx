@@ -15,9 +15,11 @@ import {
     Button,
 } from '@mantine/core';
 import { IconAlertTriangle, IconCheck, IconClock, IconActivity, IconFilePlus, IconHistory } from '@tabler/icons-react';
-import { Link, router } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 
 function IncidentsIndex({ incidents, stats }) {
+    const { auth } = usePage().props;   
+
     return (
         <AppLayout>
             <Stack gap="xl">
@@ -181,7 +183,7 @@ function IncidentsIndex({ incidents, stats }) {
                                                 >
                                                     View Log
                                                 </Button>
-                                                {!incident.is_active && (
+                                                {auth.is_admin && !incident.is_active && (
                                                     <Button
                                                         variant="subtle"
                                                         size="xs"

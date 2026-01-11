@@ -20,7 +20,7 @@ import {
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useDisclosure } from '@mantine/hooks';
-import { router, Link } from '@inertiajs/react';
+import { router, Link, usePage } from '@inertiajs/react';
 import { IconPlus, IconDots, IconEdit, IconTrash, IconCircleCheck, IconCircleX, IconClock } from '@tabler/icons-react';
 import { notifications } from '@mantine/notifications';
 import MonitorForm from '@/Components/MonitorForm';
@@ -29,6 +29,7 @@ function MonitorsIndex({ monitors, escalationPolicies }) {
     const [createOpened, { open: openCreate, close: closeCreate }] = useDisclosure(false);
     const [editOpened, { open: openEdit, close: closeEdit }] = useDisclosure(false);
     const [selectedMonitor, setSelectedMonitor] = useState(null);
+    const { auth } = usePage().props;
 
     const createForm = useForm({
         initialValues: {
@@ -188,9 +189,11 @@ function MonitorsIndex({ monitors, escalationPolicies }) {
                             Manage your uptime monitors
                         </Text>
                     </div>
-                    <Button leftSection={<IconPlus size={16} />} onClick={openCreate}>
-                        Add Monitor
-                    </Button>
+                    {auth.is_admin && (
+                        <Button leftSection={<IconPlus size={16} />} onClick={openCreate}>
+                            Add Monitor
+                        </Button>
+                    )}
                 </Group>
 
                 <Paper shadow="sm" radius="md" withBorder>
@@ -276,19 +279,24 @@ function MonitorsIndex({ monitors, escalationPolicies }) {
                                                     >
                                                         View Details
                                                     </Menu.Item>
-                                                    <Menu.Item
-                                                        leftSection={<IconEdit style={{ width: rem(14), height: rem(14) }} />}
-                                                        onClick={() => handleEdit(monitor)}
-                                                    >
-                                                        Edit
-                                                    </Menu.Item>
-                                                    <Menu.Item
-                                                        color="red"
-                                                        leftSection={<IconTrash style={{ width: rem(14), height: rem(14) }} />}
-                                                        onClick={() => handleDelete(monitor.id)}
-                                                    >
-                                                        Delete
-                                                    </Menu.Item>
+                                                    
+                                                    {auth.is_admin && (
+                                                        <>
+                                                            <Menu.Item
+                                                                leftSection={<IconEdit style={{ width: rem(14), height: rem(14) }} />}
+                                                                onClick={() => handleEdit(monitor)}
+                                                            >
+                                                                Edit
+                                                            </Menu.Item>
+                                                            <Menu.Item
+                                                                color="red"
+                                                                leftSection={<IconTrash style={{ width: rem(14), height: rem(14) }} />}
+                                                                onClick={() => handleDelete(monitor.id)}
+                                                            >
+                                                                Delete
+                                                            </Menu.Item>
+                                                        </>
+                                                    )}
                                                 </Menu.Dropdown>
                                             </Menu>
                                         </Table.Td>

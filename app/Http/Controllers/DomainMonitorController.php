@@ -15,7 +15,7 @@ class DomainMonitorController extends Controller
         $user = auth()->user();
         $query = DomainMonitor::query();
 
-        if ($user->role === \App\Enums\Role::ADMIN) {
+        if ($user->role->isAdmin()) {
         } elseif ($user->teams()->exists()) {
             $teamUserIds = $user->teams()
                 ->with('users')
@@ -41,11 +41,8 @@ class DomainMonitorController extends Controller
                 'last_checked' => $domain->last_checked_at?->diffForHumans(),
             ]);
 
-        $isReadOnly = $user->role === 'user' || $user->role === 'member';
-
         return Inertia::render('Domains/Index', [
             'domains' => $domains,
-            'isReadOnly' => $isReadOnly,
         ]);
     }
 

@@ -42,6 +42,14 @@ class HandleInertiaRequests extends Middleware
                 'has_team' => $request->user() ? $request->user()->teams()->exists() : false,
                 'team_has_monitors' => $request->user() ? $request->user()->teams()->whereHas('monitors')->exists() : false,
                 'pending_invitations_count' => $pendingInvitationsCount,
+                
+                'is_member' => $request->user() 
+                ? $request->user()->role->isUser() 
+                : false,
+
+                'is_admin' => $request->user() 
+                ? $request->user()->role->isAdmin() 
+                : false,
             ],
             'flash' => [
                 'message' => $request->session()->get('message'),

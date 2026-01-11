@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import AppLayout from '@/Layouts/AppLayout';
+import { router, usePage } from '@inertiajs/react';
 import {
     Title,
     Text,
@@ -17,7 +18,7 @@ import {
     ActionIcon,
     Tooltip,
 } from '@mantine/core';
-import { useForm, router } from '@inertiajs/react';
+import { useForm } from '@inertiajs/react';
 import {
     IconPlus,
     IconTrash,
@@ -31,6 +32,7 @@ import {
 import { notifications } from '@mantine/notifications';
 
 export default function DependencyIndex({ monitors, allMonitors }) {
+    const { auth } = usePage().props;
     const [opened, setOpened] = useState(false);
     const { data, setData, post, processing, reset, errors } = useForm({
         monitor_id: '',
@@ -91,9 +93,12 @@ export default function DependencyIndex({ monitors, allMonitors }) {
                             Map relationships between your monitors to see the potential impact of a failure.
                         </Text>
                     </div>
-                    <Button leftSection={<IconPlus size={16} />} onClick={() => setOpened(true)}>
-                        New Relationship
-                    </Button>
+
+                    {auth.is_admin && (
+                        <Button leftSection={<IconPlus size={16} />} onClick={() => setOpened(true)}>
+                            New Relationship
+                        </Button>
+                    )}
                 </Group>
 
                 <Grid gutter="md">
@@ -188,7 +193,10 @@ export default function DependencyIndex({ monitors, allMonitors }) {
                                 <Text size="sm" c="dimmed" mb="xl">
                                     Define dependencies between your services to enable impact analysis.
                                 </Text>
-                                <Button variant="light" onClick={() => setOpened(true)}>Map your first dependency</Button>
+
+                                {auth.is_admin && (
+                                    <Button variant="light" onClick={() => setOpened(true)}>Map your first dependency</Button>
+                                )}
                             </Card>
                         </Grid.Col>
                     )}

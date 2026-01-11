@@ -19,7 +19,7 @@ class MonitorController extends Controller
             $query->latest()->limit(10);
         }]);
 
-        if ($user->role !== \App\Enums\Role::ADMIN && $user->teams()->exists()) {
+        if ($user->role->isUser() && $user->teams()->exists()) {
             $teamIds = $user->teams()->pluck('teams.id');
             
             $query->whereHas('teams', function ($q) use ($teamIds) {
@@ -58,8 +58,6 @@ class MonitorController extends Controller
                 'value' => $p->id,
                 'label' => $p->name,
             ]),
-
-            'isReadOnly' => $user->role === 'user' || $user->role === 'member',
         ]);
     }
 
@@ -158,7 +156,7 @@ class MonitorController extends Controller
             ]),
             'responseDistribution' => $this->getResponseDistribution($monitor),
             'uptimeTrend' => $this->getUptimeTrend($monitor, 7),
-            'isReadOnly' => $user->role === 'user' || $user->role === 'member',
+            'isReadOnly' => $user->role->isUser()
         ]);
     }
 

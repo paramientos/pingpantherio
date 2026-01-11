@@ -1,6 +1,6 @@
 import React from 'react';
 import AppLayout from '@/Layouts/AppLayout';
-import { Link, router } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import {
     Title,
     Text,
@@ -18,6 +18,8 @@ import { IconPlus, IconDots, IconTrash, IconClock } from '@tabler/icons-react';
 import { notifications } from '@mantine/notifications';
 
 function MaintenanceWindowsIndex({ windows }) {
+    const { auth } = usePage().props;
+    
     const handleDelete = (id) => {
         if (confirm('Are you sure you want to delete this maintenance window?')) {
             router.delete(`/maintenance-windows/${id}`, {
@@ -44,13 +46,15 @@ function MaintenanceWindowsIndex({ windows }) {
                             Schedule maintenance periods to pause monitoring
                         </Text>
                     </div>
-                    <Button
-                        component={Link}
-                        href="/maintenance-windows/create"
-                        leftSection={<IconPlus size={16} />}
-                    >
-                        Schedule Maintenance
-                    </Button>
+                    {auth.is_admin && (
+                        <Button
+                            component={Link}
+                            href="/maintenance-windows/create"
+                            leftSection={<IconPlus size={16} />}
+                        >
+                            Schedule Maintenance
+                        </Button>
+                    )}
                 </Group>
 
                 <Card padding="0" radius="md">
@@ -73,6 +77,8 @@ function MaintenanceWindowsIndex({ windows }) {
                                             <Text c="dimmed" size="lg">
                                                 No maintenance windows scheduled
                                             </Text>
+
+                                            {auth.is_admin && (
                                             <Button
                                                 component={Link}
                                                 href="/maintenance-windows/create"
@@ -80,6 +86,7 @@ function MaintenanceWindowsIndex({ windows }) {
                                             >
                                                 Schedule Your First Maintenance
                                             </Button>
+                                            )}
                                         </Stack>
                                     </Table.Td>
                                 </Table.Tr>

@@ -16,12 +16,12 @@ class SlaController extends Controller
         $user = auth()->user();
         $monitorQuery = Monitor::query();
 
-        if ($user->role !== \App\Enums\Role::ADMIN && $user->teams()->exists()) {
+        if ($user->role->isNotAdmin() && $user->teams()->exists()) {
             $teamIds = $user->teams()->pluck('teams.id');
             $monitorQuery->whereHas('teams', function ($q) use ($teamIds) {
                 $q->whereIn('teams.id', $teamIds);
             });
-        } elseif ($user->role !== \App\Enums\Role::ADMIN) {
+        } elseif ($user->role->isNotAdmin()) {
             $monitorQuery->where('user_id', $user->id);
         }
 

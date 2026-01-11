@@ -12,6 +12,16 @@ enum Role: string
         return $this === self::ADMIN;
     }
 
+    public function isUser(): bool
+    {
+        return $this === self::USER;
+    }
+
+    public function isNotAdmin(): bool
+    {
+        return !$this->isAdmin();
+    }
+
     public function label(): string
     {
         return match ($this) {

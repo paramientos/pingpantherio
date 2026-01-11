@@ -22,9 +22,10 @@ import {
 import { useForm } from '@inertiajs/react';
 import { IconPlus, IconTrash, IconChevronRight, IconClock, IconBell, IconSettingsAutomation } from '@tabler/icons-react';
 import { notifications } from '@mantine/notifications';
-import { router } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 
 export default function EscalationPoliciesIndex({ policies, channels, schedules }) {
+    const { auth } = usePage().props;
     const [opened, setOpened] = useState(false);
     const { data, setData, post, processing, reset, errors } = useForm({
         name: '',
@@ -87,9 +88,12 @@ export default function EscalationPoliciesIndex({ policies, channels, schedules 
                             Define chains of alerts to ensure critical issues are never missed.
                         </Text>
                     </div>
-                    <Button leftSection={<IconPlus size={16} />} onClick={() => setOpened(true)}>
-                        Create Policy
-                    </Button>
+
+                    {auth.is_admin && (
+                        <Button leftSection={<IconPlus size={16} />} onClick={() => setOpened(true)}>
+                            Create Policy
+                        </Button>
+                    )}
                 </Group>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))', gap: rem(20) }}>
@@ -98,7 +102,10 @@ export default function EscalationPoliciesIndex({ policies, channels, schedules 
                             <IconSettingsAutomation size={48} stroke={1.5} color="gray" style={{ margin: '0 auto mb(16)' }} />
                             <Text fw={600} mt="md">No policies yet</Text>
                             <Text size="sm" c="dimmed" mb="xl">Escalation policies help you notify multiple channels in a sequence.</Text>
-                            <Button variant="light" onClick={() => setOpened(true)}>Setup your first policy</Button>
+                            
+                            {auth.is_admin && (
+                                <Button variant="light" onClick={() => setOpened(true)}>Setup your first policy</Button>
+                            )}
                         </Card>
                     ) : (
                         policies.map((policy) => (

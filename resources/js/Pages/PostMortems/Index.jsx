@@ -15,7 +15,7 @@ import {
     ActionIcon,
     Tooltip,
 } from '@mantine/core';
-import { Link, router } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import {
     IconFileText,
     IconTrash,

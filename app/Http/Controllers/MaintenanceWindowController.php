@@ -15,7 +15,7 @@ class MaintenanceWindowController extends Controller
         $user = auth()->user();
         $query = Monitor::query();
 
-        if ($user->role !== \App\Enums\Role::ADMIN && $user->teams()->exists()) {
+        if ($user->role->isUser() && $user->teams()->exists()) {
             $teamIds = $user->teams()->pluck('teams.id');
             
             $query->whereHas('teams', function ($q) use ($teamIds) {

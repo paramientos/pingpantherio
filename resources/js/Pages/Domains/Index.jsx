@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import AppLayout from '@/Layouts/AppLayout';
-import { Link, router } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import {
     Title,
     Text,
@@ -19,6 +19,8 @@ import { IconPlus, IconTrash, IconWorld, IconAlertTriangle, IconCheck } from '@t
 import { notifications } from '@mantine/notifications';
 
 function DomainsIndex({ domains }) {
+    const { auth } = usePage().props;
+    const isReadOnly = auth.user.role !== 'admin';
     const [modalOpened, setModalOpened] = useState(false);
 
     const form = useForm({
@@ -77,12 +79,14 @@ function DomainsIndex({ domains }) {
                             Track domain expiration dates and WHOIS changes
                         </Text>
                     </div>
-                    <Button
-                        leftSection={<IconPlus size={16} />}
-                        onClick={() => setModalOpened(true)}
-                    >
-                        Add Domain
-                    </Button>
+                    {!isReadOnly && (
+                        <Button
+                            leftSection={<IconPlus size={16} />}
+                            onClick={() => setModalOpened(true)}
+                        >
+                            Add Domain
+                        </Button>
+                    )}
                 </Group>
 
                 <Card padding="0" radius="md">
@@ -128,13 +132,15 @@ function DomainsIndex({ domains }) {
                                             <Text size="xs" c="dimmed">{domain.last_checked || 'Never'}</Text>
                                         </Table.Td>
                                         <Table.Td>
-                                            <ActionIcon
-                                                color="red"
-                                                variant="subtle"
-                                                onClick={() => handleDelete(domain.id)}
-                                            >
-                                                <IconTrash size={16} />
-                                            </ActionIcon>
+                                            {!isReadOnly && (
+                                                <ActionIcon
+                                                    color="red"
+                                                    variant="subtle"
+                                                    onClick={() => handleDelete(domain.id)}
+                                                >
+                                                    <IconTrash size={16} />
+                                                </ActionIcon>
+                                            )}
                                         </Table.Td>
                                     </Table.Tr>
                                 ))

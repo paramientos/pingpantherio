@@ -1,6 +1,6 @@
 import React from 'react';
 import AppLayout from '@/Layouts/AppLayout';
-import { Link, router } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import {
     Title,
     Text,
@@ -20,6 +20,8 @@ import { IconPlus, IconDots, IconEdit, IconTrash, IconExternalLink, IconCopy, Ic
 import { notifications } from '@mantine/notifications';
 
 function StatusPagesIndex({ statusPages }) {
+    const { auth } = usePage().props;
+    
     const handleDelete = (id) => {
         if (confirm('Are you sure you want to delete this status page?')) {
             router.delete(`/status-pages/${id}`, {
@@ -46,13 +48,15 @@ function StatusPagesIndex({ statusPages }) {
                             Create beautiful public status pages for your services
                         </Text>
                     </div>
-                    <Button
-                        component={Link}
-                        href="/status-pages/create"
-                        leftSection={<IconPlus size={16} />}
-                    >
-                        Create Status Page
-                    </Button>
+                    {auth.is_admin && (
+                        <Button
+                            component={Link}
+                            href="/status-pages/create"
+                            leftSection={<IconPlus size={16} />}
+                        >
+                            Create Status Page
+                        </Button>
+                    )}
                 </Group>
 
                 <Card padding="0" radius="md">
@@ -76,6 +80,8 @@ function StatusPagesIndex({ statusPages }) {
                                             <Text c="dimmed" size="lg">
                                                 No status pages yet
                                             </Text>
+
+                                            {auth.is_admin && (
                                             <Button
                                                 component={Link}
                                                 href="/status-pages/create"
@@ -83,6 +89,7 @@ function StatusPagesIndex({ statusPages }) {
                                             >
                                                 Create Your First Status Page
                                             </Button>
+                                            )}
                                         </Stack>
                                     </Table.Td>
                                 </Table.Tr>
@@ -151,20 +158,24 @@ function StatusPagesIndex({ statusPages }) {
                                                 </Menu.Target>
 
                                                 <Menu.Dropdown>
-                                                    <Menu.Item
-                                                        leftSection={<IconEdit style={{ width: rem(14), height: rem(14) }} />}
-                                                        component={Link}
-                                                        href={`/status-pages/${page.id}/edit`}
-                                                    >
-                                                        Edit
-                                                    </Menu.Item>
-                                                    <Menu.Item
-                                                        color="red"
-                                                        leftSection={<IconTrash style={{ width: rem(14), height: rem(14) }} />}
-                                                        onClick={() => handleDelete(page.id)}
-                                                    >
-                                                        Delete
-                                                    </Menu.Item>
+                                                    {!isReadOnly && (
+                                                        <>
+                                                            <Menu.Item
+                                                                leftSection={<IconEdit style={{ width: rem(14), height: rem(14) }} />}
+                                                                component={Link}
+                                                                href={`/status-pages/${page.id}/edit`}
+                                                            >
+                                                                Edit
+                                                            </Menu.Item>
+                                                            <Menu.Item
+                                                                color="red"
+                                                                leftSection={<IconTrash style={{ width: rem(14), height: rem(14) }} />}
+                                                                onClick={() => handleDelete(page.id)}
+                                                            >
+                                                                Delete
+                                                            </Menu.Item>
+                                                        </>
+                                                    )}
                                                 </Menu.Dropdown>
                                             </Menu>
                                         </Table.Td>
