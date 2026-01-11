@@ -201,6 +201,7 @@ function MonitorsIndex({ monitors, escalationPolicies }) {
                                 <Table.Th>URL</Table.Th>
                                 <Table.Th>Type</Table.Th>
                                 <Table.Th>Status</Table.Th>
+                                <Table.Th>Recent Checks</Table.Th>
                                 <Table.Th>Interval</Table.Th>
                                 <Table.Th>Last Check</Table.Th>
                                 <Table.Th>Actions</Table.Th>
@@ -209,7 +210,7 @@ function MonitorsIndex({ monitors, escalationPolicies }) {
                         <Table.Tbody>
                             {monitors.length === 0 ? (
                                 <Table.Tr>
-                                    <Table.Td colSpan={7} style={{ textAlign: 'center', padding: '2rem' }}>
+                                    <Table.Td colSpan={8} style={{ textAlign: 'center', padding: '2rem' }}>
                                         <Text c="dimmed">No monitors yet. Create your first one!</Text>
                                     </Table.Td>
                                 </Table.Tr>
@@ -230,6 +231,27 @@ function MonitorsIndex({ monitors, escalationPolicies }) {
                                         </Table.Td>
                                         <Table.Td>{getTypeBadge(monitor.type)}</Table.Td>
                                         <Table.Td>{getStatusBadge(monitor.status)}</Table.Td>
+                                        <Table.Td>
+                                            <Group gap={2}>
+                                                {monitor.recent_heartbeats && monitor.recent_heartbeats.length > 0 ? (
+                                                    monitor.recent_heartbeats.slice(0, 10).reverse().map((hb, idx) => (
+                                                        <div
+                                                            key={idx}
+                                                            style={{
+                                                                width: 8,
+                                                                height: 24,
+                                                                backgroundColor: hb.is_up ? 'var(--mantine-color-green-6)' : 'var(--mantine-color-red-6)',
+                                                                borderRadius: 2,
+                                                                opacity: 0.8,
+                                                            }}
+                                                            title={`${hb.is_up ? 'Up' : 'Down'} - ${hb.checked_at}`}
+                                                        />
+                                                    ))
+                                                ) : (
+                                                    <Text size="xs" c="dimmed">No data</Text>
+                                                )}
+                                            </Group>
+                                        </Table.Td>
                                         <Table.Td>
                                             <Text size="sm">{monitor.interval}s</Text>
                                         </Table.Td>

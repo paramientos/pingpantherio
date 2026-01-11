@@ -13,7 +13,9 @@ class MonitorController extends Controller
 {
     public function index(): Response
     {
-        $monitors = Monitor::with('user')
+        $monitors = Monitor::with(['user', 'heartbeats' => function ($query) {
+                $query->latest()->limit(10);
+            }])
             ->latest()
             ->get()
             ->map(fn ($monitor) => [
@@ -31,6 +33,10 @@ class MonitorController extends Controller
                 'last_ping_at' => $monitor->last_ping_at?->diffForHumans(),
                 'last_checked_at' => $monitor->last_checked_at?->diffForHumans(),
                 'created_at' => $monitor->created_at->format('M d, Y'),
+                'recent_heartbeats' => $monitor->heartbeats->map(fn ($h) => [
+                    'is_up' => $h->is_up,
+                    'checked_at' => $h->checked_at?->format('Y-m-d H:i:s'),
+                ]),
             ]);
 
         return Inertia::render('Monitors/Index', [
