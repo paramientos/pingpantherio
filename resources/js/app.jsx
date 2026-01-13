@@ -69,6 +69,21 @@ const baseTheme = {
                     blur: 3,
                 },
             },
+        },
+        Table: {
+            styles: (theme) => ({
+                thead: {
+                    backgroundColor: 'rgba(255,255,255,0.02)',
+                },
+                th: {
+                    backgroundColor: 'rgba(255,255,255,0.02)',
+                    borderBottom: '1px solid rgba(255,255,255,0.08)',
+                    color: 'rgba(255,255,255,0.7)',
+                },
+                tr: {
+                    borderBottom: '1px solid rgba(255,255,255,0.08)',
+                }
+            })
         }
     },
 };

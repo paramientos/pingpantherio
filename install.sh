@@ -219,6 +219,25 @@ php artisan user:create-admin "$ADMIN_EMAIL" "$ADMIN_PASSWORD"
 
 php artisan horizon:install
 
+# Remove demo credentials from Login page for production
+echo -e "${YELLOW}Removing demo credentials from login page...${NC}"
+LOGIN_FILE="$INSTALL_DIR/resources/js/Pages/Auth/Login.jsx"
+if [ -f "$LOGIN_FILE" ]; then
+    # Remove demo credentials from initial form state
+    sed -i "s/email: 'admin@pingpanther\.io',/email: '',/g" "$LOGIN_FILE"
+    sed -i "s/password: 'password',/password: '',/g" "$LOGIN_FILE"
+    
+    # Remove fillDemoCredentials function
+    sed -i '/const fillDemoCredentials = () => {/,/};/d' "$LOGIN_FILE"
+    
+    # Remove demo credentials section (Divider + Paper with credentials)
+    sed -i '/<Divider label="Demo Access"/,/<\/Paper>/d' "$LOGIN_FILE"
+    
+    echo -e "${GREEN}✓ Demo credentials removed from login page${NC}"
+else
+    echo -e "${YELLOW}⚠ Login file not found, skipping demo removal${NC}"
+fi
+
 # Optimize for production
 echo -e "${YELLOW}Optimizing application for production...${NC}"
 php artisan optimize
