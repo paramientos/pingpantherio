@@ -196,6 +196,7 @@ cp .env.example .env
 # 9. Install Dependencies
 echo -e "${YELLOW}[9/12] Installing PHP & Frontend dependencies...${NC}"
 composer install --no-dev --optimize-autoloader --no-interaction
+composer dump-autoload
 #yarn install
 #yarn build
 
