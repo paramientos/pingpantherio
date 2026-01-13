@@ -197,8 +197,8 @@ cp .env.example .env
 echo -e "${YELLOW}[9/12] Installing PHP & Frontend dependencies...${NC}"
 composer install --no-dev --optimize-autoloader --no-interaction
 composer dump-autoload --no-interaction
-#yarn install
-#yarn build
+yarn install
+yarn build
 
 # Generate Application Key (now that composer install is done)
 if [ ! -f ".env" ] || ! grep -q "^APP_KEY=base64:" .env; then
