@@ -221,6 +221,7 @@ php artisan horizon:install
 
 # Remove demo credentials from Login page for production
 echo -e "${YELLOW}Removing demo credentials from login page...${NC}"
+
 LOGIN_FILE="$INSTALL_DIR/resources/js/Pages/Auth/Login.jsx"
 if [ -f "$LOGIN_FILE" ]; then
     # Remove demo credentials from initial form state
