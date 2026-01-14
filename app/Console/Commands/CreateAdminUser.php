@@ -36,6 +36,14 @@ class CreateAdminUser extends Command
         $this->line("  Email: {$user->email}");
         $this->line("  Password: {$password}");
 
+        // Seed demo data
+        $this->info("Creating demo monitors and data...");
+        $this->call('db:seed', [
+            '--class' => 'DemoMonitorSeeder',
+            '--force' => true,
+        ]);
+        $this->info("✓ Demo data created!");
+
         return self::SUCCESS;
     }
 }
