@@ -34,7 +34,28 @@ echo " / ____/ / / / / /_/ / ____/ /_/ / / / / /_/ / / /  __/ /      "
 echo "/_/   /_/_/ /_/\__, /_/    \__,_/_/ /_/\__/_/ /_/\___/_/       "
 echo "              /____/                                           "
 echo -e "${NC}"
-echo -e "${BLUE}>>> Starting Installation for Ubuntu 24.04 <<<${NC}\n"
+echo -e "${BLUE}>>> Starting Installation for Ubuntu 22.04/24.04 <<<${NC}\n"
+
+# --- Ubuntu Version Check ---
+if [ -f /etc/os-release ]; then
+    . /etc/os-release
+    UBUNTU_VERSION=$VERSION_ID
+    
+    if [[ "$UBUNTU_VERSION" != "22.04" && "$UBUNTU_VERSION" != "24.04" ]]; then
+        echo -e "${RED}Error: This script is designed for Ubuntu 22.04 or 24.04${NC}"
+        echo -e "${RED}Your version: Ubuntu $UBUNTU_VERSION${NC}"
+        echo -e "${YELLOW}Installation may not work correctly on this version.${NC}"
+        read -p "Continue anyway? (yes/no): " continue_version < /dev/tty
+        if [[ ! "$continue_version" =~ ^[Yy]([Ee][Ss])?$ ]]; then
+            echo -e "${RED}Installation cancelled.${NC}"
+            exit 1
+        fi
+    else
+        echo -e "${GREEN}✓ Ubuntu $UBUNTU_VERSION detected${NC}\n"
+    fi
+else
+    echo -e "${YELLOW}⚠ Could not detect Ubuntu version. Proceeding anyway...${NC}\n"
+fi
 
 # --- Interactive Domain Setup ---
 echo -e "${YELLOW}[SETUP] Domain Configuration${NC}"
@@ -42,7 +63,45 @@ echo ""
 read -p "Do you have a domain name for this installation? (yes/no): " has_domain < /dev/tty
 
 if [[ "$has_domain" =~ ^[Yy]([Ee][Ss])?$ ]]; then
+    echo ""
+    echo -e "${RED}⚠️  IMPORTANT: DNS A Record Configuration Required${NC}"
+    echo -e "${YELLOW}Before proceeding, you MUST ensure that:${NC}"
+    echo -e "  1. Your domain's A record is pointing to this server's IP address"
+    echo -e "  2. DNS propagation is complete (this may take a few minutes)"
+    echo -e "  3. The DNS records are properly configured at your domain registrar"
+    echo ""
+    SERVER_IP=$(hostname -I | awk '{print $1}')
+    echo -e "${CYAN}This server's IP address: ${GREEN}$SERVER_IP${NC}"
+    echo ""
+    
     read -p "Enter your domain name (e.g., status.example.com): " APP_DOMAIN < /dev/tty
+    
+    # Verify DNS A record matches server IP
+    echo -e "${YELLOW}Checking DNS configuration...${NC}"
+    RESOLVED_IP=$(dig +short "$APP_DOMAIN" @8.8.8.8 | tail -n1)
+    
+    if [ -z "$RESOLVED_IP" ]; then
+        echo -e "${RED}⚠️  WARNING: Could not resolve domain $APP_DOMAIN${NC}"
+        echo -e "${YELLOW}The domain may not have DNS records configured yet.${NC}"
+        read -p "Continue anyway? (yes/no): " continue_anyway < /dev/tty
+        if [[ ! "$continue_anyway" =~ ^[Yy]([Ee][Ss])?$ ]]; then
+            echo -e "${RED}Installation cancelled. Please configure DNS and try again.${NC}"
+            exit 1
+        fi
+    elif [ "$RESOLVED_IP" != "$SERVER_IP" ]; then
+        echo -e "${RED}⚠️  DNS MISMATCH DETECTED!${NC}"
+        echo -e "  Domain resolves to: ${RED}$RESOLVED_IP${NC}"
+        echo -e "  Server IP is:       ${GREEN}$SERVER_IP${NC}"
+        echo -e "${YELLOW}The A record is not pointing to this server!${NC}"
+        read -p "Continue anyway? (yes/no): " continue_anyway < /dev/tty
+        if [[ ! "$continue_anyway" =~ ^[Yy]([Ee][Ss])?$ ]]; then
+            echo -e "${RED}Installation cancelled. Please update DNS records and try again.${NC}"
+            exit 1
+        fi
+    else
+        echo -e "${GREEN}✓ DNS verification successful! Domain resolves to $RESOLVED_IP${NC}"
+    fi
+    
     echo -e "${GREEN}✓ Using domain: $APP_DOMAIN${NC}"
 else
     APP_DOMAIN=$(hostname -I | awk '{print $1}')
