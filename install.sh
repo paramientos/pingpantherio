@@ -312,7 +312,6 @@ cp .env.example .env
     sed -i "s|^#* *DB_DATABASE=.*|DB_DATABASE=$DB_NAME|g" .env
     sed -i "s|^#* *DB_USERNAME=.*|DB_USERNAME=$DB_USER|g" .env
     sed -i "s|^#* *DB_PASSWORD=.*|DB_PASSWORD=$DB_PASS|g" .env
-    sed -i "s|^SESSION_DRIVER=.*|SESSION_DRIVER=redis|g" .env
     sed -i "s|^CACHE_STORE=.*|CACHE_STORE=redis|g" .env
     sed -i "s|^QUEUE_CONNECTION=.*|QUEUE_CONNECTION=redis|g" .env
     # Key generation moved to after composer install
@@ -376,6 +375,13 @@ if [ -f "$LOGIN_FILE" ]; then
 else
     echo -e "${YELLOW}⚠ Login file not found, skipping demo removal${NC}"
 fi
+
+# Clear any existing cache before optimization
+echo -e "${YELLOW}Clearing existing cache...${NC}"
+php artisan cache:clear
+php artisan config:clear
+php artisan route:clear
+php artisan view:clear
 
 # Optimize for production
 echo -e "${YELLOW}Optimizing application for production...${NC}"
@@ -453,9 +459,18 @@ if [[ "$INSTALL_SSL" == "true" ]]; then
     echo -e "${YELLOW}Installing SSL certificate for $APP_DOMAIN...${NC}"
     certbot --nginx -d "$APP_DOMAIN" --non-interactive --agree-tos -m "$SSL_EMAIL" --redirect
     echo -e "${GREEN}✓ SSL successfully installed for $APP_DOMAIN${NC}"
+    
     # Update APP_URL in .env
-    sed -i "s|APP_URL=http://$APP_DOMAIN|APP_URL=https://$APP_DOMAIN|g" /var/www/pingpanther/.env
+    sed -i "s|APP_URL=http://$APP_DOMAIN|APP_URL=https://$APP_DOMAIN|g" $INSTALL_DIR/.env
     APP_URL="https://$APP_DOMAIN"
+    
+    # Clear and rebuild cache after SSL configuration
+    echo -e "${YELLOW}Rebuilding cache after SSL installation...${NC}"
+    cd $INSTALL_DIR
+    php artisan config:clear
+    php artisan cache:clear
+    php artisan config:cache
+    echo -e "${GREEN}✓ Cache rebuilt with HTTPS configuration${NC}"
 else
     echo -e "${BLUE}ℹ Skipping SSL installation${NC}"
     APP_URL="http://$APP_DOMAIN"
