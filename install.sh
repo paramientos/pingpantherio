@@ -374,8 +374,8 @@ fi
 echo -e "${YELLOW}[10/12] Initializing Database & Creating Admin User...${NC}"
 php artisan migrate --force
 
-# Create admin user (credentials collected at start)
-php artisan pp:create-admin "$ADMIN_EMAIL" "$ADMIN_PASSWORD"
+# Create admin user with demo data (credentials collected at start)
+php artisan pp:create-admin "$ADMIN_EMAIL" "$ADMIN_PASSWORD" --with-demo
 
 php artisan horizon:install
 

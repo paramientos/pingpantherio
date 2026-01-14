@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 
 class CreateAdminUser extends Command
 {
-    protected $signature = 'pp:create-admin {email} {password}';
+    protected $signature = 'pp:create-admin {email} {password} {--with-demo : Seed demo monitors and data}';
     protected $description = 'Create an admin user with specified email and password';
 
     public function handle(): int
@@ -36,13 +36,14 @@ class CreateAdminUser extends Command
         $this->line("  Email: {$user->email}");
         $this->line("  Password: {$password}");
 
-        // Seed demo data
-        $this->info("Creating demo monitors and data...");
-        $this->call('db:seed', [
-            '--class' => 'DemoMonitorSeeder',
-            '--force' => true,
-        ]);
-        $this->info("✓ Demo data created!");
+        if ($this->option('with-demo')) {
+            $this->info("Creating demo monitors and data...");
+            $this->call('db:seed', [
+                '--class' => 'DemoMonitorSeeder',
+                '--force' => true,
+            ]);
+            $this->info("✓ Demo data created!");
+        }
 
         return self::SUCCESS;
     }
