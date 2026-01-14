@@ -57,8 +57,17 @@ else
     echo -e "${YELLOW}⚠ Could not detect Ubuntu version. Proceeding anyway...${NC}\n"
 fi
 
-# --- Interactive Domain Setup ---
-echo -e "${YELLOW}[SETUP] Domain Configuration${NC}"
+# =================================================================
+# INTERACTIVE SETUP - All questions asked upfront
+# =================================================================
+
+echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "${CYAN}                  INSTALLATION CONFIGURATION${NC}"
+echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo ""
+
+# --- 1. Domain Setup ---
+echo -e "${YELLOW}[1/3] Domain Configuration${NC}"
 echo ""
 read -p "Do you have a domain name for this installation? (yes/no): " has_domain < /dev/tty
 
@@ -103,19 +112,76 @@ if [[ "$has_domain" =~ ^[Yy]([Ee][Ss])?$ ]]; then
     fi
     
     echo -e "${GREEN}✓ Using domain: $APP_DOMAIN${NC}"
+    HAS_DOMAIN=true
 else
     APP_DOMAIN=$(hostname -I | awk '{print $1}')
     echo -e "${BLUE}ℹ No domain provided. Using server IP: $APP_DOMAIN${NC}"
     echo -e "${YELLOW}⚠ SSL certificates will not be installed without a domain.${NC}"
+    HAS_DOMAIN=false
 fi
 
 echo ""
-echo -e "${CYAN}Installation Summary:${NC}"
-echo -e "  Domain/IP: ${GREEN}$APP_DOMAIN${NC}"
+
+# --- 2. SSL Configuration ---
+INSTALL_SSL=false
+SSL_EMAIL=""
+
+if [[ "$HAS_DOMAIN" == "true" ]]; then
+    echo -e "${YELLOW}[2/3] SSL Certificate Configuration${NC}"
+    echo -e "${CYAN}Would you like to install Let's Encrypt SSL certificate? (yes/no)${NC}"
+    read -p "Choice: " ssl_choice < /dev/tty
+    
+    if [[ $ssl_choice =~ ^[Yy]([Ee][Ss])?$ ]]; then
+        echo ""
+        echo -e "${YELLOW}⚠️  IMPORTANT: CloudFlare Users${NC}"
+        echo -e "${RED}If you are using CloudFlare, you MUST disable SSL/TLS Proxy (set to DNS Only)${NC}"
+        echo -e "${YELLOW}Reason: We provide SSL certificates via Let's Encrypt directly on this server.${NC}"
+        echo -e "${YELLOW}CloudFlare's proxy mode will conflict with our SSL configuration.${NC}"
+        echo ""
+        echo -e "${CYAN}Steps for CloudFlare users:${NC}"
+        echo -e "  1. Go to CloudFlare DNS settings"
+        echo -e "  2. Find your A record for $APP_DOMAIN"
+        echo -e "  3. Click the orange cloud icon to turn it gray (DNS Only)"
+        echo -e "  4. Wait a few minutes for changes to propagate"
+        echo ""
+        
+        read -p "Enter email for Let's Encrypt notifications: " SSL_EMAIL < /dev/tty
+        if [ ! -z "$SSL_EMAIL" ]; then
+            INSTALL_SSL=true
+            echo -e "${GREEN}✓ SSL will be installed for $APP_DOMAIN${NC}"
+        else
+            echo -e "${YELLOW}⚠ No email provided, skipping SSL installation${NC}"
+        fi
+    else
+        echo -e "${BLUE}ℹ Skipping SSL installation${NC}"
+    fi
+    echo ""
+else
+    echo -e "${YELLOW}[2/3] SSL Certificate Configuration${NC}"
+    echo -e "${BLUE}ℹ Skipping SSL (no domain configured)${NC}"
+    echo ""
+fi
+
+# --- 3. Admin Account ---
+echo -e "${YELLOW}[3/3] Admin Account Setup${NC}"
+read -p "Enter admin email address: " ADMIN_EMAIL < /dev/tty
+ADMIN_PASSWORD=$(openssl rand -base64 16)
+echo -e "${GREEN}✓ Admin account will be created${NC}"
+
+echo ""
+echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "${CYAN}                  INSTALLATION SUMMARY${NC}"
+echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "  Domain/IP:    ${GREEN}$APP_DOMAIN${NC}"
 echo -e "  Install Path: ${GREEN}$INSTALL_DIR${NC}"
+echo -e "  SSL:          ${GREEN}$([ "$INSTALL_SSL" == "true" ] && echo "Yes ($SSL_EMAIL)" || echo "No")${NC}"
+echo -e "  Admin Email:  ${GREEN}$ADMIN_EMAIL${NC}"
+echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
-read -p "Press Enter to continue or Ctrl+C to cancel..." < /dev/tty
+read -p "Press Enter to start installation or Ctrl+C to cancel..." < /dev/tty
 echo ""
+
+echo -e "${GREEN}Starting unattended installation...${NC}\n"
 
 # --- Root Check ---
 if [ "$EUID" -ne 0 ]; then
@@ -269,12 +335,7 @@ fi
 echo -e "${YELLOW}[10/12] Initializing Database & Creating Admin User...${NC}"
 php artisan migrate --force
 
-# Create admin user interactively
-echo ""
-echo -e "${CYAN}=== Admin Account Setup ===${NC}"
-read -p "Enter admin email address: " ADMIN_EMAIL < /dev/tty
-ADMIN_PASSWORD=$(openssl rand -base64 16)
-
+# Create admin user (credentials collected at start)
 php artisan pp:create-admin "$ADMIN_EMAIL" "$ADMIN_PASSWORD"
 
 php artisan horizon:install
@@ -387,42 +448,17 @@ fi
 systemctl restart nginx
 
 # 12. Optional SSL (Let's Encrypt)
-echo -e "${YELLOW}[11.1/12] SSL Configuration (Optional)...${NC}"
-# Check if APP_DOMAIN is not an IP address
-if [[ ! $APP_DOMAIN =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-    echo -e "${CYAN}Detected domain ($APP_DOMAIN). Would you like to install Let's Encrypt SSL? (y/n)${NC}"
-    # 10s timeout for interaction
-    read -t 10 -p "Choice [n]: " ssl_choice
-    ssl_choice=${ssl_choice:-n}
-
-    if [[ $ssl_choice =~ ^[Yy]$ ]]; then
-        echo ""
-        echo -e "${YELLOW}⚠️  IMPORTANT: CloudFlare Users${NC}"
-        echo -e "${RED}If you are using CloudFlare, you MUST disable SSL/TLS Proxy (set to DNS Only)${NC}"
-        echo -e "${YELLOW}Reason: We provide SSL certificates via Let's Encrypt directly on this server.${NC}"
-        echo -e "${YELLOW}CloudFlare's proxy mode will conflict with our SSL configuration.${NC}"
-        echo ""
-        echo -e "${CYAN}Steps for CloudFlare users:${NC}"
-        echo -e "  1. Go to CloudFlare DNS settings"
-        echo -e "  2. Find your A record for $APP_DOMAIN"
-        echo -e "  3. Click the orange cloud icon to turn it gray (DNS Only)"
-        echo -e "  4. Wait a few minutes for changes to propagate"
-        echo ""
-        read -p "Press Enter to continue with SSL installation..." < /dev/tty
-        echo ""
-        
-        echo -e "${YELLOW}Please enter email for Let's Encrypt notifications:${NC}"
-        read ssl_email
-        if [ ! -z "$ssl_email" ]; then
-            certbot --nginx -d "$APP_DOMAIN" --non-interactive --agree-tos -m "$ssl_email" --redirect
-            echo -e "${GREEN}SSL successfully installed for $APP_DOMAIN${NC}"
-            # Update APP_URL in .env
-            sed -i "s|APP_URL=http://$APP_DOMAIN|APP_URL=https://$APP_DOMAIN|g" /var/www/pingpanther/.env
-            APP_URL="https://$APP_DOMAIN"
-        fi
-    fi
+echo -e "${YELLOW}[11.1/12] SSL Configuration...${NC}"
+if [[ "$INSTALL_SSL" == "true" ]]; then
+    echo -e "${YELLOW}Installing SSL certificate for $APP_DOMAIN...${NC}"
+    certbot --nginx -d "$APP_DOMAIN" --non-interactive --agree-tos -m "$SSL_EMAIL" --redirect
+    echo -e "${GREEN}✓ SSL successfully installed for $APP_DOMAIN${NC}"
+    # Update APP_URL in .env
+    sed -i "s|APP_URL=http://$APP_DOMAIN|APP_URL=https://$APP_DOMAIN|g" /var/www/pingpanther/.env
+    APP_URL="https://$APP_DOMAIN"
 else
-    echo -e "${BLUE}IP address detected, skipping SSL configuration.${NC}"
+    echo -e "${BLUE}ℹ Skipping SSL installation${NC}"
+    APP_URL="http://$APP_DOMAIN"
 fi
 
 # 12. Setup Systemd Services (Queue & Schedule)
