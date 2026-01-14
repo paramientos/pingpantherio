@@ -378,7 +378,9 @@ rm -f /etc/nginx/sites-enabled/default
 
 # Firewall
 if command -v ufw > /dev/null; then
-    ufw allow 'Nginx Full'
+    ufw allow ssh
+    ufw allow http
+    ufw allow https
     ufw --force enable
 fi
 
