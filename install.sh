@@ -377,6 +377,21 @@ if [[ ! $APP_DOMAIN =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
     ssl_choice=${ssl_choice:-n}
 
     if [[ $ssl_choice =~ ^[Yy]$ ]]; then
+        echo ""
+        echo -e "${YELLOW}⚠️  IMPORTANT: CloudFlare Users${NC}"
+        echo -e "${RED}If you are using CloudFlare, you MUST disable SSL/TLS Proxy (set to DNS Only)${NC}"
+        echo -e "${YELLOW}Reason: We provide SSL certificates via Let's Encrypt directly on this server.${NC}"
+        echo -e "${YELLOW}CloudFlare's proxy mode will conflict with our SSL configuration.${NC}"
+        echo ""
+        echo -e "${CYAN}Steps for CloudFlare users:${NC}"
+        echo -e "  1. Go to CloudFlare DNS settings"
+        echo -e "  2. Find your A record for $APP_DOMAIN"
+        echo -e "  3. Click the orange cloud icon to turn it gray (DNS Only)"
+        echo -e "  4. Wait a few minutes for changes to propagate"
+        echo ""
+        read -p "Press Enter to continue with SSL installation..." < /dev/tty
+        echo ""
+        
         echo -e "${YELLOW}Please enter email for Let's Encrypt notifications:${NC}"
         read ssl_email
         if [ ! -z "$ssl_email" ]; then
