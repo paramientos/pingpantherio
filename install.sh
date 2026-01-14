@@ -284,15 +284,32 @@ echo -e "${YELLOW}Removing demo credentials from login page...${NC}"
 
 LOGIN_FILE="$INSTALL_DIR/resources/js/Pages/Auth/Login.jsx"
 if [ -f "$LOGIN_FILE" ]; then
-    # Remove demo credentials from initial form state
-    sed -i "s/email: 'admin@pingpanther\.io',/email: '',/g" "$LOGIN_FILE"
-    sed -i "s/password: 'password',/password: '',/g" "$LOGIN_FILE"
+    # Create a temporary file for the cleaned version
+    TEMP_FILE=$(mktemp)
     
-    # Remove fillDemoCredentials function
-    sed -i '/const fillDemoCredentials = () => {/,/};/d' "$LOGIN_FILE"
+    # Use awk to remove demo credentials sections
+    awk '
+    BEGIN { skip = 0; in_demo_function = 0; }
     
-    # Remove demo credentials section (Divider + Paper with credentials)
-    sed -i '/<Divider label="Demo Access"/,/<\/Paper>/d' "$LOGIN_FILE"
+    # Skip fillDemoCredentials function
+    /const fillDemoCredentials = \(\) => \{/ { in_demo_function = 1; skip = 1; next; }
+    in_demo_function && /^    \};$/ { in_demo_function = 0; skip = 0; next; }
+    in_demo_function { next; }
+    
+    # Skip Demo Access divider and paper section
+    /<Divider label="Demo Access"/ { skip = 1; next; }
+    skip && /<\/Paper>/ { skip = 0; next; }
+    skip { next; }
+    
+    # Replace demo credentials in useForm with empty values
+    /email: .admin@pingpanther\.io.,/ { gsub(/admin@pingpanther\.io/, ""); }
+    /password: .password.,/ { gsub(/password/, ""); }
+    
+    !skip { print; }
+    ' "$LOGIN_FILE" > "$TEMP_FILE"
+    
+    # Replace original file with cleaned version
+    mv "$TEMP_FILE" "$LOGIN_FILE"
     
     echo -e "${GREEN}✓ Demo credentials removed from login page${NC}"
 else
