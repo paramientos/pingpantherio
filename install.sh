@@ -216,7 +216,7 @@ echo -e "${CYAN}=== Admin Account Setup ===${NC}"
 read -p "Enter admin email address: " ADMIN_EMAIL < /dev/tty
 ADMIN_PASSWORD=$(openssl rand -base64 16)
 
-php artisan user:create-admin "$ADMIN_EMAIL" "$ADMIN_PASSWORD"
+php artisan pp:create-admin "$ADMIN_EMAIL" "$ADMIN_PASSWORD"
 
 php artisan horizon:install
 
@@ -373,6 +373,9 @@ echo -e "${YELLOW}⚠ Save these credentials:${NC}"
 echo -e "  Email: ${GREEN}$ADMIN_EMAIL${NC}"
 echo -e "  Password: ${GREEN}$ADMIN_PASSWORD${NC}"
 
+echo ""
+echo -e "${CYAN}💡 Forgot your password?${NC}"
+echo -e "  Run: ${YELLOW}php artisan pp:reset-password${NC}"
 echo ""
 
 echo -e "${GREEN}=================================================================${NC}"

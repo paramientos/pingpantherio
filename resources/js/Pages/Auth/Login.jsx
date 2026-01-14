@@ -162,9 +162,6 @@ export default function Login({ status, canResetPassword }) {
                                         styles={{ label: { color: '#888' } }}
                                         color="orange"
                                     />
-                                    <Anchor href="/" size="sm" c="dimmed">
-                                        Forgot password?
-                                    </Anchor>
                                 </Group>
 
                                 <Button

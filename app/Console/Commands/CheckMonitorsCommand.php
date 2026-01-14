@@ -7,7 +7,7 @@ use Illuminate\Console\Command;
 
 class CheckMonitorsCommand extends Command
 {
-    protected $signature = 'monitors:check';
+    protected $signature = 'pp:monitors-check';
 
     protected $description = 'Check all active monitors';
 

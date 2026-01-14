@@ -2,12 +2,36 @@
 
 After running the `install.sh` script, your PingPanther instance is ready for use. However, you might want to configure additional settings for production.
 
-## 🔑 Default Credentials
+## 🔑 Admin Account Management
+
+### Default Credentials (Demo Only)
 
 - **Admin Email**: `admin@pingpanther.io`
 - **Admin Password**: `password`
 
-> **Warning**: Change these credentials immediately after your first login!
+> **Warning**: These demo credentials are automatically removed during production installation. Your actual credentials are provided at the end of the installation process.
+
+### Reset Password
+
+If you forget your password or need to reset it, use the interactive password reset command:
+
+```bash
+cd /var/www/pingpanther
+php artisan pp:reset-password
+```
+
+The command will prompt you for:
+1. **Email address**: Enter the user's email
+2. **New password**: Enter the new password (input is hidden for security)
+
+Example:
+```bash
+$ php artisan pp:reset-password
+Enter user email address: admin@example.com
+User found: Admin User (admin@example.com)
+Enter new password: ********
+✓ Password successfully reset for user: Admin User (admin@example.com)
+```
 
 ## 📧 Mail Settings
 

@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Schema;
 
 class PruneOldData extends Command
 {
-    protected $signature = 'pingpanther:prune';
+    protected $signature = 'pp:prune';
     protected $description = 'Prune data older than 1 month to keep the database small';
 
     public function handle()

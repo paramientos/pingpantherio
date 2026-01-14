@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 
 class CreateAdminUser extends Command
 {
-    protected $signature = 'user:create-admin {email} {password}';
+    protected $signature = 'pp:create-admin {email} {password}';
     protected $description = 'Create an admin user with specified email and password';
 
     public function handle(): int

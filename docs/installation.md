@@ -71,6 +71,19 @@ After installation completes, you can access your dashboard:
 
 **💡 Important:** Save your credentials immediately! They are only shown once during installation.
 
+### Forgot Your Password?
+
+If you lose access to your account, you can reset the password using the command line:
+
+```bash
+cd /var/www/pingpanther
+php artisan pp:reset-password
+```
+
+The command will interactively ask for:
+1. User email address
+2. New password (hidden input)
+
 ### Post-Install Tasks
 
 1.  **Change Password**: First thing you should do is login and change the administrator password.

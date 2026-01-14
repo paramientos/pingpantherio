@@ -13,6 +13,6 @@ class TestCommand extends Command
 
     public function handle()
     {
-        new CheckDomainExpirations()->handle();
+        //
     }
 }

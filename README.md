@@ -59,6 +59,36 @@ Detailed installation instructions can be found in the [Documentation](docs/inst
 
 ---
 
+## 🔧 Management Commands
+
+PingPanther includes several useful Artisan commands for system administration:
+
+### Password Reset
+Reset any user's password interactively:
+```bash
+php artisan pp:reset-password
+```
+
+### Monitor Checks
+Manually trigger monitor checks:
+```bash
+php artisan pp:monitors-check
+```
+
+### Data Pruning
+Clean up old data (older than 1 month):
+```bash
+php artisan pp:prune
+```
+
+### Create Admin User
+Create a new admin user:
+```bash
+php artisan pp:create-admin email@example.com password123
+```
+
+---
+
 ## 🛡 License
 
 PingPanther is open-source software licensed under the [MIT license](LICENSE).
