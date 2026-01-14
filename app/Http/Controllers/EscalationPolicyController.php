@@ -12,8 +12,17 @@ class EscalationPolicyController extends Controller
 {
     public function index(): Response
     {
-        $policies = EscalationPolicy::where('user_id', auth()->id())
-            ->with(['rules.channel', 'monitors'])
+        $user = auth()->user();
+        $policyQuery = EscalationPolicy::query();
+        $channelQuery = AlertChannel::query();
+        
+        // Admin sees all escalation policies and channels
+        if (!$user->role->isAdmin()) {
+            $policyQuery->where('user_id', $user->id);
+            $channelQuery->where('user_id', $user->id);
+        }
+        
+        $policies = $policyQuery->with(['rules.channel', 'monitors'])
             ->latest()
             ->get()
             ->map(fn ($policy) => [
@@ -34,7 +43,7 @@ class EscalationPolicyController extends Controller
                 ]),
             ]);
 
-        $channels = AlertChannel::where('user_id', auth()->id())->get()->map(fn ($c) => [
+        $channels = $channelQuery->get()->map(fn ($c) => [
             'value' => $c->id,
             'label' => $c->name . ' (' . ucfirst($c->type) . ')',
         ]);

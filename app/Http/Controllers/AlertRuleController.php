@@ -13,9 +13,15 @@ class AlertRuleController extends Controller
 {
     public function index(): Response
     {
-        $rules = AlertRule::where('user_id', auth()->id())
-            ->latest()
-            ->get();
+        $user = auth()->user();
+        $query = AlertRule::query();
+        
+        // Admin sees all alert rules
+        if (!$user->role->isAdmin()) {
+            $query->where('user_id', $user->id);
+        }
+        
+        $rules = $query->latest()->get();
 
         return Inertia::render('AlertRules/Index', [
             'rules' => $rules,

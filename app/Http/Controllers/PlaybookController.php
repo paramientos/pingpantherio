@@ -13,12 +13,22 @@ class PlaybookController extends Controller
 {
     public function index(): Response
     {
-        $playbooks = Playbook::where('user_id', auth()->id())
-            ->withCount('monitors')
+        $user = auth()->user();
+        
+        $playbookQuery = Playbook::query();
+        $monitorQuery = Monitor::query();
+        
+        // Admin sees all playbooks and monitors
+        if (!$user->role->isAdmin()) {
+            $playbookQuery->where('user_id', $user->id);
+            $monitorQuery->where('user_id', $user->id);
+        }
+        
+        $playbooks = $playbookQuery->withCount('monitors')
             ->latest()
             ->get();
 
-        $monitors = Monitor::where('user_id', auth()->id())->get()->map(fn ($m) => [
+        $monitors = $monitorQuery->get()->map(fn ($m) => [
             'value' => $m->id,
             'label' => $m->name,
         ]);

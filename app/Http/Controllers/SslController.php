@@ -17,14 +17,17 @@ class SslController extends Controller
             $query->latest()->limit(10);
         }]);
 
-        if ($user->role->isUser() && $user->teams()->exists()) {
-            $teamIds = $user->teams()->pluck('teams.id');
-            
-            $query->whereHas('teams', function ($q) use ($teamIds) {
-                $q->whereIn('teams.id', $teamIds);
-            });
-        } else {
-            $query->where('user_id', $user->id);
+        // Admin sees all monitors
+        if (!$user->role->isAdmin()) {
+            if ($user->role->isUser() && $user->teams()->exists()) {
+                $teamIds = $user->teams()->pluck('teams.id');
+                
+                $query->whereHas('teams', function ($q) use ($teamIds) {
+                    $q->whereIn('teams.id', $teamIds);
+                });
+            } else {
+                $query->where('user_id', $user->id);
+            }
         }
 
         $monitors = $query->where('check_ssl', true)
