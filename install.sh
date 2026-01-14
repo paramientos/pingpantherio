@@ -45,7 +45,8 @@ if [ -f /etc/os-release ]; then
         echo -e "${RED}Error: This script is designed for Ubuntu 22.04 or 24.04${NC}"
         echo -e "${RED}Your version: Ubuntu $UBUNTU_VERSION${NC}"
         echo -e "${YELLOW}Installation may not work correctly on this version.${NC}"
-        read -p "Continue anyway? (yes/no): " continue_version < /dev/tty
+        read -p "Continue anyway? (yes/no) [default: yes]: " continue_version < /dev/tty
+        continue_version=${continue_version:-yes}
         if [[ ! "$continue_version" =~ ^[Yy]([Ee][Ss])?$ ]]; then
             echo -e "${RED}Installation cancelled.${NC}"
             exit 1
@@ -66,10 +67,11 @@ echo -e "${CYAN}                  INSTALLATION CONFIGURATION${NC}"
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
 
-# --- 1. Domain Setup ---
-echo -e "${YELLOW}[1/3] Domain Configuration${NC}"
+# --- 1. Domain Setup & Admin Account ---
+echo -e "${YELLOW}[1/3] Domain & Admin Configuration${NC}"
 echo ""
-read -p "Do you have a domain name for this installation? (yes/no): " has_domain < /dev/tty
+read -p "Do you have a domain name for this installation? (yes/no) [default: no]: " has_domain < /dev/tty
+has_domain=${has_domain:-no}
 
 if [[ "$has_domain" =~ ^[Yy]([Ee][Ss])?$ ]]; then
     echo ""
@@ -92,7 +94,8 @@ if [[ "$has_domain" =~ ^[Yy]([Ee][Ss])?$ ]]; then
     if [ -z "$RESOLVED_IP" ]; then
         echo -e "${RED}⚠️  WARNING: Could not resolve domain $APP_DOMAIN${NC}"
         echo -e "${YELLOW}The domain may not have DNS records configured yet.${NC}"
-        read -p "Continue anyway? (yes/no): " continue_anyway < /dev/tty
+        read -p "Continue anyway? (yes/no) [default: yes]: " continue_anyway < /dev/tty
+        continue_anyway=${continue_anyway:-yes}
         if [[ ! "$continue_anyway" =~ ^[Yy]([Ee][Ss])?$ ]]; then
             echo -e "${RED}Installation cancelled. Please configure DNS and try again.${NC}"
             exit 1
@@ -102,7 +105,8 @@ if [[ "$has_domain" =~ ^[Yy]([Ee][Ss])?$ ]]; then
         echo -e "  Domain resolves to: ${RED}$RESOLVED_IP${NC}"
         echo -e "  Server IP is:       ${GREEN}$SERVER_IP${NC}"
         echo -e "${YELLOW}The A record is not pointing to this server!${NC}"
-        read -p "Continue anyway? (yes/no): " continue_anyway < /dev/tty
+        read -p "Continue anyway? (yes/no) [default: yes]: " continue_anyway < /dev/tty
+        continue_anyway=${continue_anyway:-yes}
         if [[ ! "$continue_anyway" =~ ^[Yy]([Ee][Ss])?$ ]]; then
             echo -e "${RED}Installation cancelled. Please update DNS records and try again.${NC}"
             exit 1
@@ -122,14 +126,20 @@ fi
 
 echo ""
 
+read -p "Enter admin email address for panel login: " ADMIN_EMAIL < /dev/tty
+echo -e "${GREEN}✓ Admin account will be created${NC}"
+
+echo ""
+
 # --- 2. SSL Configuration ---
 INSTALL_SSL=false
 SSL_EMAIL=""
 
 if [[ "$HAS_DOMAIN" == "true" ]]; then
     echo -e "${YELLOW}[2/3] SSL Certificate Configuration${NC}"
-    echo -e "${CYAN}Would you like to install Let's Encrypt SSL certificate? (yes/no)${NC}"
+    echo -e "${CYAN}Would you like to install Let's Encrypt SSL certificate? (yes/no) [default: yes]${NC}"
     read -p "Choice: " ssl_choice < /dev/tty
+    ssl_choice=${ssl_choice:-yes}
     
     if [[ $ssl_choice =~ ^[Yy]([Ee][Ss])?$ ]]; then
         echo ""
@@ -145,7 +155,8 @@ if [[ "$HAS_DOMAIN" == "true" ]]; then
         echo -e "  4. Wait a few minutes for changes to propagate"
         echo ""
         
-        read -p "Enter email for Let's Encrypt notifications: " SSL_EMAIL < /dev/tty
+        read -p "Enter email for Let's Encrypt notifications [default: $ADMIN_EMAIL]: " SSL_EMAIL < /dev/tty
+        SSL_EMAIL=${SSL_EMAIL:-$ADMIN_EMAIL}
         if [ ! -z "$SSL_EMAIL" ]; then
             INSTALL_SSL=true
             echo -e "${GREEN}✓ SSL will be installed for $APP_DOMAIN${NC}"
@@ -162,9 +173,7 @@ else
     echo ""
 fi
 
-# --- 3. Admin Account ---
-echo -e "${YELLOW}[3/3] Admin Account Setup${NC}"
-read -p "Enter admin email address: " ADMIN_EMAIL < /dev/tty
+
 ADMIN_PASSWORD=$(openssl rand -base64 16)
 echo -e "${GREEN}✓ Admin account will be created${NC}"
 
@@ -322,6 +331,26 @@ echo -e "${YELLOW}[9/12] Installing PHP & Frontend dependencies...${NC}"
 composer install --no-dev --optimize-autoloader --no-interaction
 composer dump-autoload --no-interaction
 yarn install
+
+# Remove demo credentials from Login page for production
+echo -e "${YELLOW}Removing demo credentials from login page...${NC}"
+
+LOGIN_FILE="$INSTALL_DIR/resources/js/Pages/Auth/Login.jsx"
+if [ -f "$LOGIN_FILE" ]; then
+    # Create a temporary file for the cleaned version
+    TEMP_FILE=$(mktemp)
+    
+    # Use sed to replace the specific strings safely
+    sed -i "s/email: 'admin@pingpanther.io'/email: ''/g" "$LOGIN_FILE"
+    sed -i "s/password: 'password'/password: ''/g" "$LOGIN_FILE"
+
+    # Remove the Demo Access UI block (Divider and the following Paper)
+    sed -i '/<Divider label="Demo Access"/,/<\/Paper>/d' "$LOGIN_FILE"
+    
+    echo -e "${GREEN}✓ Demo credentials removed from login page${NC}"
+else
+    echo -e "${YELLOW}⚠ Login file not found, skipping demo removal${NC}"
+fi
 yarn build
 
 # Generate Application Key (now that composer install is done)
@@ -339,42 +368,7 @@ php artisan pp:create-admin "$ADMIN_EMAIL" "$ADMIN_PASSWORD"
 
 php artisan horizon:install
 
-# Remove demo credentials from Login page for production
-echo -e "${YELLOW}Removing demo credentials from login page...${NC}"
 
-LOGIN_FILE="$INSTALL_DIR/resources/js/Pages/Auth/Login.jsx"
-if [ -f "$LOGIN_FILE" ]; then
-    # Create a temporary file for the cleaned version
-    TEMP_FILE=$(mktemp)
-    
-    # Use awk to remove demo credentials sections
-    awk '
-    BEGIN { skip = 0; in_demo_function = 0; }
-    
-    # Skip fillDemoCredentials function
-    /const fillDemoCredentials = \(\) => \{/ { in_demo_function = 1; skip = 1; next; }
-    in_demo_function && /^    \};$/ { in_demo_function = 0; skip = 0; next; }
-    in_demo_function { next; }
-    
-    # Skip Demo Access divider and paper section
-    /<Divider label="Demo Access"/ { skip = 1; next; }
-    skip && /<\/Paper>/ { skip = 0; next; }
-    skip { next; }
-    
-    # Replace demo credentials in useForm with empty values
-    /email: .admin@pingpanther\.io.,/ { gsub(/admin@pingpanther\.io/, ""); }
-    /password: .password.,/ { gsub(/password/, ""); }
-    
-    !skip { print; }
-    ' "$LOGIN_FILE" > "$TEMP_FILE"
-    
-    # Replace original file with cleaned version
-    mv "$TEMP_FILE" "$LOGIN_FILE"
-    
-    echo -e "${GREEN}✓ Demo credentials removed from login page${NC}"
-else
-    echo -e "${YELLOW}⚠ Login file not found, skipping demo removal${NC}"
-fi
 
 # Clear any existing cache before optimization
 echo -e "${YELLOW}Clearing existing cache...${NC}"
