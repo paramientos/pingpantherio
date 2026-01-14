@@ -16,7 +16,7 @@
     @inertiaHead
     
     <!-- Umami Analytics -->
-    <script defer src="https://cloud.umami.is/script.js" data-website-id="3f8431a6-fe4c-4aa4-8662-313a817368e3"></script>
+<script defer src="https://cloud.umami.is/script.js" data-website-id="53f58a7e-ec66-4997-afa8-a5564a047be8"></script>
 </head>
 
 <body>
