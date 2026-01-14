@@ -14,6 +14,9 @@
     @routes
     @vite(['resources/css/app.css', 'resources/js/app.jsx'])
     @inertiaHead
+    
+    <!-- Umami Analytics -->
+    <script defer src="https://cloud.umami.is/script.js" data-website-id="3f8431a6-fe4c-4aa4-8662-313a817368e3"></script>
 </head>
 
 <body>

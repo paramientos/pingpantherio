@@ -337,9 +337,6 @@ echo -e "${YELLOW}Removing demo credentials from login page...${NC}"
 
 LOGIN_FILE="$INSTALL_DIR/resources/js/Pages/Auth/Login.jsx"
 if [ -f "$LOGIN_FILE" ]; then
-    # Create a temporary file for the cleaned version
-    TEMP_FILE=$(mktemp)
-    
     # Use sed to replace the specific strings safely
     sed -i "s/email: 'admin@pingpanther.io'/email: ''/g" "$LOGIN_FILE"
     sed -i "s/password: 'password'/password: ''/g" "$LOGIN_FILE"
@@ -351,6 +348,20 @@ if [ -f "$LOGIN_FILE" ]; then
 else
     echo -e "${YELLOW}⚠ Login file not found, skipping demo removal${NC}"
 fi
+
+# Remove Umami Analytics script for production
+echo -e "${YELLOW}Removing analytics script for production...${NC}"
+
+APP_BLADE="$INSTALL_DIR/resources/views/app.blade.php"
+if [ -f "$APP_BLADE" ]; then
+    # Remove Umami Analytics comment and script tag
+    sed -i '/<!-- Umami Analytics -->/,/<\/script>/d' "$APP_BLADE"
+    
+    echo -e "${GREEN}✓ Analytics script removed${NC}"
+else
+    echo -e "${YELLOW}⚠ app.blade.php not found, skipping analytics removal${NC}"
+fi
+
 yarn build
 
 # Generate Application Key (now that composer install is done)
