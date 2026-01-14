@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\MonitorStatus;
 use App\Models\Heartbeat;
 use App\Models\Monitor;
 use App\Models\User;
@@ -13,11 +14,11 @@ class DemoMonitorSeeder extends Seeder
 {
     public function run(?User $user = null): void
     {
-        if (!$user) {
+        if (! $user) {
             $user = User::first();
         }
 
-        if (!$user) {
+        if (! $user) {
             return;
         }
 
@@ -37,7 +38,7 @@ class DemoMonitorSeeder extends Seeder
                 'url' => '127.0.0.1',
                 'type' => 'port',
                 'port' => 5432,
-            ]
+            ],
         ];
 
         foreach ($monitors as $data) {
@@ -47,7 +48,7 @@ class DemoMonitorSeeder extends Seeder
                 'name' => $data['name'],
                 'url' => $data['url'],
                 'type' => $data['type'],
-                'status' => 'active',
+                'status' => MonitorStatus::UP,
                 'interval' => 60,
                 'timeout' => 10,
                 'method' => 'GET',
@@ -59,13 +60,13 @@ class DemoMonitorSeeder extends Seeder
             // Generate heartbeats for the last 24 hours
             $now = Carbon::now();
             $heartbeats = [];
-            
+
             // Create a heartbeat every ~10 minutes to save DB space but show history
             for ($i = 0; $i < 144; $i++) {
                 $time = $now->copy()->subMinutes(10 * $i);
                 $isUp = true;
                 $responseTime = rand(40, 300); // Random latency between 40ms and 300ms
-                
+
                 // Simulate a small downtime 50 iterations ago
                 if ($i > 48 && $i < 52) {
                     $isUp = false;
