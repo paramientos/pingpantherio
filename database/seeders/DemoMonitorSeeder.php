@@ -7,16 +7,16 @@ use App\Models\Heartbeat;
 use App\Models\Monitor;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
 class DemoMonitorSeeder extends Seeder
 {
-    public function run(?User $user = null): void
+    public function run(): void
     {
-        if (! $user) {
-            $user = User::first();
-        }
+        Model::unguard();
+        $user = User::first();
 
         if (! $user) {
             return;
