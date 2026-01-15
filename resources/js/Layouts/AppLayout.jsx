@@ -252,10 +252,10 @@ function AppLayout({ children }) {
                             <Menu shadow="md" width={220} position="bottom-end">
                                 <Menu.Target>
                                     <Group style={{ cursor: 'pointer' }} gap="sm" px="sm" py={6}>
-                                        <Indicator 
-                                            inline 
-                                            label={auth.pending_invitations_count} 
-                                            size={16} 
+                                        <Indicator
+                                            inline
+                                            label={auth.pending_invitations_count}
+                                            size={16}
                                             color="indigo"
                                             disabled={!auth.pending_invitations_count || auth.pending_invitations_count === 0}
                                         >
@@ -346,7 +346,7 @@ function AppLayout({ children }) {
                 <AppShell.Section>
                     <Divider my="md" />
                     <Text size="xs" c="dimmed" ta="center">
-                        PingPanther v1.0.0
+                        PingPanther v1.0.1
                     </Text>
                 </AppShell.Section>
             </AppShell.Navbar>
