@@ -16,22 +16,7 @@ class DashboardController extends Controller
     public function index(): Response
     {
         $user = auth()->user();
-        $query = Monitor::query();
-
-        if ($user->role === \App\Enums\Role::ADMIN) {
-            // Admins see all monitors
-        } elseif ($user->teams()->exists()) {
-            // Team members see monitors of their teams
-            $teamIds = $user->teams()->pluck('teams.id');
-            $query->whereHas('teams', function ($q) use ($teamIds) {
-                $q->whereIn('teams.id', $teamIds);
-            });
-        } else {
-            // Personal users see only their own monitors
-            $query->where('user_id', $user->id);
-        }
-
-        $monitors = $query->get();
+        $monitors = Monitor::accessibleBy($user)->get();
 
         $stats = [
             'uptime_24h' => $this->calculateGlobalUptime($monitors, 24),

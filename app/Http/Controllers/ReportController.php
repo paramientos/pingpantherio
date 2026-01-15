@@ -34,18 +34,7 @@ class ReportController extends Controller
     public function create(): Response
     {
         $user = auth()->user();
-        $query = Monitor::query();
-
-        if ($user->role !== \App\Enums\Role::ADMIN && $user->teams()->exists()) {
-            $teamIds = $user->teams()->pluck('teams.id');
-            $query->whereHas('teams', function ($q) use ($teamIds) {
-                $q->whereIn('teams.id', $teamIds);
-            });
-        } elseif ($user->role !== \App\Enums\Role::ADMIN) {
-            $query->where('user_id', $user->id);
-        }
-
-        $monitors = $query->get()
+        $monitors = Monitor::accessibleBy($user)->get()
             ->map(fn ($m) => [
                 'value' => $m->getKey(),
                 'label' => $m->name,
@@ -91,7 +80,7 @@ class ReportController extends Controller
         $period = $request->get('period', '30'); // days
         $monitorId = $request->get('monitor_id');
 
-        $query = Monitor::where('user_id', auth()->user()->id);
+        $query = Monitor::accessibleBy(auth()->user());
 
         if ($monitorId) {
             $query->where('id', $monitorId);
@@ -137,7 +126,7 @@ class ReportController extends Controller
             ];
         });
 
-        $allMonitors = Monitor::where('user_id', auth()->user()->id)->get()->map(fn ($m) => [
+        $allMonitors = Monitor::accessibleBy(auth()->user())->get()->map(fn ($m) => [
             'value' => $m->id,
             'label' => $m->name,
         ]);
@@ -155,7 +144,7 @@ class ReportController extends Controller
         $period = $request->get('period', '30');
         $monitorId = $request->get('monitor_id');
 
-        $query = Monitor::where('user_id', auth()->user()->id);
+        $query = Monitor::accessibleBy(auth()->user());
 
         if ($monitorId) {
             $query->where('id', $monitorId);

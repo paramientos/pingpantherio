@@ -13,7 +13,7 @@ class SslController extends Controller
     {
        $user = auth()->user();
         
-        $query = Monitor::with(['user', 'heartbeats' => function ($query) {
+        $query = Monitor::accessibleBy($user)->with(['user', 'heartbeats' => function ($query) {
             $query->latest()->limit(10);
         }]);
 

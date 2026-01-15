@@ -50,7 +50,7 @@ class TeamController extends Controller
                 ];
             });
 
-        $monitors = Monitor::where('user_id', auth()->id())
+        $monitors = Monitor::accessibleBy(auth()->user())
             ->select('id', 'name', 'type', 'status')
             ->orderBy('name')
             ->get();

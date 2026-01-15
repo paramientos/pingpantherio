@@ -14,7 +14,7 @@ class DependencyController extends Controller
     {
         $user = auth()->user();
 
-        $monitors = Monitor::where('user_id', $user->id)
+        $monitors = Monitor::accessibleBy($user)
             ->with(['dependencies.dependsOnMonitor', 'dependents.monitor'])
             ->get()
             ->map(fn ($m) => [
@@ -37,7 +37,7 @@ class DependencyController extends Controller
                 ]),
             ]);
 
-        $allMonitors = Monitor::where('user_id', $user->id)->get()->map(fn ($m) => [
+        $allMonitors = Monitor::accessibleBy($user)->get()->map(fn ($m) => [
             'value' => $m->id,
             'label' => $m->name,
         ]);

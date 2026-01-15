@@ -14,18 +14,7 @@ class SlaController extends Controller
     public function index(): Response
     {
         $user = auth()->user();
-        $monitorQuery = Monitor::query();
-
-        if ($user->role->isNotAdmin() && $user->teams()->exists()) {
-            $teamIds = $user->teams()->pluck('teams.id');
-            $monitorQuery->whereHas('teams', function ($q) use ($teamIds) {
-                $q->whereIn('teams.id', $teamIds);
-            });
-        } elseif ($user->role->isNotAdmin()) {
-            $monitorQuery->where('user_id', $user->id);
-        }
-
-        $monitorIds = $monitorQuery->pluck('id');
+        $monitorIds = Monitor::accessibleBy($user)->pluck('id');
 
         $slas = SlaConfig::with('monitor')
             ->whereIn('monitor_id', $monitorIds)
@@ -51,15 +40,7 @@ class SlaController extends Controller
                 ];
             });
 
-        $monitors = Monitor::query()
-            ->when($user->role !== \App\Enums\Role::ADMIN && $user->teams()->exists(), function ($q) use ($teamIds) {
-                $q->whereHas('teams', function ($subQ) use ($teamIds) {
-                    $subQ->whereIn('teams.id', $teamIds);
-                });
-            })
-            ->when($user->role !== \App\Enums\Role::ADMIN && !$user->teams()->exists(), function ($q) use ($user) {
-                $q->where('user_id', $user->id);
-            })
+        $monitors = Monitor::accessibleBy($user)
             ->whereDoesntHave('slaConfig')
             ->get()
             ->map(fn ($m) => [

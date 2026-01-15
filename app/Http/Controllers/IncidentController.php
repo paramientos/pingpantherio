@@ -12,19 +12,7 @@ class IncidentController extends Controller
     public function index(): Response
     {
         $user = auth()->user();
-        $query = Monitor::query();
-
-        if ($user->role !== \App\Enums\Role::ADMIN && $user->teams()->exists()) {
-            $teamIds = $user->teams()->pluck('teams.id');
-            
-            $query->whereHas('teams', function ($q) use ($teamIds) {
-                $q->whereIn('teams.id', $teamIds);
-            });
-        } elseif ($user->role !== \App\Enums\Role::ADMIN) {
-            $query->where('user_id', $user->id);
-        }
-
-        $monitors = $query->get();
+        $monitors = Monitor::accessibleBy($user)->get();
 
         $incidents = Incident::whereIn('monitor_id', $monitors->pluck('id'))
             ->with('monitor')

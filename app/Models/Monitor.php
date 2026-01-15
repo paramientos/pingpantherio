@@ -59,6 +59,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Team> $teams
  * @property-read int|null $teams_count
  * @property-read \App\Models\User $user
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor query()
@@ -90,6 +91,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor whereUserId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor whereUuid($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Monitor whereVerifySsl($value)
+ *
  * @mixin \Eloquent
  */
 class Monitor extends Model
@@ -135,6 +137,23 @@ class Monitor extends Model
         'ssl_expires_at' => 'datetime',
         'status' => MonitorStatus::class,
     ];
+
+    public function scopeAccessibleBy($query, User $user)
+    {
+        if ($user->role->isAdmin()) {
+            return $query;
+        }
+
+        if ($user->teams()->exists()) {
+            $teamIds = $user->teams()->pluck('teams.id');
+
+            return $query->whereHas('teams', function ($q) use ($teamIds) {
+                $q->whereIn('teams.id', $teamIds);
+            });
+        }
+
+        return $query->where('user_id', $user->id);
+    }
 
     public function user(): BelongsTo
     {

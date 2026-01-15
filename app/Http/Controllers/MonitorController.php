@@ -14,27 +14,14 @@ class MonitorController extends Controller
     public function index(): Response
     {
         $user = auth()->user();
-        
-        $query = Monitor::with(['user', 'heartbeats' => function ($query) {
+
+        $query = Monitor::accessibleBy($user)->with(['user', 'heartbeats' => function ($query) {
             $query->latest()->limit(10);
         }]);
 
-        // Admin sees all monitors
-        if (!$user->role->isAdmin()) {
-            if ($user->role->isUser() && $user->teams()->exists()) {
-                $teamIds = $user->teams()->pluck('teams.id');
-                
-                $query->whereHas('teams', function ($q) use ($teamIds) {
-                    $q->whereIn('teams.id', $teamIds);
-                });
-            } else {
-                $query->where('user_id', $user->id);
-            }
-        }
-
         $monitors = $query->latest()
             ->get()
-            ->map(fn(Monitor $monitor) => [
+            ->map(fn (Monitor $monitor) => [
                 'id' => $monitor->getKey(),
                 'name' => $monitor->name,
                 'url' => $monitor->url,
@@ -49,7 +36,7 @@ class MonitorController extends Controller
                 'last_ping_at' => $monitor->last_ping_at?->diffForHumans(),
                 'last_checked_at' => $monitor->last_checked_at?->diffForHumans(),
                 'created_at' => $monitor->created_at->format('M d, Y'),
-                'recent_heartbeats' => $monitor->heartbeats->map(fn($h) => [
+                'recent_heartbeats' => $monitor->heartbeats->map(fn ($h) => [
                     'is_up' => $h->is_up,
                     'checked_at' => $h->checked_at?->format('Y-m-d H:i:s'),
                 ]),
@@ -57,7 +44,7 @@ class MonitorController extends Controller
 
         return Inertia::render('Monitors/Index', [
             'monitors' => $monitors,
-            'escalationPolicies' => \App\Models\EscalationPolicy::where('user_id', auth()->id())->get()->map(fn($p) => [
+            'escalationPolicies' => \App\Models\EscalationPolicy::where('user_id', auth()->id())->get()->map(fn ($p) => [
                 'value' => $p->id,
                 'label' => $p->name,
             ]),
@@ -67,13 +54,13 @@ class MonitorController extends Controller
     public function show(Monitor $monitor): Response
     {
         $user = auth()->user();
-        
+
         // Authorization check
         if ($user->role !== \App\Enums\Role::ADMIN) {
             $isOwner = $monitor->user_id === $user->id;
-            $isInTeam = $monitor->teams()->whereHas('users', fn($q) => $q->where('users.id', $user->id))->exists();
-            
-            if (!$isOwner && !$isInTeam) {
+            $isInTeam = $monitor->teams()->whereHas('users', fn ($q) => $q->where('users.id', $user->id))->exists();
+
+            if (! $isOwner && ! $isInTeam) {
                 abort(403, 'Unauthorized access to monitor.');
             }
         }
@@ -108,7 +95,7 @@ class MonitorController extends Controller
                 'playbook' => $monitor->playbook,
                 'created_at' => $monitor->created_at->format('M d, Y'),
             ],
-            'heartbeats' => $monitor->heartbeats->map(fn($h) => [
+            'heartbeats' => $monitor->heartbeats->map(fn ($h) => [
                 'id' => $h->getKey(),
                 'is_up' => $h->is_up,
                 'status_code' => $h->status_code,
@@ -116,7 +103,7 @@ class MonitorController extends Controller
                 'error' => $h->error,
                 'checked_at' => $h->checked_at?->format('Y-m-d H:i:s'),
             ]),
-            'incidents' => $monitor->incidents->map(fn($i) => [
+            'incidents' => $monitor->incidents->map(fn ($i) => [
                 'id' => $i->getKey(),
                 'started_at' => $i->started_at->format('Y-m-d H:i:s'),
                 'resolved_at' => $i->resolved_at?->format('Y-m-d H:i:s'),
@@ -125,7 +112,7 @@ class MonitorController extends Controller
                 'screenshot_path' => $i->screenshot_path,
                 'html_snapshot' => $i->html_snapshot,
                 'response_headers' => $i->response_headers,
-                'updates' => $i->updates->map(fn($u) => [
+                'updates' => $i->updates->map(fn ($u) => [
                     'id' => $u->id,
                     'message' => $u->message,
                     'type' => $u->type,
@@ -141,7 +128,7 @@ class MonitorController extends Controller
                 'total_incidents' => $monitor->incidents()->count(),
                 'active_incidents' => $monitor->incidents()->whereNull('resolved_at')->count(),
             ],
-            'recovery_actions' => $monitor->recoveryActions->map(fn($ra) => [
+            'recovery_actions' => $monitor->recoveryActions->map(fn ($ra) => [
                 'id' => $ra->id,
                 'name' => $ra->name,
                 'type' => $ra->type,
@@ -149,17 +136,17 @@ class MonitorController extends Controller
                 'delay_seconds' => $ra->delay_seconds,
                 'is_active' => $ra->is_active,
             ]),
-            'escalationPolicies' => \App\Models\EscalationPolicy::where('user_id', auth()->id())->get()->map(fn($p) => [
+            'escalationPolicies' => \App\Models\EscalationPolicy::where('user_id', auth()->id())->get()->map(fn ($p) => [
                 'value' => $p->id,
                 'label' => $p->name,
             ]),
-            'playbooks' => \App\Models\Playbook::where('user_id', auth()->id())->get()->map(fn($p) => [
+            'playbooks' => \App\Models\Playbook::where('user_id', auth()->id())->get()->map(fn ($p) => [
                 'value' => $p->id,
                 'label' => $p->name,
             ]),
             'responseDistribution' => $this->getResponseDistribution($monitor),
             'uptimeTrend' => $this->getUptimeTrend($monitor, 7),
-            'isReadOnly' => $user->role->isUser()
+            'isReadOnly' => $user->role->isUser(),
         ]);
     }
 
@@ -185,14 +172,14 @@ class MonitorController extends Controller
             'playbook_id' => 'nullable|exists:playbooks,id',
         ]);
 
-        if (isset($validated['headers']) && !empty($validated['headers'])) {
+        if (isset($validated['headers']) && ! empty($validated['headers'])) {
             $validated['headers'] = json_decode($validated['headers'], true);
         }
 
         $monitor = Monitor::create([
             ...$validated,
             'user_id' => auth()->id(),
-            'uuid' => $validated['type'] === 'push' ? (string)\Illuminate\Support\Str::uuid() : null,
+            'uuid' => $validated['type'] === 'push' ? (string) \Illuminate\Support\Str::uuid() : null,
             'status' => MonitorStatus::PENDING,
         ]);
 
@@ -240,12 +227,12 @@ class MonitorController extends Controller
             'playbook_id' => 'nullable|exists:playbooks,id',
         ]);
 
-        if (!empty($validated['headers'])) {
+        if (! empty($validated['headers'])) {
             $validated['headers'] = json_decode($validated['headers'], true);
         }
 
-        if ($monitor->type !== 'push' && $validated['type'] === 'push' && !$monitor->uuid) {
-            $validated['uuid'] = (string)\Illuminate\Support\Str::uuid();
+        if ($monitor->type !== 'push' && $validated['type'] === 'push' && ! $monitor->uuid) {
+            $validated['uuid'] = (string) \Illuminate\Support\Str::uuid();
         }
 
         $monitor->update($validated);
@@ -295,11 +282,17 @@ class MonitorController extends Controller
         foreach ($heartbeats as $hb) {
             $time = $hb->response_time;
 
-            if ($time < 100) $distribution[0]['count']++;
-            elseif ($time < 300) $distribution[1]['count']++;
-            elseif ($time < 500) $distribution[2]['count']++;
-            elseif ($time < 1000) $distribution[3]['count']++;
-            else $distribution[4]['count']++;
+            if ($time < 100) {
+                $distribution[0]['count']++;
+            } elseif ($time < 300) {
+                $distribution[1]['count']++;
+            } elseif ($time < 500) {
+                $distribution[2]['count']++;
+            } elseif ($time < 1000) {
+                $distribution[3]['count']++;
+            } else {
+                $distribution[4]['count']++;
+            }
         }
 
         return $distribution;
