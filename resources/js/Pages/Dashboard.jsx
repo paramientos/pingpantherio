@@ -1,9 +1,9 @@
 import React from 'react';
 import AppLayout from '@/Layouts/AppLayout';
 import { Title, Text, Grid, Card, Group, Badge, Stack, Paper, ThemeIcon, useMantineTheme, Table, Anchor, Alert, Center, Button } from '@mantine/core';
-import { IconArrowUp, IconClock, IconAlertTriangle, IconCheck, IconTrendingUp, IconActivity, IconLock } from '@tabler/icons-react';
+import { IconArrowUp, IconClock, IconAlertTriangle, IconCheck, IconTrendingUp, IconActivity, IconLock, IconUsers } from '@tabler/icons-react';
 import { LineChart, Line, AreaChart, Area, PieChart, Pie, BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { Link, usePage } from '@inertiajs/react';
+import { Link, usePage, router } from '@inertiajs/react';
 
 function Dashboard({ stats, uptimeData, responseTimeData, monitorDistribution, incidentTimeline, slowestMonitors, recentIncidents, hasTeam, pendingInvitations }) {
     const theme = useMantineTheme();
@@ -33,7 +33,7 @@ function Dashboard({ stats, uptimeData, responseTimeData, monitorDistribution, i
                                     <Text c="dimmed" ta="center">
                                         You have been invited to a team. You must accept the invitation to access the system.
                                     </Text>
-                                    
+
                                     {pendingInvitations.map((inv) => (
                                         <Card key={inv.id} withBorder w="100%" p="md">
                                             <Group justify="space-between">
@@ -75,14 +75,14 @@ function Dashboard({ stats, uptimeData, responseTimeData, monitorDistribution, i
     const statCards = [
         {
             title: 'Uptime (24h)',
-            value: `${stats?.uptime_24h || 0}%`,
+            value: `${stats?.uptime_24h || 0}% `,
             icon: IconArrowUp,
             color: 'teal',
             trend: '+0.1%',
         },
         {
             title: 'Avg Response',
-            value: `${stats?.avg_response || 0}ms`,
+            value: `${stats?.avg_response || 0} ms`,
             icon: IconClock,
             color: 'blue',
             trend: '-12ms',
@@ -123,10 +123,10 @@ function Dashboard({ stats, uptimeData, responseTimeData, monitorDistribution, i
         <AppLayout>
             <Stack gap="xl">
                 {pendingInvitations && pendingInvitations.length > 0 && (
-                    <Alert 
-                        variant="light" 
-                        color="indigo" 
-                        title="Pending Team Invitations" 
+                    <Alert
+                        variant="light"
+                        color="indigo"
+                        title="Pending Team Invitations"
                         icon={<IconUsers size={18} />}
                         withCloseButton
                     >
@@ -207,13 +207,13 @@ function Dashboard({ stats, uptimeData, responseTimeData, monitorDistribution, i
                                         dataKey="value"
                                     >
                                         {(monitorDistribution || []).map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={entry.color} />
+                                            <Cell key={`cell - ${index} `} fill={entry.color} />
                                         ))}
                                     </Pie>
                                     <Tooltip
                                         contentStyle={{
                                             backgroundColor: tooltipBg,
-                                            border: `1px solid ${tooltipBorder}`,
+                                            border: `1px solid ${tooltipBorder} `,
                                             borderRadius: '8px',
                                             color: tooltipColor
                                         }}
@@ -240,7 +240,7 @@ function Dashboard({ stats, uptimeData, responseTimeData, monitorDistribution, i
                                     <Tooltip
                                         contentStyle={{
                                             backgroundColor: tooltipBg,
-                                            border: `1px solid ${tooltipBorder}`,
+                                            border: `1px solid ${tooltipBorder} `,
                                             borderRadius: '8px',
                                             color: tooltipColor
                                         }}
@@ -276,7 +276,7 @@ function Dashboard({ stats, uptimeData, responseTimeData, monitorDistribution, i
                                     <Tooltip
                                         contentStyle={{
                                             backgroundColor: tooltipBg,
-                                            border: `1px solid ${tooltipBorder}`,
+                                            border: `1px solid ${tooltipBorder} `,
                                             borderRadius: '8px',
                                             color: tooltipColor
                                         }}
@@ -315,7 +315,7 @@ function Dashboard({ stats, uptimeData, responseTimeData, monitorDistribution, i
                                             <Text size="xs" c="dimmed" lineClamp={1}>{incident.error}</Text>
                                             <Text size="xs" c="dimmed" mt={4}>
                                                 {incident.started_at}
-                                                {incident.is_resolved && ` → ${incident.resolved_at}`}
+                                                {incident.is_resolved && ` → ${incident.resolved_at} `}
                                             </Text>
                                         </Paper>
                                     ))
@@ -366,7 +366,7 @@ function Dashboard({ stats, uptimeData, responseTimeData, monitorDistribution, i
                                     <Tooltip
                                         contentStyle={{
                                             backgroundColor: tooltipBg,
-                                            border: `1px solid ${tooltipBorder}`,
+                                            border: `1px solid ${tooltipBorder} `,
                                             borderRadius: '8px',
                                             color: tooltipColor
                                         }}
@@ -402,7 +402,7 @@ function Dashboard({ stats, uptimeData, responseTimeData, monitorDistribution, i
                                     <Tooltip
                                         contentStyle={{
                                             backgroundColor: tooltipBg,
-                                            border: `1px solid ${tooltipBorder}`,
+                                            border: `1px solid ${tooltipBorder} `,
                                             borderRadius: '8px',
                                             color: tooltipColor
                                         }}
