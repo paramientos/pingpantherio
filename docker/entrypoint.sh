@@ -21,6 +21,13 @@ fi
 if [ "${RUN_MIGRATIONS:-false}" = "true" ]; then
     echo "Running migrations..."
     php artisan migrate --force
+    
+    # Run seeders if database is empty
+    USER_COUNT=$(php artisan tinker --execute="echo \App\Models\User::count();")
+    if [ "$USER_COUNT" = "0" ]; then
+        echo "Seeding database..."
+        php artisan db:seed --force
+    fi
 fi
 
 # Link storage
