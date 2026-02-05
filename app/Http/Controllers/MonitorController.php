@@ -6,6 +6,7 @@ use App\Enums\MonitorStatus;
 use App\Jobs\CheckMonitors;
 use App\Models\Monitor;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -13,7 +14,8 @@ class MonitorController extends Controller
 {
     public function index(): Response
     {
-        $user = auth()->user();
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
 
         return Inertia::render('Monitors/Index', [
             'monitors' => Inertia::defer(fn () => Monitor::accessibleBy($user)
@@ -40,7 +42,7 @@ class MonitorController extends Controller
                         'checked_at' => $h->checked_at?->format('Y-m-d H:i:s'),
                     ]),
                 ])),
-            'escalationPolicies' => Inertia::defer(fn () => \App\Models\EscalationPolicy::where('user_id', auth()->id())->get()->map(fn ($p) => [
+            'escalationPolicies' => Inertia::defer(fn () => \App\Models\EscalationPolicy::where('user_id', Auth::id())->get()->map(fn ($p) => [
                 'value' => $p->id,
                 'label' => $p->name,
             ])),
@@ -49,7 +51,8 @@ class MonitorController extends Controller
 
     public function show(Monitor $monitor): Response
     {
-        $user = auth()->user();
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
 
         // Authorization check
         if ($user->role !== \App\Enums\Role::ADMIN) {
@@ -126,11 +129,11 @@ class MonitorController extends Controller
                 'delay_seconds' => $ra->delay_seconds,
                 'is_active' => $ra->is_active,
             ])),
-            'escalationPolicies' => Inertia::defer(fn () => \App\Models\EscalationPolicy::where('user_id', auth()->id())->get()->map(fn ($p) => [
+            'escalationPolicies' => Inertia::defer(fn () => \App\Models\EscalationPolicy::where('user_id', Auth::id())->get()->map(fn ($p) => [
                 'value' => $p->id,
                 'label' => $p->name,
             ])),
-            'playbooks' => Inertia::defer(fn () => \App\Models\Playbook::where('user_id', auth()->id())->get()->map(fn ($p) => [
+            'playbooks' => Inertia::defer(fn () => \App\Models\Playbook::where('user_id', Auth::id())->get()->map(fn ($p) => [
                 'value' => $p->id,
                 'label' => $p->name,
             ])),
@@ -168,7 +171,7 @@ class MonitorController extends Controller
 
         $monitor = Monitor::create([
             ...$validated,
-            'user_id' => auth()->id(),
+            'user_id' => Auth::id(),
             'uuid' => $validated['type'] === 'push' ? (string) \Illuminate\Support\Str::uuid() : null,
             'status' => MonitorStatus::PENDING,
         ]);

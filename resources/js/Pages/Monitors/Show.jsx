@@ -72,6 +72,8 @@ import {
     Tooltip,
     ResponsiveContainer
 } from 'recharts';
+import { Deferred } from '@inertiajs/react';
+import { Skeleton } from '@mantine/core';
 
 function MonitorShow({ monitor, heartbeats, incidents, stats, recovery_actions, playbooks, responseDistribution, uptimeTrend }) {
     const [opened, { open, close }] = useDisclosure(false);
@@ -80,7 +82,42 @@ function MonitorShow({ monitor, heartbeats, incidents, stats, recovery_actions, 
     const [testing, setTesting] = React.useState(false);
     const [testResult, setTestResult] = React.useState(null);
 
+    const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+    const initialTab = params?.get('tab') || 'heartbeats';
+    const initialIncidentId = params?.get('incident_id');
+
+    const [activeTab, setActiveTab] = React.useState(initialTab);
+    const [selectedIncident, setSelectedIncident] = React.useState(null);
+
+    React.useEffect(() => {
+        if (initialIncidentId && incidents && incidents.length > 0) {
+            const incident = incidents.find(i => i.id === initialIncidentId);
+            if (incident) {
+                setSelectedIncident(incident);
+            }
+        }
+    }, [initialIncidentId, incidents]);
+
+    const updateForm = useForm({
+        initialValues: {
+            message: '',
+            type: 'update',
+            is_public: false,
+        }
+    });
+
+    const form = useForm({
+        initialValues: {
+            name: '',
+            type: 'webhook',
+            config: { url: '', payload: '{}' },
+            delay_seconds: 0,
+        },
+    });
+
     const handleTestNow = async () => {
+        if (!monitor?.id) return;
+        
         setTesting(true);
         setTestResult(null);
         openTestModal();
@@ -115,31 +152,8 @@ function MonitorShow({ monitor, heartbeats, incidents, stats, recovery_actions, 
         }
     };
 
-    const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
-    const initialTab = params?.get('tab') || 'heartbeats';
-    const initialIncidentId = params?.get('incident_id');
-
-    const [activeTab, setActiveTab] = React.useState(initialTab);
-    const [selectedIncident, setSelectedIncident] = React.useState(null);
-
-    React.useEffect(() => {
-        if (initialIncidentId && incidents.length > 0) {
-            const incident = incidents.find(i => i.id === initialIncidentId);
-            if (incident) {
-                setSelectedIncident(incident);
-            }
-        }
-    }, [initialIncidentId, incidents]);
-
-    const updateForm = useForm({
-        initialValues: {
-            message: '',
-            type: 'update',
-            is_public: false,
-        }
-    });
-
     const handleAddUpdate = (values) => {
+        if (!selectedIncident?.id) return;
         router.post(route('incidents.updates.store', selectedIncident.id), values, {
             onSuccess: () => {
                 notifications.show({ title: 'Success', message: 'Update added', color: 'green' });
@@ -148,16 +162,9 @@ function MonitorShow({ monitor, heartbeats, incidents, stats, recovery_actions, 
         });
     };
 
-    const form = useForm({
-        initialValues: {
-            name: '',
-            type: 'webhook',
-            config: { url: '', payload: '{}' },
-            delay_seconds: 0,
-        },
-    });
-
     const handleAddRecovery = (values) => {
+        if (!monitor?.id) return;
+        
         const payload = {
             ...values,
             config: {
@@ -185,7 +192,7 @@ function MonitorShow({ monitor, heartbeats, incidents, stats, recovery_actions, 
             });
         }
     };
-    const chartData = [...heartbeats].reverse().map(h => ({
+    const chartData = (heartbeats || []).slice().reverse().map(h => ({
         time: h.checked_at_human || new Date(h.checked_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         responseTime: Math.round(h.response_time),
         status: h.is_up ? 'UP' : 'DOWN'
@@ -204,310 +211,365 @@ function MonitorShow({ monitor, heartbeats, incidents, stats, recovery_actions, 
     return (
         <AppLayout>
             <Stack gap="xl">
-                <Group justify="space-between" align="flex-start">
-                    <div>
-                        <Group gap="sm" mb="xs">
-                            <Button
-                                component={Link}
-                                href="/monitors"
-                                variant="subtle"
-                                color="gray"
-                                leftSection={<IconArrowLeft size={16} />}
-                                size="xs"
-                                radius="xl"
-                            >
-                                Back to Monitors
-                            </Button>
-                            <Badge
-                                color={getStatusColor(monitor.status)}
-                                variant="filled"
-                                size="lg"
-                                leftSection={monitor.status === 'up' ? <IconCheck size={14} /> : <IconAlertTriangle size={14} />}
-                            >
-                                {monitor.status.toUpperCase()}
-                            </Badge>
-                        </Group>
-                        <Group gap="md">
-                            <Title order={1} fw={900} style={{ letterSpacing: '-1px', fontSize: '2.5rem' }}>
-                                {monitor.name}
-                            </Title>
-                        </Group>
-                        <Group gap="xs" mt={4}>
-                            <IconWorld size={16} />
-                            <Text c="dimmed" size="sm" component="a" href={monitor.url} target="_blank" style={{ textDecoration: 'none' }}>
-                                {monitor.url}
-                            </Text>
-                        </Group>
-                    </div>
-                    <Group>
-                        <Button variant="light" color="blue" leftSection={<IconBook size={18} />} onClick={openPlaybookModal}>
-                            Playbook
-                        </Button>
-                        <Button
-                            variant="filled"
-                            color="blue"
-                            leftSection={<IconBolt size={18} />}
-                            onClick={handleTestNow}
-                            loading={testing}
-                        >
-                            Test Now
-                        </Button>
-                    </Group>
-                </Group>
-
-                <SimpleGrid cols={{ base: 1, sm: 2, md: 6 }} spacing="lg">
-                    <Card padding="xl" radius="lg" withBorder style={{ overflow: 'visible' }}>
-                        <div style={{ position: 'absolute', top: -10, right: 20 }}>
-                            <RingProgress
-                                size={80}
-                                thickness={8}
-                                roundCaps
-                                sections={[
-                                    { value: stats.uptime_24h, color: 'teal' },
-                                    { value: 100 - stats.uptime_24h, color: 'gray.1' },
-                                ]}
-                                label={
-                                    <Text ta="center" fw={700} size="xs">
-                                        {stats.uptime_24h}%
-                                    </Text>
-                                }
-                            />
-                        </div>
-                        <Text size="xs" c="dimmed" fw={700} tt="uppercase" mb={4}>Uptime (24h)</Text>
-                        <Text size="h2" fw={900} style={{ lineHeight: 1 }}>{stats.uptime_24h}%</Text>
-                        <Text size="xs" c="green" fw={600} mt={8}>Last day</Text>
-                    </Card>
-
-                    <Card padding="xl" radius="lg" withBorder>
-                        <ThemeIcon color="teal" variant="light" size="xl" radius="md" mb="md">
-                            <IconCheck size={24} />
-                        </ThemeIcon>
-                        <Text size="xs" c="dimmed" fw={700} tt="uppercase" mb={4}>Uptime (7d)</Text>
-                        <Text size="h2" fw={900} style={{ lineHeight: 1 }}>{stats.uptime_7d}%</Text>
-                        <Text size="xs" c="dimmed" fw={500} mt={8}>Last week</Text>
-                    </Card>
-
-                    <Card padding="xl" radius="lg" withBorder>
-                        <ThemeIcon color="cyan" variant="light" size="xl" radius="md" mb="md">
-                            <IconActivity size={24} />
-                        </ThemeIcon>
-                        <Text size="xs" c="dimmed" fw={700} tt="uppercase" mb={4}>Uptime (30d)</Text>
-                        <Text size="h2" fw={900} style={{ lineHeight: 1 }}>{stats.uptime_30d}%</Text>
-                        <Text size="xs" c="dimmed" fw={500} mt={8}>Last month</Text>
-                    </Card>
-
-                    <Card padding="xl" radius="lg" withBorder>
-                        <ThemeIcon color="blue" variant="light" size="xl" radius="md" mb="md">
-                            <IconClock size={24} />
-                        </ThemeIcon>
-                        <Text size="xs" c="dimmed" fw={700} tt="uppercase" mb={4}>Avg Response</Text>
-                        <Text size="h2" fw={900} style={{ lineHeight: 1 }}>{Math.round(stats.avg_response_time || 0)}<span style={{ fontSize: '1rem', fontWeight: 500, marginLeft: 2 }}>ms</span></Text>
-                        <Text size="xs" c="dimmed" fw={500} mt={8}>Last 100 checks</Text>
-                    </Card>
-
-                    <Card padding="xl" radius="lg" withBorder>
-                        <ThemeIcon color="orange" variant="light" size="xl" radius="md" mb="md">
-                            <IconAlertTriangle size={24} />
-                        </ThemeIcon>
-                        <Text size="xs" c="dimmed" fw={700} tt="uppercase" mb={4}>Total Incidents</Text>
-                        <Text size="h2" fw={900} style={{ lineHeight: 1 }}>{stats.total_incidents}</Text>
-                        <Text size="xs" c="dimmed" fw={500} mt={8}>Lifetime</Text>
-                    </Card>
-
-                    <Card padding="xl" radius="lg" withBorder>
-                        <ThemeIcon color={stats.active_incidents > 0 ? "red" : "green"} variant="light" size="xl" radius="md" mb="md">
-                            {stats.active_incidents > 0 ? <IconX size={24} /> : <IconCheck size={24} />}
-                        </ThemeIcon>
-                        <Text size="xs" c="dimmed" fw={700} tt="uppercase" mb={4}>Active Incidents</Text>
-                        <Text size="h2" fw={900} style={{ lineHeight: 1 }}>{stats.active_incidents}</Text>
-                        <Text size="xs" c={stats.active_incidents > 0 ? "red" : "green"} fw={600} mt={8}>
-                            {stats.active_incidents > 0 ? "Under investigation" : "All systems normal"}
-                        </Text>
-                    </Card>
-                </SimpleGrid>
-
-                <Card padding="xl" radius="lg" withBorder shadow="sm">
-                    <Group justify="space-between" mb="xl">
+                <Deferred data="monitor" fallback={
+                    <Group justify="space-between" align="flex-start">
                         <div>
-                            <Title order={4} fw={800}>Check History</Title>
-                            <Text size="sm" c="dimmed">Visual representation of the last 100 heartbeats</Text>
+                            <Skeleton height={30} width={150} mb="xs" />
+                            <Skeleton height={50} width={300} mb="xs" />
+                            <Skeleton height={20} width={250} />
                         </div>
-                        <Group gap={4}>
-                            <Text size="xs" c="dimmed">SLOW</Text>
-                            {[...Array(5)].map((_, i) => (
-                                <div key={i} style={{ width: 12, height: 12, borderRadius: 2, background: `rgba(34, 139, 230, ${0.2 + (i * 0.2)})` }} />
-                            ))}
-                            <Text size="xs" c="dimmed" ml={4}>FAST</Text>
+                        <Group>
+                            <Skeleton height={36} width={100} />
+                            <Skeleton height={36} width={100} />
                         </Group>
                     </Group>
-
-                    <Group gap={6} justify="center">
-                        {heartbeats.slice(0, 50).map((h, i) => {
-                            const speed = h.response_time;
-                            let color = 'var(--mantine-color-blue-filled)';
-                            if (!h.is_up) color = 'var(--mantine-color-red-filled)';
-                            else if (speed > 1000) color = 'var(--mantine-color-blue-3)';
-                            else if (speed > 500) color = 'var(--mantine-color-blue-5)';
-                            else if (speed > 200) color = 'var(--mantine-color-blue-7)';
-
-                            return (
-                                <MantineTooltip
-                                    key={h.id}
-                                    label={`${h.is_up ? 'Up' : 'Down'} - ${Math.round(speed)}ms at ${h.checked_at}`}
-                                    withArrow
+                }>
+                    <Group justify="space-between" align="flex-start">
+                        <div>
+                            <Group gap="sm" mb="xs">
+                                <Button
+                                    component={Link}
+                                    href="/monitors"
+                                    variant="subtle"
+                                    color="gray"
+                                    leftSection={<IconArrowLeft size={16} />}
+                                    size="xs"
+                                    radius="xl"
                                 >
-                                    <div
-                                        style={{
-                                            width: 14,
-                                            height: 32,
-                                            borderRadius: 4,
-                                            background: color,
-                                            transition: 'transform 0.2s ease',
-                                            cursor: 'pointer'
-                                        }}
-                                        onMouseEnter={(e) => e.currentTarget.style.transform = 'scaleY(1.2)'}
-                                        onMouseLeave={(e) => e.currentTarget.style.transform = 'scaleY(1)'}
-                                    />
-                                </MantineTooltip>
-                            );
-                        })}
+                                    Back to Monitors
+                                </Button>
+                                <Badge
+                                    color={getStatusColor(monitor?.status || 'pending')}
+                                    variant="filled"
+                                    size="lg"
+                                    leftSection={monitor?.status === 'up' ? <IconCheck size={14} /> : <IconAlertTriangle size={14} />}
+                                >
+                                    {monitor?.status?.toUpperCase() || 'LOADING'}
+                                </Badge>
+                            </Group>
+                            <Group gap="md">
+                                <Title order={1} fw={900} style={{ letterSpacing: '-1px', fontSize: '2.5rem' }}>
+                                    {monitor?.name || 'Loading...'}
+                                </Title>
+                            </Group>
+                            <Group gap="xs" mt={4}>
+                                <IconWorld size={16} />
+                                <Text c="dimmed" size="sm" component="a" href={monitor?.url || '#'} target="_blank" style={{ textDecoration: 'none' }}>
+                                    {monitor?.url || 'Loading...'}
+                                </Text>
+                            </Group>
+                        </div>
+                        <Group>
+                            <Button variant="light" color="blue" leftSection={<IconBook size={18} />} onClick={openPlaybookModal}>
+                                Playbook
+                            </Button>
+                            <Button
+                                variant="filled"
+                                color="blue"
+                                leftSection={<IconBolt size={18} />}
+                                onClick={handleTestNow}
+                                loading={testing}
+                            >
+                                Test Now
+                            </Button>
+                        </Group>
                     </Group>
+                </Deferred>
 
-                    <Divider my="xl" label="Performance Analysis" labelPosition="center" />
+                <Deferred data="stats" fallback={
+                    <SimpleGrid cols={{ base: 1, sm: 2, md: 6 }} spacing="lg">
+                        {Array.from({ length: 6 }).map((_, i) => (
+                            <Card key={i} padding="xl" radius="lg" withBorder>
+                                <Skeleton height={40} width={40} mb="md" />
+                                <Skeleton height={10} width="60%" mb={8} />
+                                <Skeleton height={40} width="80%" />
+                            </Card>
+                        ))}
+                    </SimpleGrid>
+                }>
+                    <SimpleGrid cols={{ base: 1, sm: 2, md: 6 }} spacing="lg">
+                        <Card padding="xl" radius="lg" withBorder style={{ overflow: 'visible' }}>
+                            <div style={{ position: 'absolute', top: -10, right: 20 }}>
+                                <RingProgress
+                                    size={80}
+                                    thickness={8}
+                                    roundCaps
+                                    sections={[
+                                        { value: stats?.uptime_24h || 0, color: 'teal' },
+                                        { value: 100 - (stats?.uptime_24h || 0), color: 'gray.1' },
+                                    ]}
+                                    label={
+                                        <Text ta="center" fw={700} size="xs">
+                                            {stats?.uptime_24h || 0}%
+                                        </Text>
+                                    }
+                                />
+                            </div>
+                            <Text size="xs" c="dimmed" fw={700} tt="uppercase" mb={4}>Uptime (24h)</Text>
+                            <Text size="h2" fw={900} style={{ lineHeight: 1 }}>{stats?.uptime_24h || 0}%</Text>
+                            <Text size="xs" c="green" fw={600} mt={8}>Last day</Text>
+                        </Card>
 
-                    <div style={{ height: 350, width: '100%', marginTop: 20 }}>
-                        <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={chartData}>
-                                <defs>
-                                    <linearGradient id="colorRes" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#228be6" stopOpacity={0.2} />
-                                        <stop offset="95%" stopColor="#228be6" stopOpacity={0} />
-                                    </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f3f5" />
-                                <XAxis
-                                    dataKey="time"
-                                    hide
-                                />
-                                <YAxis
-                                    unit="ms"
-                                    fontSize={12}
-                                    tickLine={false}
-                                    axisLine={false}
-                                    tick={{ fill: '#adb5bd' }}
-                                />
-                                <Tooltip
-                                    content={({ active, payload }) => {
-                                        if (active && payload && payload.length) {
-                                            return (
-                                                <Paper shadow="xl" p="md" withBorder radius="md">
-                                                    <Text size="xs" c="dimmed" fw={700} tt="uppercase">{payload[0].payload.time}</Text>
-                                                    <Text size="lg" fw={900} c="blue">{payload[0].value}ms</Text>
-                                                    <Badge size="xs" color={payload[0].payload.status === 'UP' ? 'green' : 'red'}>
-                                                        {payload[0].payload.status}
-                                                    </Badge>
-                                                </Paper>
-                                            );
-                                        }
-                                        return null;
-                                    }}
-                                />
-                                <Area
-                                    type="monotone"
-                                    dataKey="responseTime"
-                                    stroke="#228be6"
-                                    strokeWidth={3}
-                                    fillOpacity={1}
-                                    fill="url(#colorRes)"
-                                    animationDuration={1500}
-                                />
-                            </AreaChart>
-                        </ResponsiveContainer>
-                    </div>
-                </Card>
+                        <Card padding="xl" radius="lg" withBorder>
+                            <ThemeIcon color="teal" variant="light" size="xl" radius="md" mb="md">
+                                <IconCheck size={24} />
+                            </ThemeIcon>
+                            <Text size="xs" c="dimmed" fw={700} tt="uppercase" mb={4}>Uptime (7d)</Text>
+                            <Text size="h2" fw={900} style={{ lineHeight: 1 }}>{stats?.uptime_7d || 0}%</Text>
+                            <Text size="xs" c="dimmed" fw={500} mt={8}>Last week</Text>
+                        </Card>
+
+                        <Card padding="xl" radius="lg" withBorder>
+                            <ThemeIcon color="cyan" variant="light" size="xl" radius="md" mb="md">
+                                <IconActivity size={24} />
+                            </ThemeIcon>
+                            <Text size="xs" c="dimmed" fw={700} tt="uppercase" mb={4}>Uptime (30d)</Text>
+                            <Text size="h2" fw={900} style={{ lineHeight: 1 }}>{stats?.uptime_30d || 0}%</Text>
+                            <Text size="xs" c="dimmed" fw={500} mt={8}>Last month</Text>
+                        </Card>
+
+                        <Card padding="xl" radius="lg" withBorder>
+                            <ThemeIcon color="blue" variant="light" size="xl" radius="md" mb="md">
+                                <IconClock size={24} />
+                            </ThemeIcon>
+                            <Text size="xs" c="dimmed" fw={700} tt="uppercase" mb={4}>Avg Response</Text>
+                            <Text size="h2" fw={900} style={{ lineHeight: 1 }}>{Math.round(stats?.avg_response_time || 0)}<span style={{ fontSize: '1rem', fontWeight: 500, marginLeft: 2 }}>ms</span></Text>
+                            <Text size="xs" c="dimmed" fw={500} mt={8}>Last 100 checks</Text>
+                        </Card>
+
+                        <Card padding="xl" radius="lg" withBorder>
+                            <ThemeIcon color="orange" variant="light" size="xl" radius="md" mb="md">
+                                <IconAlertTriangle size={24} />
+                            </ThemeIcon>
+                            <Text size="xs" c="dimmed" fw={700} tt="uppercase" mb={4}>Total Incidents</Text>
+                            <Text size="h2" fw={900} style={{ lineHeight: 1 }}>{stats?.total_incidents || 0}</Text>
+                            <Text size="xs" c="dimmed" fw={500} mt={8}>Lifetime</Text>
+                        </Card>
+
+                        <Card padding="xl" radius="lg" withBorder>
+                            <ThemeIcon color={(stats?.active_incidents || 0) > 0 ? "red" : "green"} variant="light" size="xl" radius="md" mb="md">
+                                {(stats?.active_incidents || 0) > 0 ? <IconX size={24} /> : <IconCheck size={24} />}
+                            </ThemeIcon>
+                            <Text size="xs" c="dimmed" fw={700} tt="uppercase" mb={4}>Active Incidents</Text>
+                            <Text size="h2" fw={900} style={{ lineHeight: 1 }}>{stats?.active_incidents || 0}</Text>
+                            <Text size="xs" c={(stats?.active_incidents || 0) > 0 ? "red" : "green"} fw={600} mt={8}>
+                                {(stats?.active_incidents || 0) > 0 ? "Under investigation" : "All systems normal"}
+                            </Text>
+                        </Card>
+                    </SimpleGrid>
+                </Deferred>
+
+                <Deferred data="heartbeats" fallback={
+                    <Card padding="xl" radius="lg" withBorder shadow="sm">
+                        <Skeleton height={20} width="40%" mb="xs" />
+                        <Skeleton height={10} width="60%" mb="xl" />
+                        <Group gap={6} justify="center" mb="xl">
+                            {Array.from({ length: 50 }).map((_, i) => (
+                                <Skeleton key={i} height={32} width={14} />
+                            ))}
+                        </Group>
+                        <Skeleton height={350} mt="xl" />
+                    </Card>
+                }>
+                    <Card padding="xl" radius="lg" withBorder shadow="sm">
+                        <Group justify="space-between" mb="xl">
+                            <div>
+                                <Title order={4} fw={800}>Check History</Title>
+                                <Text size="sm" c="dimmed">Visual representation of the last 100 heartbeats</Text>
+                            </div>
+                            <Group gap={4}>
+                                <Text size="xs" c="dimmed">SLOW</Text>
+                                {[...Array(5)].map((_, i) => (
+                                    <div key={i} style={{ width: 12, height: 12, borderRadius: 2, background: `rgba(34, 139, 230, ${0.2 + (i * 0.2)})` }} />
+                                ))}
+                                <Text size="xs" c="dimmed" ml={4}>FAST</Text>
+                            </Group>
+                        </Group>
+
+                        <Group gap={6} justify="center">
+                            {(heartbeats || []).slice(0, 50).map((h, i) => {
+                                const speed = h.response_time;
+                                let color = 'var(--mantine-color-blue-filled)';
+                                if (!h.is_up) color = 'var(--mantine-color-red-filled)';
+                                else if (speed > 1000) color = 'var(--mantine-color-blue-3)';
+                                else if (speed > 500) color = 'var(--mantine-color-blue-5)';
+                                else if (speed > 200) color = 'var(--mantine-color-blue-7)';
+
+                                return (
+                                    <MantineTooltip
+                                        key={h.id}
+                                        label={`${h.is_up ? 'Up' : 'Down'} - ${Math.round(speed)}ms at ${h.checked_at}`}
+                                        withArrow
+                                    >
+                                        <div
+                                            style={{
+                                                width: 14,
+                                                height: 32,
+                                                borderRadius: 4,
+                                                background: color,
+                                                transition: 'transform 0.2s ease',
+                                                cursor: 'pointer'
+                                            }}
+                                            onMouseEnter={(e) => e.currentTarget.style.transform = 'scaleY(1.2)'}
+                                            onMouseLeave={(e) => e.currentTarget.style.transform = 'scaleY(1)'}
+                                        />
+                                    </MantineTooltip>
+                                );
+                            })}
+                        </Group>
+
+                        <Divider my="xl" label="Performance Analysis" labelPosition="center" />
+
+                        <div style={{ height: 350, width: '100%', marginTop: 20 }}>
+                            <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={chartData}>
+                                    <defs>
+                                        <linearGradient id="colorRes" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#228be6" stopOpacity={0.2} />
+                                            <stop offset="95%" stopColor="#228be6" stopOpacity={0} />
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f3f5" />
+                                    <XAxis
+                                        dataKey="time"
+                                        hide
+                                    />
+                                    <YAxis
+                                        unit="ms"
+                                        fontSize={12}
+                                        tickLine={false}
+                                        axisLine={false}
+                                        tick={{ fill: '#adb5bd' }}
+                                    />
+                                    <Tooltip
+                                        content={({ active, payload }) => {
+                                            if (active && payload && payload.length) {
+                                                return (
+                                                    <Paper shadow="xl" p="md" withBorder radius="md">
+                                                        <Text size="xs" c="dimmed" fw={700} tt="uppercase">{payload[0].payload.time}</Text>
+                                                        <Text size="lg" fw={900} c="blue">{payload[0].value}ms</Text>
+                                                        <Badge size="xs" color={payload[0].payload.status === 'UP' ? 'green' : 'red'}>
+                                                            {payload[0].payload.status}
+                                                        </Badge>
+                                                    </Paper>
+                                                );
+                                            }
+                                            return null;
+                                        }}
+                                    />
+                                    <Area
+                                        type="monotone"
+                                        dataKey="responseTime"
+                                        stroke="#228be6"
+                                        strokeWidth={3}
+                                        fillOpacity={1}
+                                        fill="url(#colorRes)"
+                                        animationDuration={1500}
+                                    />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </Card>
+                </Deferred>
 
                 <Grid>
                     <Grid.Col span={{ base: 12, md: 6 }}>
-                        <Card padding="xl" radius="lg" withBorder shadow="sm">
-                            <Group justify="space-between" mb="xl">
-                                <div>
-                                    <Title order={4} fw={800}>Response Time Distribution</Title>
-                                    <Text size="sm" c="dimmed">Last 24 hours breakdown</Text>
-                                </div>
-                                <ThemeIcon color="blue" variant="light" size="lg">
-                                    <IconClock size={20} />
-                                </ThemeIcon>
-                            </Group>
-                            <ResponsiveContainer width="100%" height={300}>
-                                <BarChart data={responseDistribution || []}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f3f5" />
-                                    <XAxis dataKey="range" fontSize={12} tickLine={false} axisLine={false} tick={{ fill: '#adb5bd' }} />
-                                    <YAxis fontSize={12} tickLine={false} axisLine={false} tick={{ fill: '#adb5bd' }} />
-                                    <Tooltip
-                                        content={({ active, payload }) => {
-                                            if (active && payload && payload.length) {
-                                                return (
-                                                    <Paper shadow="xl" p="md" withBorder radius="md">
-                                                        <Text size="xs" c="dimmed" fw={700} tt="uppercase">{payload[0].payload.range}</Text>
-                                                        <Text size="lg" fw={900} c="blue">{payload[0].value} checks</Text>
-                                                    </Paper>
-                                                );
-                                            }
-                                            return null;
-                                        }}
-                                    />
-                                    <Bar dataKey="count" fill="var(--mantine-color-blue-6)" radius={[8, 8, 0, 0]} />
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </Card>
+                        <Deferred data="responseDistribution" fallback={
+                            <Card padding="xl" radius="lg" withBorder shadow="sm">
+                                <Skeleton height={20} width="50%" mb="xs" />
+                                <Skeleton height={10} width="40%" mb="xl" />
+                                <Skeleton height={300} />
+                            </Card>
+                        }>
+                            <Card padding="xl" radius="lg" withBorder shadow="sm">
+                                <Group justify="space-between" mb="xl">
+                                    <div>
+                                        <Title order={4} fw={800}>Response Time Distribution</Title>
+                                        <Text size="sm" c="dimmed">Last 24 hours breakdown</Text>
+                                    </div>
+                                    <ThemeIcon color="blue" variant="light" size="lg">
+                                        <IconClock size={20} />
+                                    </ThemeIcon>
+                                </Group>
+                                <ResponsiveContainer width="100%" height={300}>
+                                    <BarChart data={responseDistribution || []}>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f3f5" />
+                                        <XAxis dataKey="range" fontSize={12} tickLine={false} axisLine={false} tick={{ fill: '#adb5bd' }} />
+                                        <YAxis fontSize={12} tickLine={false} axisLine={false} tick={{ fill: '#adb5bd' }} />
+                                        <Tooltip
+                                            content={({ active, payload }) => {
+                                                if (active && payload && payload.length) {
+                                                    return (
+                                                        <Paper shadow="xl" p="md" withBorder radius="md">
+                                                            <Text size="xs" c="dimmed" fw={700} tt="uppercase">{payload[0].payload.range}</Text>
+                                                            <Text size="lg" fw={900} c="blue">{payload[0].value} checks</Text>
+                                                        </Paper>
+                                                    );
+                                                }
+                                                return null;
+                                            }}
+                                        />
+                                        <Bar dataKey="count" fill="var(--mantine-color-blue-6)" radius={[8, 8, 0, 0]} />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </Card>
+                        </Deferred>
                     </Grid.Col>
 
                     <Grid.Col span={{ base: 12, md: 6 }}>
-                        <Card padding="xl" radius="lg" withBorder shadow="sm">
-                            <Group justify="space-between" mb="xl">
-                                <div>
-                                    <Title order={4} fw={800}>Uptime Trend (7 Days)</Title>
-                                    <Text size="sm" c="dimmed">Daily uptime percentage</Text>
-                                </div>
-                                <ThemeIcon color="teal" variant="light" size="lg">
-                                    <IconActivity size={20} />
-                                </ThemeIcon>
-                            </Group>
-                            <ResponsiveContainer width="100%" height={300}>
-                                <LineChart data={uptimeTrend || []}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f3f5" />
-                                    <XAxis dataKey="date" fontSize={12} tickLine={false} axisLine={false} tick={{ fill: '#adb5bd' }} />
-                                    <YAxis domain={[90, 100]} fontSize={12} tickLine={false} axisLine={false} tick={{ fill: '#adb5bd' }} />
-                                    <Tooltip
-                                        content={({ active, payload }) => {
-                                            if (active && payload && payload.length) {
-                                                return (
-                                                    <Paper shadow="xl" p="md" withBorder radius="md">
-                                                        <Text size="xs" c="dimmed" fw={700} tt="uppercase">{payload[0].payload.date}</Text>
-                                                        <Text size="lg" fw={900} c="teal">{payload[0].value}% uptime</Text>
-                                                    </Paper>
-                                                );
-                                            }
-                                            return null;
-                                        }}
-                                    />
-                                    <Line
-                                        type="monotone"
-                                        dataKey="uptime"
-                                        stroke="var(--mantine-color-teal-6)"
-                                        strokeWidth={3}
-                                        dot={{ fill: 'var(--mantine-color-teal-6)', r: 4 }}
-                                        activeDot={{ r: 6 }}
-                                    />
-                                </LineChart>
-                            </ResponsiveContainer>
-                        </Card>
+                        <Deferred data="uptimeTrend" fallback={
+                            <Card padding="xl" radius="lg" withBorder shadow="sm">
+                                <Skeleton height={20} width="50%" mb="xs" />
+                                <Skeleton height={10} width="40%" mb="xl" />
+                                <Skeleton height={300} />
+                            </Card>
+                        }>
+                            <Card padding="xl" radius="lg" withBorder shadow="sm">
+                                <Group justify="space-between" mb="xl">
+                                    <div>
+                                        <Title order={4} fw={800}>Uptime Trend (7 Days)</Title>
+                                        <Text size="sm" c="dimmed">Daily uptime percentage</Text>
+                                    </div>
+                                    <ThemeIcon color="teal" variant="light" size="lg">
+                                        <IconActivity size={20} />
+                                    </ThemeIcon>
+                                </Group>
+                                <ResponsiveContainer width="100%" height={300}>
+                                    <LineChart data={uptimeTrend || []}>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f3f5" />
+                                        <XAxis dataKey="date" fontSize={12} tickLine={false} axisLine={false} tick={{ fill: '#adb5bd' }} />
+                                        <YAxis domain={[90, 100]} fontSize={12} tickLine={false} axisLine={false} tick={{ fill: '#adb5bd' }} />
+                                        <Tooltip
+                                            content={({ active, payload }) => {
+                                                if (active && payload && payload.length) {
+                                                    return (
+                                                        <Paper shadow="xl" p="md" withBorder radius="md">
+                                                            <Text size="xs" c="dimmed" fw={700} tt="uppercase">{payload[0].payload.date}</Text>
+                                                            <Text size="lg" fw={900} c="teal">{payload[0].value}% uptime</Text>
+                                                        </Paper>
+                                                    );
+                                                }
+                                                return null;
+                                            }}
+                                        />
+                                        <Line
+                                            type="monotone"
+                                            dataKey="uptime"
+                                            stroke="var(--mantine-color-teal-6)"
+                                            strokeWidth={3}
+                                            dot={{ fill: 'var(--mantine-color-teal-6)', r: 4 }}
+                                            activeDot={{ r: 6 }}
+                                        />
+                                    </LineChart>
+                                </ResponsiveContainer>
+                            </Card>
+                        </Deferred>
                     </Grid.Col>
                 </Grid>
 
                 <Grid>
                     <Grid.Col span={{ base: 12, md: 8 }}>
-                        {monitor.metadata && (
+                        {monitor?.metadata && (
                             <Card padding="xl" radius="lg" withBorder>
                                 <Group mb="xl">
                                     <ThemeIcon variant="light" color="gray" size="lg" radius="md">
@@ -559,7 +621,7 @@ function MonitorShow({ monitor, heartbeats, incidents, stats, recovery_actions, 
                     </Grid.Col>
 
                     <Grid.Col span={{ base: 12, md: 4 }}>
-                        {monitor.check_ssl && monitor.ssl_expires_at && (
+                        {monitor?.check_ssl && monitor?.ssl_expires_at && (
                             <Card padding="xl" radius="lg" withBorder shadow="sm">
                                 <Stack gap="lg">
                                     <Group justify="space-between" align="flex-start">
@@ -571,10 +633,10 @@ function MonitorShow({ monitor, heartbeats, incidents, stats, recovery_actions, 
                                         >
                                             <IconShieldLock size={24} />
                                         </ThemeIcon>
-                                        <Badge 
-                                            size="lg" 
-                                            radius="sm" 
-                                            variant="light" 
+                                        <Badge
+                                            size="lg"
+                                            radius="sm"
+                                            variant="light"
                                             color={monitor.ssl_days_until_expiry <= 30 ? 'red' : 'blue'}
                                         >
                                             {monitor.ssl_days_until_expiry <= 30 ? 'CRITICAL' : 'SECURE'}
@@ -641,14 +703,14 @@ function MonitorShow({ monitor, heartbeats, incidents, stats, recovery_actions, 
                                         </Table.Tr>
                                     </Table.Thead>
                                     <Table.Tbody>
-                                        {heartbeats.length === 0 ? (
+                                        {(!heartbeats || heartbeats.length === 0) ? (
                                             <Table.Tr>
                                                 <Table.Td colSpan={5} style={{ textAlign: 'center', padding: '2rem' }}>
                                                     <Text c="dimmed">No heartbeats yet</Text>
                                                 </Table.Td>
                                             </Table.Tr>
                                         ) : (
-                                            heartbeats.map((heartbeat) => (
+                                            (heartbeats || []).map((heartbeat) => (
                                                 <Table.Tr key={heartbeat.id}>
                                                     <Table.Td>
                                                         {heartbeat.is_up ? (
@@ -685,61 +747,82 @@ function MonitorShow({ monitor, heartbeats, incidents, stats, recovery_actions, 
                     </Tabs.Panel>
 
                     <Tabs.Panel value="incidents" pt="md">
-                        <Grid gutter="xl">
-                            <Grid.Col span={{ base: 12, md: 5 }}>
-                                <Card padding="lg" radius="md" withBorder>
-                                    <Title order={4} fw={700} mb="xl">Incident History</Title>
-                                    {incidents.length === 0 ? (
-                                        <Paper p="md" radius="sm">
-                                            <Text size="sm" c="dimmed">No incidents recorded</Text>
-                                        </Paper>
-                                    ) : (
+                        <Deferred data="incidents" fallback={
+                            <Grid gutter="xl">
+                                <Grid.Col span={{ base: 12, md: 5 }}>
+                                    <Card padding="lg" radius="md" withBorder>
+                                        <Skeleton height={20} width="40%" mb="xl" />
                                         <Stack gap="md">
-                                            {incidents.map((incident) => (
-                                                <Paper
-                                                    key={incident.id}
-                                                    withBorder
-                                                    p="md"
-                                                    radius="md"
-                                                    style={{
-                                                        cursor: 'pointer',
-                                                        borderColor: selectedIncident?.id === incident.id ? 'var(--mantine-color-blue-filled)' : undefined,
-                                                        background: selectedIncident?.id === incident.id ? 'var(--mantine-color-blue-0)' : undefined,
-                                                    }}
-                                                    onClick={() => setSelectedIncident(incident)}
-                                                >
-                                                    <Group justify="space-between" mb={4}>
-                                                        <Badge color={incident.resolved_at ? 'green' : 'red'} variant="light">
-                                                            {incident.resolved_at ? 'Resolved' : 'Active'}
-                                                        </Badge>
-                                                        <Text size="xs" c="dimmed">{incident.started_at}</Text>
-                                                    </Group>
-                                                    <Text fw={700} size="sm" lineClamp={1}>{incident.error_message}</Text>
-                                                    {incident.resolved_at && (
-                                                        <Text size="xs" c="dimmed" mt={4}>Downtime: {incident.duration}</Text>
-                                                    )}
-                                                </Paper>
+                                            {Array.from({ length: 3 }).map((_, i) => (
+                                                <Skeleton key={i} height={80} radius="md" />
                                             ))}
                                         </Stack>
-                                    )}
-                                </Card>
-                            </Grid.Col>
+                                    </Card>
+                                </Grid.Col>
+                                <Grid.Col span={{ base: 12, md: 7 }}>
+                                    <Card padding="xl" radius="md" withBorder>
+                                        <Skeleton height={30} width="50%" mb="xs" />
+                                        <Skeleton height={10} width="30%" mb="xl" />
+                                        <Skeleton height={200} />
+                                    </Card>
+                                </Grid.Col>
+                            </Grid>
+                        }>
+                            <Grid gutter="xl">
+                                <Grid.Col span={{ base: 12, md: 5 }}>
+                                    <Card padding="lg" radius="md" withBorder>
+                                        <Title order={4} fw={700} mb="xl">Incident History</Title>
+                                        {(incidents?.length || 0) === 0 ? (
+                                            <Paper p="md" radius="sm">
+                                                <Text size="sm" c="dimmed">No incidents recorded</Text>
+                                            </Paper>
+                                        ) : (
+                                            <Stack gap="md">
+                                                {(incidents || []).map((incident) => (
+                                                    <Paper
+                                                        key={incident.id}
+                                                        withBorder
+                                                        p="md"
+                                                        radius="md"
+                                                        style={{
+                                                            cursor: 'pointer',
+                                                            borderColor: selectedIncident?.id === incident.id ? 'var(--mantine-color-blue-filled)' : undefined,
+                                                            background: selectedIncident?.id === incident.id ? 'var(--mantine-color-blue-0)' : undefined,
+                                                        }}
+                                                        onClick={() => setSelectedIncident(incident)}
+                                                    >
+                                                        <Group justify="space-between" mb={4}>
+                                                            <Badge color={incident.resolved_at ? 'green' : 'red'} variant="light">
+                                                                {incident.resolved_at ? 'Resolved' : 'Active'}
+                                                            </Badge>
+                                                            <Text size="xs" c="dimmed">{incident.started_at}</Text>
+                                                        </Group>
+                                                        <Text fw={700} size="sm" lineClamp={1}>{incident.error_message}</Text>
+                                                        {incident.resolved_at && (
+                                                            <Text size="xs" c="dimmed" mt={4}>Downtime: {incident.duration}</Text>
+                                                        )}
+                                                    </Paper>
+                                                ))}
+                                            </Stack>
+                                        )}
+                                    </Card>
+                                </Grid.Col>
 
                             <Grid.Col span={{ base: 12, md: 7 }}>
                                 {selectedIncident ? (
                                     <Stack gap="lg">
                                         <Card padding="xl" radius="md" withBorder>
                                             <Title order={3} fw={900} mb="xs">Incident Details</Title>
-                                            <Text c="dimmed" size="sm" mb="xl">ID: {selectedIncident.id}</Text>
+                                            <Text c="dimmed" size="sm" mb="xl">ID: {selectedIncident?.id}</Text>
 
                                             <SimpleGrid cols={2} mb="xl">
                                                 <Paper p="md" radius="md">
                                                     <Text size="xs" c="dimmed" fw={700} tt="uppercase">Started At</Text>
-                                                    <Text fw={700}>{selectedIncident.started_at}</Text>
+                                                    <Text fw={700}>{selectedIncident?.started_at}</Text>
                                                 </Paper>
-                                                <Paper p="md" radius="md" bg={selectedIncident.resolved_at ? 'green.0' : 'red.0'}>
+                                                <Paper p="md" radius="md" bg={selectedIncident?.resolved_at ? 'green.0' : 'red.0'}>
                                                     <Text size="xs" c="dimmed" fw={700} tt="uppercase">Resolved At</Text>
-                                                    <Text fw={700}>{selectedIncident.resolved_at || 'Under investigation'}</Text>
+                                                    <Text fw={700}>{selectedIncident?.resolved_at || 'Under investigation'}</Text>
                                                 </Paper>
                                             </SimpleGrid>
 
@@ -783,8 +866,8 @@ function MonitorShow({ monitor, heartbeats, incidents, stats, recovery_actions, 
                                                             </Paper>
                                                         </form>
 
-                                                        <Timeline active={selectedIncident.updates.length} bulletSize={20} lineWidth={2}>
-                                                            {selectedIncident.updates.map((update) => (
+                                                        <Timeline active={selectedIncident?.updates?.length || 0} bulletSize={20} lineWidth={2}>
+                                                            {(selectedIncident?.updates || []).map((update) => (
                                                                 <Timeline.Item
                                                                     key={update.id}
                                                                     title={
@@ -807,14 +890,14 @@ function MonitorShow({ monitor, heartbeats, incidents, stats, recovery_actions, 
                                                                 lineVariant="dashed"
                                                                 title="Incident Started"
                                                             >
-                                                                <Text size="xs" c="dimmed">{selectedIncident.started_at}</Text>
+                                                                <Text size="xs" c="dimmed">{selectedIncident?.started_at}</Text>
                                                             </Timeline.Item>
                                                         </Timeline>
                                                     </Stack>
                                                 </Tabs.Panel>
 
                                                 <Tabs.Panel value="snapshot">
-                                                    {selectedIncident.screenshot_path ? (
+                                                    {selectedIncident?.screenshot_path ? (
                                                         <Paper withBorder radius="md" style={{ overflow: 'hidden' }}>
                                                             <img
                                                                 src={selectedIncident.screenshot_path}
@@ -833,7 +916,7 @@ function MonitorShow({ monitor, heartbeats, incidents, stats, recovery_actions, 
                                                 </Tabs.Panel>
 
                                                 <Tabs.Panel value="code">
-                                                    {selectedIncident.html_snapshot ? (
+                                                    {selectedIncident?.html_snapshot ? (
                                                         <Paper withBorder radius="md" p="md" style={{ background: 'var(--mantine-color-dark-filled)' }}>
                                                             <Code block color="gray.0" ff="monospace" style={{ maxHeight: 400, overflow: 'auto' }}>
                                                                 {selectedIncident.html_snapshot}
@@ -866,55 +949,78 @@ function MonitorShow({ monitor, heartbeats, incidents, stats, recovery_actions, 
                                 )}
                             </Grid.Col>
                         </Grid>
+                        </Deferred>
                     </Tabs.Panel>
 
                     <Tabs.Panel value="recovery" pt="md">
-                        <Stack gap="md">
-                            <Group justify="space-between">
-                                <div>
-                                    <Title order={4} fw={700}>Automated Recovery Actions</Title>
-                                    <Text size="xs" c="dimmed">Executed automatically when an incident begins</Text>
-                                </div>
-                                <Button size="xs" leftSection={<IconPlus size={14} />} onClick={open}>
-                                    Add Action
-                                </Button>
-                            </Group>
-
-                            {recovery_actions.length === 0 ? (
-                                <Paper p="xl" withBorder style={{ textAlign: 'center' }}>
-                                    <IconBolt size={48} color="gray" opacity={0.3} />
-                                    <Text c="dimmed" mt="sm">No automated recovery actions configured.</Text>
-                                    <Button variant="subtle" size="xs" mt="md" onClick={open}>Configure Now</Button>
-                                </Paper>
-                            ) : (
+                        <Deferred data="recovery_actions" fallback={
+                            <Stack gap="md">
+                                <Group justify="space-between">
+                                    <div>
+                                        <Skeleton height={20} width="40%" />
+                                        <Skeleton height={10} width="60%" mt="xs" />
+                                    </div>
+                                    <Skeleton height={30} width={100} />
+                                </Group>
                                 <Grid>
-                                    {recovery_actions.map((action) => (
-                                        <Grid.Col key={action.id} span={{ base: 12, md: 6 }}>
+                                    {Array.from({ length: 2 }).map((_, i) => (
+                                        <Grid.Col key={i} span={{ base: 12, md: 6 }}>
                                             <Card withBorder>
-                                                <Group justify="space-between" mb="xs">
-                                                    <Group gap="sm">
-                                                        <ThemeIcon color="yellow" variant="light">
-                                                            <IconPlayerPlay size={16} />
-                                                        </ThemeIcon>
-                                                        <Text fw={700}>{action.name}</Text>
-                                                    </Group>
-                                                    <ActionIcon color="red" variant="subtle" onClick={() => handleDeleteRecovery(action.id)}>
-                                                        <IconTrash size={16} />
-                                                    </ActionIcon>
-                                                </Group>
-                                                <Stack gap={4}>
-                                                    <Text size="xs" c="dimmed">TYPE: <Badge size="xs" variant="outline">{action.type.toUpperCase()}</Badge></Text>
-                                                    <Text size="xs" c="dimmed">DELAY: <b>{action.delay_seconds} seconds</b></Text>
-                                                    {action.type === 'webhook' && (
-                                                        <Code block mt="xs" size="xs">{action.config.url}</Code>
-                                                    )}
-                                                </Stack>
+                                                <Skeleton height={40} mb="xs" />
+                                                <Skeleton height={60} />
                                             </Card>
                                         </Grid.Col>
                                     ))}
                                 </Grid>
-                            )}
-                        </Stack>
+                            </Stack>
+                        }>
+                            <Stack gap="md">
+                                <Group justify="space-between">
+                                    <div>
+                                        <Title order={4} fw={700}>Automated Recovery Actions</Title>
+                                        <Text size="xs" c="dimmed">Executed automatically when an incident begins</Text>
+                                    </div>
+                                    <Button size="xs" leftSection={<IconPlus size={14} />} onClick={open}>
+                                        Add Action
+                                    </Button>
+                                </Group>
+
+                                {(recovery_actions?.length || 0) === 0 ? (
+                                    <Paper p="xl" withBorder style={{ textAlign: 'center' }}>
+                                        <IconBolt size={48} color="gray" opacity={0.3} />
+                                        <Text c="dimmed" mt="sm">No automated recovery actions configured.</Text>
+                                        <Button variant="subtle" size="xs" mt="md" onClick={open}>Configure Now</Button>
+                                    </Paper>
+                                ) : (
+                                    <Grid>
+                                        {(recovery_actions || []).map((action) => (
+                                            <Grid.Col key={action.id} span={{ base: 12, md: 6 }}>
+                                                <Card withBorder>
+                                                    <Group justify="space-between" mb="xs">
+                                                        <Group gap="sm">
+                                                            <ThemeIcon color="yellow" variant="light">
+                                                                <IconPlayerPlay size={16} />
+                                                            </ThemeIcon>
+                                                            <Text fw={700}>{action.name}</Text>
+                                                        </Group>
+                                                        <ActionIcon color="red" variant="subtle" onClick={() => handleDeleteRecovery(action.id)}>
+                                                            <IconTrash size={16} />
+                                                        </ActionIcon>
+                                                    </Group>
+                                                    <Stack gap={4}>
+                                                        <Text size="xs" c="dimmed">TYPE: <Badge size="xs" variant="outline">{action.type.toUpperCase()}</Badge></Text>
+                                                        <Text size="xs" c="dimmed">DELAY: <b>{action.delay_seconds} seconds</b></Text>
+                                                        {action.type === 'webhook' && (
+                                                            <Code block mt="xs" size="xs">{action.config.url}</Code>
+                                                        )}
+                                                    </Stack>
+                                                </Card>
+                                            </Grid.Col>
+                                        ))}
+                                    </Grid>
+                                )}
+                            </Stack>
+                        </Deferred>
                     </Tabs.Panel>
 
                     <Tabs.Panel value="playbook" pt="md">
@@ -929,7 +1035,7 @@ function MonitorShow({ monitor, heartbeats, incidents, stats, recovery_actions, 
                                 </Button>
                             </Group>
 
-                            {monitor.playbook ? (
+                            {monitor?.playbook ? (
                                 <Card padding="xl" withBorder radius="md">
                                     <Group justify="space-between" mb="md">
                                         <Title order={5}>{monitor.playbook.name}</Title>
@@ -961,9 +1067,10 @@ function MonitorShow({ monitor, heartbeats, incidents, stats, recovery_actions, 
                         <Select
                             label="Select Playbook"
                             placeholder="Choose a guide"
-                            data={playbooks}
-                            defaultValue={monitor.playbook_id}
+                            data={playbooks || []}
+                            defaultValue={monitor?.playbook_id}
                             onChange={(val) => {
+                                if (!monitor?.id) return;
                                 router.put(route('monitors.update', monitor.id), {
                                     ...monitor,
                                     playbook_id: val
@@ -1020,7 +1127,7 @@ function MonitorShow({ monitor, heartbeats, incidents, stats, recovery_actions, 
                             <Stack align="center" gap="xl" py="xl">
                                 <Loader size="xl" variant="bars" />
                                 <div style={{ textAlign: 'center' }}>
-                                    <Text fw={700} size="lg">Testing {monitor.name}...</Text>
+                                    <Text fw={700} size="lg">Testing {monitor?.name || 'monitor'}...</Text>
                                     <Text size="sm" c="dimmed">This might take up to 10 seconds</Text>
                                 </div>
                             </Stack>
