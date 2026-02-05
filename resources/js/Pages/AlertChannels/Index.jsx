@@ -15,8 +15,9 @@ import {
     Card,
     ThemeIcon,
 } from '@mantine/core';
-import { IconPlus, IconDots, IconEdit, IconTrash, IconMail, IconBrandSlack, IconBrandDiscord, IconBrandTelegram, IconWebhook } from '@tabler/icons-react';
+import { IconPlus, IconDots, IconEdit, IconTrash, IconMail, IconBrandSlack, IconBrandDiscord, IconBrandTelegram, IconWebhook, IconInfoCircle } from '@tabler/icons-react';
 import { notifications } from '@mantine/notifications';
+import { Alert } from '@mantine/core';
 
 function AlertChannelsIndex({ channels }) {
     const { auth } = usePage().props;
@@ -70,15 +71,23 @@ function AlertChannelsIndex({ channels }) {
                         </Text>
                     </div>
                     {auth.is_admin && (
-                    <Button
-                        component={Link}
-                        href="/alert-channels/create"
-                        leftSection={<IconPlus size={16} />}
-                    >
-                        Add Channel
-                    </Button>
+                        <Button
+                            component={Link}
+                            href="/alert-channels/create"
+                            leftSection={<IconPlus size={16} />}
+                        >
+                            Add Channel
+                        </Button>
                     )}
                 </Group>
+
+                <Alert icon={<IconInfoCircle size={16} />} title="How to connect monitors?" color="blue" variant="light">
+                    To start receiving notifications, you need to create an
+                    <Link href="/alert-rules" style={{ color: 'inherit', fontWeight: 700, margin: '0 4px' }}>
+                        Alert Rule
+                    </Link>
+                    where you can map your monitors to these channels.
+                </Alert>
 
                 <Card padding="0" radius="md">
                     <Table striped highlightOnHover>
@@ -102,13 +111,13 @@ function AlertChannelsIndex({ channels }) {
                                             </Text>
 
                                             {auth.is_admin && (
-                                            <Button
-                                                component={Link}
-                                                href="/alert-channels/create"
-                                                leftSection={<IconPlus size={16} />}
-                                            >
-                                                Add Your First Channel
-                                            </Button>
+                                                <Button
+                                                    component={Link}
+                                                    href="/alert-channels/create"
+                                                    leftSection={<IconPlus size={16} />}
+                                                >
+                                                    Add Your First Channel
+                                                </Button>
                                             )}
                                         </Stack>
                                     </Table.Td>

@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { AppShell, Burger, Group, NavLink, Avatar, Menu, Text, rem, ActionIcon, ScrollArea, Divider, ThemeIcon, Badge, Indicator } from '@mantine/core';
+import { AppShell, Burger, Group, NavLink, Avatar, Menu, Text, rem, ActionIcon, ScrollArea, Divider, ThemeIcon, Badge, Indicator, Box } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { Link, usePage, router } from '@inertiajs/react';
 import { Alert } from '@mantine/core';
@@ -263,14 +263,14 @@ function AppLayout({ children }) {
                                                 {auth.user.name.substring(0, 2).toUpperCase()}
                                             </Avatar>
                                         </Indicator>
-                                        <div style={{ flex: 1 }} visibleFrom="sm">
+                                        <Box style={{ flex: 1 }} visibleFrom="sm">
                                             <Text size="sm" fw={600} style={{ lineHeight: 1 }}>
                                                 {auth.user.name}
                                             </Text>
                                             <Text size="xs" c="dimmed" style={{ lineHeight: 1.4 }}>
                                                 {auth.user.email}
                                             </Text>
-                                        </div>
+                                        </Box>
                                     </Group>
                                 </Menu.Target>
 

@@ -21,7 +21,12 @@ class AlertChannelController extends Controller
                 'name' => $channel->name,
                 'type' => $channel->type,
                 'is_active' => $channel->is_active,
-                'monitors_count' => $channel->monitors_count,
+                'monitors_count' => \App\Models\AlertRule::whereJsonContains('channel_ids', $channel->id)
+                    ->get()
+                    ->pluck('monitor_ids')
+                    ->flatten()
+                    ->unique()
+                    ->count(),
                 'created_at' => $channel->created_at->format('M d, Y'),
             ]);
 

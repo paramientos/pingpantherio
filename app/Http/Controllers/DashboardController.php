@@ -18,38 +18,6 @@ class DashboardController extends Controller
         $user = auth()->user();
         $monitors = Monitor::accessibleBy($user)->get();
 
-        $stats = [
-            'uptime_24h' => $this->calculateGlobalUptime($monitors, 24),
-            'uptime_7d' => $this->calculateGlobalUptime($monitors, 168),
-            'avg_response' => floor(Heartbeat::whereIn('monitor_id', $monitors->pluck('id'))
-                ->where('checked_at', '>=', now()->subHours(24))
-                ->avg('response_time')),
-
-            'active_monitors' => $monitors->where('status', MonitorStatus::UP)->count(),
-            'total_monitors' => $monitors->count(),
-            'down_monitors' => $monitors->where('status', MonitorStatus::DOWN)->count(),
-            'pending_monitors' => $monitors->where('status', MonitorStatus::PENDING)->count(),
-
-            'incidents' => Incident::whereIn('monitor_id', $monitors->pluck('id'))
-                ->whereNull('resolved_at')
-                ->count(),
-
-            'incidents_24h' => Incident::whereIn('monitor_id', $monitors->pluck('id'))
-                ->where('started_at', '>=', now()->subHours(24))
-                ->count(),
-
-            'incidents_7d' => Incident::whereIn('monitor_id', $monitors->pluck('id'))
-                ->where('started_at', '>=', now()->subDays(7))
-                ->count(),
-        ];
-
-        $uptimeData = $this->getUptimeChartData($monitors, 24);
-        $responseTimeData = $this->getResponseTimeChartData($monitors, 24);
-        $monitorDistribution = $this->getMonitorDistribution($monitors);
-        $incidentTimeline = $this->getIncidentTimeline($monitors, 7);
-        $slowestMonitors = $this->getSlowestMonitors($monitors);
-        $recentIncidents = $this->getRecentIncidents($monitors);
-
         $invitations = Invitation::where('email', $user->email)
             ->where('expires_at', '>', now())
             ->with('team')
@@ -62,13 +30,36 @@ class DashboardController extends Controller
             ]);
 
         return Inertia::render('Dashboard', [
-            'stats' => $stats,
-            'uptimeData' => $uptimeData,
-            'responseTimeData' => $responseTimeData,
-            'monitorDistribution' => $monitorDistribution,
-            'incidentTimeline' => $incidentTimeline,
-            'slowestMonitors' => $slowestMonitors,
-            'recentIncidents' => $recentIncidents,
+            'stats' => Inertia::defer(fn () => [
+                'uptime_24h' => $this->calculateGlobalUptime($monitors, 24),
+                'uptime_7d' => $this->calculateGlobalUptime($monitors, 168),
+                'avg_response' => floor(Heartbeat::whereIn('monitor_id', $monitors->pluck('id'))
+                    ->where('checked_at', '>=', now()->subHours(24))
+                    ->avg('response_time')),
+
+                'active_monitors' => $monitors->where('status', MonitorStatus::UP)->count(),
+                'total_monitors' => $monitors->count(),
+                'down_monitors' => $monitors->where('status', MonitorStatus::DOWN)->count(),
+                'pending_monitors' => $monitors->where('status', MonitorStatus::PENDING)->count(),
+
+                'incidents' => Incident::whereIn('monitor_id', $monitors->pluck('id'))
+                    ->whereNull('resolved_at')
+                    ->count(),
+
+                'incidents_24h' => Incident::whereIn('monitor_id', $monitors->pluck('id'))
+                    ->where('started_at', '>=', now()->subHours(24))
+                    ->count(),
+
+                'incidents_7d' => Incident::whereIn('monitor_id', $monitors->pluck('id'))
+                    ->where('started_at', '>=', now()->subDays(7))
+                    ->count(),
+            ]),
+            'uptimeData' => Inertia::defer(fn () => $this->getUptimeChartData($monitors, 24)),
+            'responseTimeData' => Inertia::defer(fn () => $this->getResponseTimeChartData($monitors, 24)),
+            'monitorDistribution' => Inertia::defer(fn () => $this->getMonitorDistribution($monitors)),
+            'incidentTimeline' => Inertia::defer(fn () => $this->getIncidentTimeline($monitors, 7)),
+            'slowestMonitors' => Inertia::defer(fn () => $this->getSlowestMonitors($monitors)),
+            'recentIncidents' => Inertia::defer(fn () => $this->getRecentIncidents($monitors)),
             'hasTeam' => $user->teams()->exists(),
             'pendingInvitations' => $invitations,
         ]);
