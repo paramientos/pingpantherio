@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\AlertChannel;
-use App\Models\Monitor;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;

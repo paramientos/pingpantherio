@@ -23,6 +23,8 @@ import { useDisclosure } from '@mantine/hooks';
 import { router, Link, usePage } from '@inertiajs/react';
 import { IconPlus, IconDots, IconEdit, IconTrash, IconCircleCheck, IconCircleX, IconClock } from '@tabler/icons-react';
 import { notifications } from '@mantine/notifications';
+import { Deferred } from '@inertiajs/react';
+import { Skeleton } from '@mantine/core';
 import MonitorForm from '@/Components/MonitorForm';
 
 function MonitorsIndex({ monitors, escalationPolicies }) {
@@ -211,105 +213,122 @@ function MonitorsIndex({ monitors, escalationPolicies }) {
                             </Table.Tr>
                         </Table.Thead>
                         <Table.Tbody>
-                            {monitors.length === 0 ? (
-                                <Table.Tr>
-                                    <Table.Td colSpan={8} style={{ textAlign: 'center', padding: '2rem' }}>
-                                        <Text c="dimmed">No monitors yet. Create your first one!</Text>
-                                    </Table.Td>
-                                </Table.Tr>
-                            ) : (
-                                monitors.map((monitor) => (
-                                    <Table.Tr key={monitor.id}>
-                                        <Table.Td>
-                                            <Link href={`/monitors/${monitor.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                                                <Text fw={600} className="monitor-name-link" style={{ cursor: 'pointer' }}>
-                                                    {monitor.name}
-                                                </Text>
-                                            </Link>
-                                        </Table.Td>
-                                        <Table.Td>
-                                            <Text size="sm" c="dimmed" style={{ maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                                {monitor.url}
-                                            </Text>
-                                        </Table.Td>
-                                        <Table.Td>{getTypeBadge(monitor.type)}</Table.Td>
-                                        <Table.Td>{getStatusBadge(monitor.status)}</Table.Td>
-                                        <Table.Td>
-                                            <Group gap={2}>
-                                                {monitor.recent_heartbeats && monitor.recent_heartbeats.length > 0 ? (
-                                                    monitor.recent_heartbeats.slice(0, 10).reverse().map((hb, idx) => (
-                                                        <div
-                                                            key={idx}
-                                                            style={{
-                                                                width: 8,
-                                                                height: 24,
-                                                                backgroundColor: hb.is_up ? 'var(--mantine-color-green-6)' : 'var(--mantine-color-red-6)',
-                                                                borderRadius: 2,
-                                                                opacity: 0.8,
-                                                            }}
-                                                            title={`${hb.is_up ? 'Up' : 'Down'} - ${hb.checked_at}`}
-                                                        />
-                                                    ))
-                                                ) : (
-                                                    <Text size="xs" c="dimmed">No data</Text>
-                                                )}
-                                            </Group>
-                                        </Table.Td>
-                                        <Table.Td>
-                                            <Text size="sm">{monitor.interval}s</Text>
-                                        </Table.Td>
-                                        <Table.Td>
-                                            <Text size="sm" c="dimmed">
-                                                {monitor.last_checked_at || 'Never'}
-                                            </Text>
-                                        </Table.Td>
-                                        <Table.Td>
-                                            <Menu shadow="md" width={200}>
-                                                <Menu.Target>
-                                                    <ActionIcon variant="subtle" color="gray">
-                                                        <IconDots size={16} />
-                                                    </ActionIcon>
-                                                </Menu.Target>
-
-                                                <Menu.Dropdown>
-                                                    <Menu.Item
-                                                        leftSection={<IconEdit style={{ width: rem(14), height: rem(14) }} />}
-                                                        component={Link}
-                                                        href={`/monitors/${monitor.id}`}
-                                                    >
-                                                        View Details
-                                                    </Menu.Item>
-                                                    
-                                                    {auth.is_admin && (
-                                                        <>
-                                                            <Menu.Item
-                                                                leftSection={<IconEdit style={{ width: rem(14), height: rem(14) }} />}
-                                                                onClick={() => handleEdit(monitor)}
-                                                            >
-                                                                Edit
-                                                            </Menu.Item>
-                                                            <Menu.Item
-                                                                color="red"
-                                                                leftSection={<IconTrash style={{ width: rem(14), height: rem(14) }} />}
-                                                                onClick={() => handleDelete(monitor.id)}
-                                                            >
-                                                                Delete
-                                                            </Menu.Item>
-                                                        </>
-                                                    )}
-                                                </Menu.Dropdown>
-                                            </Menu>
-                                        </Table.Td>
+                            <Deferred data="monitors" fallback={
+                                Array(5).fill(0).map((_, i) => (
+                                    <Table.Tr key={i}>
+                                        <Table.Td><Skeleton height={20} radius="md" /></Table.Td>
+                                        <Table.Td><Skeleton height={20} radius="md" /></Table.Td>
+                                        <Table.Td><Skeleton height={24} width={60} radius="xl" /></Table.Td>
+                                        <Table.Td><Skeleton height={24} width={60} radius="xl" /></Table.Td>
+                                        <Table.Td><Group gap={2}>{Array(10).fill(0).map((_, j) => <Skeleton key={j} height={24} width={8} radius={2} />)}</Group></Table.Td>
+                                        <Table.Td><Skeleton height={20} width={40} radius="md" /></Table.Td>
+                                        <Table.Td><Skeleton height={20} width={100} radius="md" /></Table.Td>
+                                        <Table.Td><Skeleton height={32} width={32} radius="md" /></Table.Td>
                                     </Table.Tr>
                                 ))
-                            )}
+                            }>
+                                {monitors?.length === 0 ? (
+                                    <Table.Tr>
+                                        <Table.Td colSpan={8} style={{ textAlign: 'center', padding: '2rem' }}>
+                                            <Text c="dimmed">No monitors yet. Create your first one!</Text>
+                                        </Table.Td>
+                                    </Table.Tr>
+                                ) : (
+                                    monitors?.map((monitor) => (
+                                        <Table.Tr key={monitor.id}>
+                                            <Table.Td>
+                                                <Link href={`/monitors/${monitor.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                                                    <Text fw={600} className="monitor-name-link" style={{ cursor: 'pointer' }}>
+                                                        {monitor.name}
+                                                    </Text>
+                                                </Link>
+                                            </Table.Td>
+                                            <Table.Td>
+                                                <Text size="sm" c="dimmed" style={{ maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                    {monitor.url}
+                                                </Text>
+                                            </Table.Td>
+                                            <Table.Td>{getTypeBadge(monitor.type)}</Table.Td>
+                                            <Table.Td>{getStatusBadge(monitor.status)}</Table.Td>
+                                            <Table.Td>
+                                                <Group gap={2}>
+                                                    {monitor.recent_heartbeats && monitor.recent_heartbeats.length > 0 ? (
+                                                        monitor.recent_heartbeats.slice(0, 10).reverse().map((hb, idx) => (
+                                                            <div
+                                                                key={idx}
+                                                                style={{
+                                                                    width: 8,
+                                                                    height: 24,
+                                                                    backgroundColor: hb.is_up ? 'var(--mantine-color-green-6)' : 'var(--mantine-color-red-6)',
+                                                                    borderRadius: 2,
+                                                                    opacity: 0.8,
+                                                                }}
+                                                                title={`${hb.is_up ? 'Up' : 'Down'} - ${hb.checked_at}`}
+                                                            />
+                                                        ))
+                                                    ) : (
+                                                        <Text size="xs" c="dimmed">No data</Text>
+                                                    )}
+                                                </Group>
+                                            </Table.Td>
+                                            <Table.Td>
+                                                <Text size="sm">{monitor.interval}s</Text>
+                                            </Table.Td>
+                                            <Table.Td>
+                                                <Text size="sm" c="dimmed">
+                                                    {monitor.last_checked_at || 'Never'}
+                                                </Text>
+                                            </Table.Td>
+                                            <Table.Td>
+                                                <Menu shadow="md" width={200}>
+                                                    <Menu.Target>
+                                                        <ActionIcon variant="subtle" color="gray">
+                                                            <IconDots size={16} />
+                                                        </ActionIcon>
+                                                    </Menu.Target>
+
+                                                    <Menu.Dropdown>
+                                                        <Menu.Item
+                                                            leftSection={<IconEdit style={{ width: rem(14), height: rem(14) }} />}
+                                                            component={Link}
+                                                            href={`/monitors/${monitor.id}`}
+                                                        >
+                                                            View Details
+                                                        </Menu.Item>
+
+                                                        {auth.is_admin && (
+                                                            <>
+                                                                <Menu.Item
+                                                                    leftSection={<IconEdit style={{ width: rem(14), height: rem(14) }} />}
+                                                                    onClick={() => handleEdit(monitor)}
+                                                                >
+                                                                    Edit
+                                                                </Menu.Item>
+                                                                <Menu.Item
+                                                                    color="red"
+                                                                    leftSection={<IconTrash style={{ width: rem(14), height: rem(14) }} />}
+                                                                    onClick={() => handleDelete(monitor.id)}
+                                                                >
+                                                                    Delete
+                                                                </Menu.Item>
+                                                            </>
+                                                        )}
+                                                    </Menu.Dropdown>
+                                                </Menu>
+                                            </Table.Td>
+                                        </Table.Tr>
+                                    ))
+                                )}
+                            </Deferred>
                         </Table.Tbody>
                     </Table>
                 </Paper>
             </Stack>
 
             <Modal opened={createOpened} onClose={closeCreate} title="Create Monitor" size="lg">
-                <MonitorForm form={createForm} onSubmit={handleCreate} submitLabel="Create Monitor" escalationPolicies={escalationPolicies} />
+                <Deferred data="escalationPolicies" fallback={<Skeleton height={300} radius="md" />}>
+                    <MonitorForm form={createForm} onSubmit={handleCreate} submitLabel="Create Monitor" escalationPolicies={escalationPolicies} />
+                </Deferred>
             </Modal>
 
             <Modal opened={editOpened} onClose={closeEdit} title="Edit Monitor" size="lg">

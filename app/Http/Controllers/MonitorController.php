@@ -15,39 +15,35 @@ class MonitorController extends Controller
     {
         $user = auth()->user();
 
-        $query = Monitor::accessibleBy($user)->with(['user', 'heartbeats' => function ($query) {
-            $query->latest()->limit(10);
-        }]);
-
-        $monitors = $query->latest()
-            ->get()
-            ->map(fn (Monitor $monitor) => [
-                'id' => $monitor->getKey(),
-                'name' => $monitor->name,
-                'url' => $monitor->url,
-                'type' => $monitor->type,
-                'status' => $monitor->status->value,
-                'interval' => $monitor->interval,
-                'check_ssl' => $monitor->check_ssl,
-                'ssl_expires_at' => $monitor->ssl_expires_at?->format('Y-m-d'),
-                'ssl_days_until_expiry' => $monitor->ssl_days_until_expiry,
-                'ssl_issuer' => $monitor->ssl_issuer,
-                'uuid' => $monitor->uuid,
-                'last_ping_at' => $monitor->last_ping_at?->diffForHumans(),
-                'last_checked_at' => $monitor->last_checked_at?->diffForHumans(),
-                'created_at' => $monitor->created_at->format('M d, Y'),
-                'recent_heartbeats' => $monitor->heartbeats->map(fn ($h) => [
-                    'is_up' => $h->is_up,
-                    'checked_at' => $h->checked_at?->format('Y-m-d H:i:s'),
-                ]),
-            ]);
-
         return Inertia::render('Monitors/Index', [
-            'monitors' => $monitors,
-            'escalationPolicies' => \App\Models\EscalationPolicy::where('user_id', auth()->id())->get()->map(fn ($p) => [
+            'monitors' => Inertia::defer(fn () => Monitor::accessibleBy($user)
+                ->with(['user', 'heartbeats' => fn ($q) => $q->latest()->limit(10)])
+                ->latest()
+                ->get()
+                ->map(fn (Monitor $monitor) => [
+                    'id' => $monitor->getKey(),
+                    'name' => $monitor->name,
+                    'url' => $monitor->url,
+                    'type' => $monitor->type,
+                    'status' => $monitor->status->value,
+                    'interval' => $monitor->interval,
+                    'check_ssl' => $monitor->check_ssl,
+                    'ssl_expires_at' => $monitor->ssl_expires_at?->format('Y-m-d'),
+                    'ssl_days_until_expiry' => $monitor->ssl_days_until_expiry,
+                    'ssl_issuer' => $monitor->ssl_issuer,
+                    'uuid' => $monitor->uuid,
+                    'last_ping_at' => $monitor->last_ping_at?->diffForHumans(),
+                    'last_checked_at' => $monitor->last_checked_at?->diffForHumans(),
+                    'created_at' => $monitor->created_at->format('M d, Y'),
+                    'recent_heartbeats' => $monitor->heartbeats->map(fn ($h) => [
+                        'is_up' => $h->is_up,
+                        'checked_at' => $h->checked_at?->format('Y-m-d H:i:s'),
+                    ]),
+                ])),
+            'escalationPolicies' => Inertia::defer(fn () => \App\Models\EscalationPolicy::where('user_id', auth()->id())->get()->map(fn ($p) => [
                 'value' => $p->id,
                 'label' => $p->name,
-            ]),
+            ])),
         ]);
     }
 
@@ -65,14 +61,8 @@ class MonitorController extends Controller
             }
         }
 
-        $monitor->load(['heartbeats' => function ($query) {
-            $query->latest()->limit(100);
-        }, 'incidents' => function ($query) {
-            $query->with('updates')->latest()->limit(20);
-        }, 'playbook']);
-
         return Inertia::render('Monitors/Show', [
-            'monitor' => [
+            'monitor' => Inertia::defer(fn () => [
                 'id' => $monitor->getKey(),
                 'name' => $monitor->name,
                 'url' => $monitor->url,
@@ -94,16 +84,16 @@ class MonitorController extends Controller
                 'playbook_id' => $monitor->playbook_id,
                 'playbook' => $monitor->playbook,
                 'created_at' => $monitor->created_at->format('M d, Y'),
-            ],
-            'heartbeats' => $monitor->heartbeats->map(fn ($h) => [
+            ]),
+            'heartbeats' => Inertia::defer(fn () => $monitor->heartbeats()->latest()->limit(100)->get()->map(fn ($h) => [
                 'id' => $h->getKey(),
                 'is_up' => $h->is_up,
                 'status_code' => $h->status_code,
                 'response_time' => $h->response_time,
                 'error' => $h->error,
                 'checked_at' => $h->checked_at?->format('Y-m-d H:i:s'),
-            ]),
-            'incidents' => $monitor->incidents->map(fn ($i) => [
+            ])),
+            'incidents' => Inertia::defer(fn () => $monitor->incidents()->with('updates')->latest()->limit(20)->get()->map(fn ($i) => [
                 'id' => $i->getKey(),
                 'started_at' => $i->started_at->format('Y-m-d H:i:s'),
                 'resolved_at' => $i->resolved_at?->format('Y-m-d H:i:s'),
@@ -119,33 +109,33 @@ class MonitorController extends Controller
                     'is_public' => $u->is_public,
                     'created_at' => $u->created_at->format('Y-m-d H:i:s'),
                 ]),
-            ]),
-            'stats' => [
+            ])),
+            'stats' => Inertia::defer(fn () => [
                 'uptime_24h' => $this->calculateUptime($monitor, 24),
                 'uptime_7d' => $this->calculateUptime($monitor, 168),
                 'uptime_30d' => $this->calculateUptime($monitor, 720),
-                'avg_response_time' => $monitor->heartbeats()->avg('response_time'),
+                'avg_response_time' => round($monitor->heartbeats()->avg('response_time'), 2),
                 'total_incidents' => $monitor->incidents()->count(),
                 'active_incidents' => $monitor->incidents()->whereNull('resolved_at')->count(),
-            ],
-            'recovery_actions' => $monitor->recoveryActions->map(fn ($ra) => [
+            ]),
+            'recovery_actions' => Inertia::defer(fn () => $monitor->recoveryActions->map(fn ($ra) => [
                 'id' => $ra->id,
                 'name' => $ra->name,
                 'type' => $ra->type,
                 'config' => $ra->config,
                 'delay_seconds' => $ra->delay_seconds,
                 'is_active' => $ra->is_active,
-            ]),
-            'escalationPolicies' => \App\Models\EscalationPolicy::where('user_id', auth()->id())->get()->map(fn ($p) => [
+            ])),
+            'escalationPolicies' => Inertia::defer(fn () => \App\Models\EscalationPolicy::where('user_id', auth()->id())->get()->map(fn ($p) => [
                 'value' => $p->id,
                 'label' => $p->name,
-            ]),
-            'playbooks' => \App\Models\Playbook::where('user_id', auth()->id())->get()->map(fn ($p) => [
+            ])),
+            'playbooks' => Inertia::defer(fn () => \App\Models\Playbook::where('user_id', auth()->id())->get()->map(fn ($p) => [
                 'value' => $p->id,
                 'label' => $p->name,
-            ]),
-            'responseDistribution' => $this->getResponseDistribution($monitor),
-            'uptimeTrend' => $this->getUptimeTrend($monitor, 7),
+            ])),
+            'responseDistribution' => Inertia::defer(fn () => $this->getResponseDistribution($monitor)),
+            'uptimeTrend' => Inertia::defer(fn () => $this->getUptimeTrend($monitor, 7)),
             'isReadOnly' => $user->role->isUser(),
         ]);
     }
