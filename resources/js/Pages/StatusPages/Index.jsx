@@ -21,7 +21,8 @@ import { notifications } from '@mantine/notifications';
 
 function StatusPagesIndex({ statusPages }) {
     const { auth } = usePage().props;
-    
+    const isReadOnly = !auth.is_admin;
+
     const handleDelete = (id) => {
         if (confirm('Are you sure you want to delete this status page?')) {
             router.delete(`/status-pages/${id}`, {
@@ -82,13 +83,13 @@ function StatusPagesIndex({ statusPages }) {
                                             </Text>
 
                                             {auth.is_admin && (
-                                            <Button
-                                                component={Link}
-                                                href="/status-pages/create"
-                                                leftSection={<IconPlus size={16} />}
-                                            >
-                                                Create Your First Status Page
-                                            </Button>
+                                                <Button
+                                                    component={Link}
+                                                    href="/status-pages/create"
+                                                    leftSection={<IconPlus size={16} />}
+                                                >
+                                                    Create Your First Status Page
+                                                </Button>
                                             )}
                                         </Stack>
                                     </Table.Td>
