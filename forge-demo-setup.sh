@@ -15,8 +15,8 @@ if [ -f "$APP_LAYOUT" ]; then
     $content = file_get_contents($path);
     $alertCode = "                <Alert
                     variant=\"filled\"
-                    color=\"red\"
-                    title=\"Demo Modu Aktif\"
+                    color=\"yellow\"
+                    title=\"Demo Mode Active\"
                     icon={<IconAlertTriangle />}
                     mb=\"lg\"
                     radius=\"md\"
@@ -25,7 +25,7 @@ if [ -f "$APP_LAYOUT" ]; then
                         root: { border: \"none\" }
                     }}
                 >
-                    PingPanther şu anda demo modundadır. Güvenlik ve denetim gerekçesiyle; kullanıcı oluşturma, şifre değiştirme, API anahtarı yönetimi ve veri silme işlemleri veritabanı seviyesinde kısıtlanmıştır.
+                    PingPanther is currently in demo mode. For security and auditing reasons; account registration, password changes, API key management, and data deletion are restricted at the database level.
                 </Alert>";
     
     $newContent = str_replace("{/* DEMO_MODE_ALERT_PLACEHOLDER */}", $alertCode, $content);
