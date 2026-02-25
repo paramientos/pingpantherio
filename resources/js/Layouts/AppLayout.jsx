@@ -352,6 +352,7 @@ function AppLayout({ children }) {
             </AppShell.Navbar>
 
             <AppShell.Main>
+                {/* DEMO_MODE_ALERT_PLACEHOLDER */}
                 {auth.user && auth.user.role !== 'admin' && !auth.has_team && (
                     <Alert variant="light" color="orange" title="Access Restricted" icon={<IconAlertTriangle />} mb="md" withCloseButton={false}>
                         You are not a member of any team. To access the system fully, you must be added to a team by an administrator.
