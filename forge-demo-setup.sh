@@ -3,74 +3,105 @@
 cd "$(dirname "$0")"
 
 echo "------------------------------------------------------------"
-echo "🚀 Running Demo Protection Setup..."
+echo "🎨 Injecting UI Demo Alert..."
 echo "------------------------------------------------------------"
 
+# UI Injection: Add the React Alert to AppLayout.jsx
+# Note: This should be run BEFORE 'npm run build' in Forge
+APP_LAYOUT="resources/js/Layouts/AppLayout.jsx"
+if [ -f "$APP_LAYOUT" ]; then
+    php -r '
+    $path = "resources/js/Layouts/AppLayout.jsx";
+    $content = file_get_contents($path);
+    $alertCode = "                <Alert
+                    variant=\"filled\"
+                    color=\"red\"
+                    title=\"Demo Modu Aktif\"
+                    icon={<IconAlertTriangle />}
+                    mb=\"lg\"
+                    radius=\"md\"
+                    styles={{
+                        title: { fontWeight: 900, fontSize: \"1.1rem\" },
+                        root: { border: \"none\" }
+                    }}
+                >
+                    PingPanther şu anda demo modundadır. Güvenlik ve denetim gerekçesiyle; kullanıcı oluşturma, şifre değiştirme, API anahtarı yönetimi ve veri silme işlemleri veritabanı seviyesinde kısıtlanmıştır.
+                </Alert>";
+    
+    $newContent = str_replace("{/* DEMO_MODE_ALERT_PLACEHOLDER */}", $alertCode, $content);
+    file_put_contents($path, $newContent);
+    '
+    echo "✅ UI Alert injected into AppLayout.jsx"
+else
+    echo "⚠️  AppLayout.jsx not found, skipping UI injection."
+fi
 
-php artisan pp:create-admin admin@pingpanther.io password --with-demo 2>/dev/null || echo "ℹ️ Admin user admin@pingpanther.io already exists or command failed."
+echo "------------------------------------------------------------"
+echo "🚀 Running Strict Demo Protection Setup..."
+echo "------------------------------------------------------------"
 
-# This ensures that even if someone tries to delete or change password via UI/API, 
-# the database level protection will block it.
+# 1. Ensure the demo admin user exists before applying triggers
+# This password 'password' is used as requested.
+php artisan pp:create-admin admin@pingpanther.io password --with-demo 2>/dev/null || echo "ℹ️ Admin user admin@pingpanther.io checked."
+
+# 2. Apply Strict PostgreSQL Triggers
 php artisan tinker << 'EOF'
 try {
     DB::unprepared("
-        -- 1. Prevent Admin User Deletion
-        CREATE OR REPLACE FUNCTION prevent_admin_delete()
+        -- Function: Block everything (Insert, Update, Delete)
+        CREATE OR REPLACE FUNCTION block_all_modifications()
         RETURNS TRIGGER AS \$\$
         BEGIN
-            IF OLD.email = 'admin@pingpanther.io' THEN
-                RAISE EXCEPTION 'Demo admin user cannot be deleted';
-            END IF;
-            RETURN OLD;
+            RAISE EXCEPTION 'This action is disabled in demo mode.';
         END;
         \$\$ LANGUAGE plpgsql;
 
-        DROP TRIGGER IF EXISTS trg_prevent_admin_delete ON users;
-        CREATE TRIGGER trg_prevent_admin_delete
-        BEFORE DELETE ON users
-        FOR EACH ROW EXECUTE FUNCTION prevent_admin_delete();
-
-        -- 2. Prevent Admin Password or Email Change
-        CREATE OR REPLACE FUNCTION prevent_admin_sensitive_update()
+        -- Function: Block only deletion
+        CREATE OR REPLACE FUNCTION block_deletion()
         RETURNS TRIGGER AS \$\$
         BEGIN
-            IF OLD.email = 'admin@pingpanther.io' AND (NEW.password IS DISTINCT FROM OLD.password OR NEW.email IS DISTINCT FROM OLD.email) THEN
-                RAISE EXCEPTION 'Demo admin credentials cannot be changed';
-            END IF;
-            RETURN NEW;
+            RAISE EXCEPTION 'Deletion is disabled in demo mode.';
         END;
         \$\$ LANGUAGE plpgsql;
 
-        DROP TRIGGER IF EXISTS trg_prevent_admin_sensitive_update ON users;
-        CREATE TRIGGER trg_prevent_admin_sensitive_update
-        BEFORE UPDATE ON users
-        FOR EACH ROW EXECUTE FUNCTION prevent_admin_sensitive_update();
+        -- A. FULL LOCK: Users, API Keys, Webhooks
+        -- Users: Prevent registration, profile updates, and deletion
+        DROP TRIGGER IF EXISTS trg_users_lock ON users;
+        CREATE TRIGGER trg_users_lock
+        BEFORE INSERT OR UPDATE OR DELETE ON users
+        FOR EACH ROW EXECUTE FUNCTION block_all_modifications();
 
-        -- 3. Prevent Deletion of Monitors
-        CREATE OR REPLACE FUNCTION prevent_delete_in_demo()
-        RETURNS TRIGGER AS \$\$
-        BEGIN
-            RAISE EXCEPTION 'Deletion is disabled in demo mode';
-        END;
-        \$\$ LANGUAGE plpgsql;
+        -- API Keys: Prevent creation, editing, and deletion
+        DROP TRIGGER IF EXISTS trg_api_keys_lock ON api_keys;
+        CREATE TRIGGER trg_api_keys_lock
+        BEFORE INSERT OR UPDATE OR DELETE ON api_keys
+        FOR EACH ROW EXECUTE FUNCTION block_all_modifications();
 
-        DROP TRIGGER IF EXISTS trg_prevent_monitors_delete ON monitors;
-        CREATE TRIGGER trg_prevent_monitors_delete
+        -- Webhooks: Prevent creation, editing, and deletion
+        DROP TRIGGER IF EXISTS trg_webhooks_lock ON webhooks;
+        CREATE TRIGGER trg_webhooks_lock
+        BEFORE INSERT OR UPDATE OR DELETE ON webhooks
+        FOR EACH ROW EXECUTE FUNCTION block_all_modifications();
+
+        -- B. DELETE LOCK: Monitors, Status Pages
+        -- Monitors: Prevent deletion
+        DROP TRIGGER IF EXISTS trg_monitors_delete_lock ON monitors;
+        CREATE TRIGGER trg_monitors_delete_lock
         BEFORE DELETE ON monitors
-        FOR EACH ROW EXECUTE FUNCTION prevent_delete_in_demo();
+        FOR EACH ROW EXECUTE FUNCTION block_deletion();
 
-        -- 4. Prevent Deletion of Status Pages
-        DROP TRIGGER IF EXISTS trg_prevent_status_pages_delete ON status_pages;
-        CREATE TRIGGER trg_prevent_status_pages_delete
+        -- Status Pages: Prevent deletion
+        DROP TRIGGER IF EXISTS trg_status_pages_delete_lock ON status_pages;
+        CREATE TRIGGER trg_status_pages_delete_lock
         BEFORE DELETE ON status_pages
-        FOR EACH ROW EXECUTE FUNCTION prevent_delete_in_demo();
+        FOR EACH ROW EXECUTE FUNCTION block_deletion();
     ");
-    echo "✅ Demo protection triggers applied successfully.\n";
+    echo "✅ Strict demo protection triggers applied successfully.\n";
 } catch (\Exception $e) {
     echo "❌ Error applying triggers: " . $e->getMessage() . "\n";
 }
 EOF
 
 echo "------------------------------------------------------------"
-echo "✅ Demo Setup Complete!"
+echo "✅ Strict Demo Setup Complete!"
 echo "------------------------------------------------------------"
