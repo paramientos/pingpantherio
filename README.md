@@ -31,31 +31,47 @@
 
 ## 📦 Quick Start with Docker
 
-The fastest way to get PingPanther running is using Docker Compose.
+### Method 1: Automated Setup (Recommended)
+
+The fastest way to get PingPanther running is using our `dockerize.sh` script.
 
 ```bash
 # 1. Clone the repo
 git clone https://github.com/paramientos/pingpantherio.git
 cd pingpantherio
 
-# 2. Setup environment
-cp .env.example .env
-# Edit .env with your configuration
+# 2. Run the setup script
+chmod +x dockerize.sh
+./dockerize.sh
+```
 
-# 3. Start PingPanther
-docker-compose up -d
+### Method 2: Manual Setup
+
+If you prefer to run the commands manually:
+
+```bash
+# 1. Clone and setup environment
+git clone https://github.com/paramientos/pingpantherio.git
+cd pingpantherio
+cp .env.example .env
+
+# 2. Generate key and edit .env with your configuration
+# Make sure to set DB_PASSWORD and REDIS_PASSWORD
+
+# 3. Start containers
+docker compose up -d
 ```
 
 Detailed installation instructions can be found in the [Documentation](docs/installation.md).
 
 #### 🔄 Rebuilding (Clean Build)
 
-If you need to rebuild from scratch (e.g., after Dockerfile or entrypoint changes):
+To rebuild from scratch:
 
 ```bash
-docker compose down
-docker compose build --no-cache
-docker compose up -d
+./dockerize.sh
+# OR
+docker compose down && docker compose build --no-cache && docker compose up -d
 ```
 
 ---

@@ -37,37 +37,53 @@ The installer will interactively prompt you for:
 
 ## 🐋 Docker Installation
 
-If you prefer containerized environments, you can use our Docker setup.
+### Option 1: Automated Setup (Recommended)
 
-### Prerequisites
-- Docker & Docker Compose installed.
+Use our `dockerize.sh` script for a fully automated setup that handles environment variables and security keys.
 
-### Steps
+```bash
+# Clone and run
+git clone https://github.com/paramientos/pingpantherio.git
+cd pingpantherio
+chmod +x dockerize.sh
+./dockerize.sh
+```
+
+**What this script does:**
+1.  **Environment Setup:** Creates a `.env` file from `.env.example` if it doesn't exist.
+2.  **Security:** Automatically generates secure `APP_KEY`, `DB_PASSWORD`, and `REDIS_PASSWORD`.
+3.  **Configuration:** Sets default Docker-compatible values for database and redis hosts.
+4.  **Deployment:** Builds the images without cache and starts all containers.
+
+### Option 2: Manual Setup
+
+For more control, you can perform the steps manually:
+
 1. **Clone the repository:**
    ```bash
    git clone https://github.com/paramientos/pingpantherio.git
-   cd pingpanther
+   cd pingpantherio
    ```
 
 2. **Configure Environment:**
    ```bash
    cp .env.example .env
-   # Edit .env with your domain and database credentials
+   # Open .env and set your DB_PASSWORD and REDIS_PASSWORD
    ```
 
 3. **Deploy:**
    ```bash
-   docker-compose up -d
+   docker compose up -d
    ```
 
 ### 🔄 Rebuilding Containers
 
-If you modify `Dockerfile`, `entrypoint.sh`, or need a clean rebuild:
+To clean rebuild the containers:
 
 ```bash
-docker compose down
-docker compose build --no-cache
-docker compose up -d
+./dockerize.sh
+# OR
+docker compose down && docker compose build --no-cache && docker compose up -d
 ```
 
 ---
