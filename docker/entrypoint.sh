@@ -6,8 +6,9 @@ if [ -z "$APP_KEY" ]; then
     echo "APP_KEY not set, generating new key..."
     APP_KEY=$(php artisan key:generate --show --no-interaction 2>/dev/null | tail -1)
     if [ -n "$APP_KEY" ]; then
+        # Update APP_KEY in .env file (works with mounted files)
         if grep -q "^APP_KEY=" /app/.env 2>/dev/null; then
-            sed -i "s/^APP_KEY=.*/APP_KEY=$APP_KEY/" /app/.env
+            awk -v key="$APP_KEY" '/^APP_KEY=/{print "APP_KEY=" key; next}1' /app/.env > /tmp/.env.tmp && cat /tmp/.env.tmp > /app/.env && rm /tmp/.env.tmp
         else
             echo "APP_KEY=$APP_KEY" >> /app/.env
         fi
