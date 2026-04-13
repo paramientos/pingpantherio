@@ -39,8 +39,9 @@ The installer will interactively prompt you for:
 
 ### Option 1: Automated Setup (Recommended)
 
-Use our `dockerize.sh` script for a fully automated setup that handles environment variables and security keys.
+Use our setup scripts for a fully automated setup that handles environment variables and security keys.
 
+#### 🍎 Linux / macOS
 ```bash
 # Clone and run
 git clone https://github.com/paramientos/pingpantherio.git
@@ -49,7 +50,15 @@ chmod +x dockerize.sh
 ./dockerize.sh
 ```
 
-**What this script does:**
+#### 🪟 Windows
+```powershell
+# Clone and run
+git clone https://github.com/paramientos/pingpantherio.git
+cd pingpantherio
+.\dockerize.ps1
+```
+
+**What these scripts do:**
 1.  **Environment Setup:** Creates a `.env` file from `.env.example` if it doesn't exist.
 2.  **Security:** Automatically generates secure `APP_KEY`, `DB_PASSWORD`, and `REDIS_PASSWORD`.
 3.  **Configuration:** Sets default Docker-compatible values for database and redis hosts.

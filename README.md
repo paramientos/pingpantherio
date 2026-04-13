@@ -33,8 +33,9 @@
 
 ### Method 1: Automated Setup (Recommended)
 
-The fastest way to get PingPanther running is using our `dockerize.sh` script.
+The fastest way to get PingPanther running is using our setup scripts.
 
+#### 🍎 Linux / macOS
 ```bash
 # 1. Clone the repo
 git clone https://github.com/paramientos/pingpantherio.git
@@ -43,6 +44,16 @@ cd pingpantherio
 # 2. Run the setup script
 chmod +x dockerize.sh
 ./dockerize.sh
+```
+
+#### 🪟 Windows
+```powershell
+# 1. Clone the repo
+git clone https://github.com/paramientos/pingpantherio.git
+cd pingpantherio
+
+# 2. Run the setup script
+.\dockerize.ps1
 ```
 
 ### Method 2: Manual Setup
