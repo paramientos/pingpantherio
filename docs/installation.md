@@ -60,6 +60,16 @@ If you prefer containerized environments, you can use our Docker setup.
    docker-compose up -d
    ```
 
+### 🔄 Rebuilding Containers
+
+If you modify `Dockerfile`, `entrypoint.sh`, or need a clean rebuild:
+
+```bash
+docker compose down
+docker compose build --no-cache
+docker compose up -d
+```
+
 ---
 
 ## 🛠 Post-Installation

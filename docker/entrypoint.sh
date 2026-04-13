@@ -1,10 +1,22 @@
 #!/bin/bash
 set -e
 
-# Check if APP_KEY is set
+# Check if APP_KEY is set, generate if empty
 if [ -z "$APP_KEY" ]; then
-    echo "ERROR: APP_KEY is not set. Please set it in your environment variables."
-    exit 1
+    echo "APP_KEY not set, generating new key..."
+    APP_KEY=$(php artisan key:generate --show --no-interaction 2>/dev/null | tail -1)
+    if [ -n "$APP_KEY" ]; then
+        if grep -q "^APP_KEY=" /app/.env 2>/dev/null; then
+            sed -i "s/^APP_KEY=.*/APP_KEY=$APP_KEY/" /app/.env
+        else
+            echo "APP_KEY=$APP_KEY" >> /app/.env
+        fi
+        export APP_KEY
+        echo "Generated and saved APP_KEY to .env"
+    else
+        echo "ERROR: Failed to generate APP_KEY"
+        exit 1
+    fi
 fi
 
 # Cache configuration, routes, and views

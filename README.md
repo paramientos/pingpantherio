@@ -48,6 +48,16 @@ docker-compose up -d
 
 Detailed installation instructions can be found in the [Documentation](docs/installation.md).
 
+#### 🔄 Rebuilding (Clean Build)
+
+If you need to rebuild from scratch (e.g., after Dockerfile or entrypoint changes):
+
+```bash
+docker compose down
+docker compose build --no-cache
+docker compose up -d
+```
+
 ---
 
 ## 📖 Documentation

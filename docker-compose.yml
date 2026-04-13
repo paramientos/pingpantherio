@@ -32,6 +32,7 @@ services:
       - pingpanther-network
     volumes:
       - ./.env:/app/.env
+      - ./docker/entrypoint.sh:/usr/local/bin/entrypoint.sh:ro
       - pingpanther-storage:/app/storage
 
   worker:
@@ -60,6 +61,7 @@ services:
       - pingpanther-network
     volumes:
       - ./.env:/app/.env
+      - ./docker/entrypoint.sh:/usr/local/bin/entrypoint.sh:ro
       - pingpanther-storage:/app/storage
 
   scheduler:
@@ -88,6 +90,7 @@ services:
       - pingpanther-network
     volumes:
       - ./.env:/app/.env
+      - ./docker/entrypoint.sh:/usr/local/bin/entrypoint.sh:ro
       - pingpanther-storage:/app/storage
 
   postgres:
