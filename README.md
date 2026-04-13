@@ -35,7 +35,7 @@ The fastest way to get PingPanther running is using Docker Compose.
 
 ```bash
 # 1. Clone the repo
-git clone https://github.com/yourusername/pingpantherio.git
+git clone https://github.com/paramientos/pingpantherio.git
 cd pingpantherio
 
 # 2. Setup environment
