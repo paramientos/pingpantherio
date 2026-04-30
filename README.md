@@ -31,6 +31,16 @@
 
 ## 📦 Quick Start with Docker
 
+### System Requirements
+
+| | Minimum | Recommended |
+|---|---|---|
+| **RAM** | 2GB | 4GB |
+| **CPU** | 1 core | 2 cores |
+| **Disk** | 10GB | 20GB |
+
+> For high-traffic setups or long data retention, consider 40GB+ disk space.
+
 ### Method 1: Automated Setup (Recommended)
 
 The fastest way to get PingPanther running is using our setup scripts.
