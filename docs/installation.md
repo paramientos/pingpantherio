@@ -8,10 +8,12 @@ The easiest way to get PingPanther running on a fresh **Ubuntu 24.04 LTS** serve
 
 ### Requirements
 - A fresh Ubuntu 24.04 LTS server.
-- **Minimum:** 2GB RAM, 1 CPU core
-- **Recommended:** 4GB RAM, 2 CPU cores
+- **Minimum:** 2GB RAM, 1 CPU core, **10GB disk space**
+- **Recommended:** 4GB RAM, 2 CPU cores, **20GB disk space**
 - Root access (sudo is not enough).
 - A domain name (e.g., `status.example.com`) pointing to your server's IP (optional, for SSL).
+
+> **💡 Disk Space Note:** The base installation (OS, PHP, Nginx, PostgreSQL, Redis, app) requires ~3–4GB. The remaining space is used for application logs, database growth, and monitor history. For high-traffic setups or long data retention, consider 40GB+.
 
 ### Installation
 Run the following command as root:
@@ -36,6 +38,13 @@ The installer will interactively prompt you for:
 ---
 
 ## 🐋 Docker Installation
+
+### Requirements
+- Docker Engine 24+ and Docker Compose v2+
+- **Minimum:** 2GB RAM, 1 CPU core, **10GB disk space**
+- **Recommended:** 4GB RAM, 2 CPU cores, **20GB disk space**
+
+> **💡 Disk Space Note:** Docker images, volumes (PostgreSQL data, Redis), and application files require ~3–5GB initially. Allocate additional space based on the number of monitors and your data retention needs.
 
 ### Option 1: Automated Setup (Recommended)
 
