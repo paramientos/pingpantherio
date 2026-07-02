@@ -1,0 +1,118 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: __APP__
+  namespace: __NAMESPACE__
+spec:
+  type: ClusterIP
+  selector:
+    app: __APP__
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: __APP__
+  namespace: __NAMESPACE__
+  annotations:
+    secret.reloader.stakater.com/reload: "vitayou-tools-status-env"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: __APP__
+  template:
+    metadata:
+      labels:
+        app: __APP__
+    spec:
+      containers:
+        - name: __APP__
+          image: __REPO__:__VERSION__
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+          envFrom:
+            - secretRef:
+                name: vitayou-tools-status-env
+          env:
+            - name: RUN_MIGRATIONS
+              value: "true"
+          resources:
+            requests:
+              memory: "__REQUESTMEMORY__"
+              cpu: "__REQUESTCPU__"
+            limits:
+              memory: "__LIMITMEMORY__"
+              cpu: "__LIMITCPU__"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: __APP__-worker
+  namespace: __NAMESPACE__
+  annotations:
+    secret.reloader.stakater.com/reload: "vitayou-tools-status-env"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: __APP__-worker
+  template:
+    metadata:
+      labels:
+        app: __APP__-worker
+    spec:
+      containers:
+        - name: __APP__-worker
+          image: __REPO__:__VERSION__
+          imagePullPolicy: Always
+          args:
+            - worker
+          envFrom:
+            - secretRef:
+                name: vitayou-tools-status-env
+          resources:
+            requests:
+              memory: "__REQUESTMEMORY__"
+              cpu: "__REQUESTCPU__"
+            limits:
+              memory: "__LIMITMEMORY__"
+              cpu: "__LIMITCPU__"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: __APP__-scheduler
+  namespace: __NAMESPACE__
+  annotations:
+    secret.reloader.stakater.com/reload: "vitayou-tools-status-env"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: __APP__-scheduler
+  template:
+    metadata:
+      labels:
+        app: __APP__-scheduler
+    spec:
+      containers:
+        - name: __APP__-scheduler
+          image: __REPO__:__VERSION__
+          imagePullPolicy: Always
+          args:
+            - scheduler
+          envFrom:
+            - secretRef:
+                name: vitayou-tools-status-env
+          resources:
+            requests:
+              memory: "__REQUESTMEMORY__"
+              cpu: "__REQUESTCPU__"
+            limits:
+              memory: "__LIMITMEMORY__"
+              cpu: "__LIMITCPU__"
