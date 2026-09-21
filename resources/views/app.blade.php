@@ -8,7 +8,7 @@
                 var nanolytica = document.createElement('script');
                 nanolytica.src = 'https://nanolytica.org/nanolytica.js';
                 nanolytica.defer = true;
-                nanolytica.setAttribute('data-site-id', '62ae56b7-86d0-4b45-bdf2-ad0c72a72a85');
+                nanolytica.setAttribute('data-site-id', '3e0108c5-5baf-45de-9546-ee7f2841fd9c');
                 document.head.appendChild(nanolytica);
                 @endproduction
             }
