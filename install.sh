@@ -349,14 +349,14 @@ else
     echo -e "${YELLOW}⚠ Login file not found, skipping demo removal${NC}"
 fi
 
-# Remove Umami Analytics script for production
+# Remove analytics script for production
 echo -e "${YELLOW}Removing analytics script for production...${NC}"
 
 APP_BLADE="$INSTALL_DIR/resources/views/app.blade.php"
 if [ -f "$APP_BLADE" ]; then
-    # Remove Umami Analytics comment and script tag
-    sed -i '/<!-- Umami Analytics -->/,/<\/script>/d' "$APP_BLADE"
-    
+    # Remove the entire <script> block containing the analytics loader (nanolytica/umami)
+    perl -0777 -pi -e 's/[ \t]*<script>[^\n]*\n(?:(?!<\/script>).)*?(nanolytica|umami)(?:(?!<\/script>).)*?<\/script>\n?//s' "$APP_BLADE"
+
     echo -e "${GREEN}✓ Analytics script removed${NC}"
 else
     echo -e "${YELLOW}⚠ app.blade.php not found, skipping analytics removal${NC}"
