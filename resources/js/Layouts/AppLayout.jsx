@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
-import { AppShell, Burger, Group, NavLink, Avatar, Menu, Text, rem, ActionIcon, ScrollArea, Divider, ThemeIcon, Badge, Indicator, Box } from '@mantine/core';
-import { useDisclosure } from '@mantine/hooks';
+import { AppShell, Burger, Group, NavLink, Avatar, Menu, Text, rem, ActionIcon, ScrollArea, Divider, ThemeIcon, Indicator, Box, UnstyledButton } from '@mantine/core';
+import { useDisclosure, useMediaQuery, useViewportSize } from '@mantine/hooks';
 import { Link, usePage, router } from '@inertiajs/react';
 import { Alert } from '@mantine/core';
 import {
@@ -20,8 +20,6 @@ import {
     IconWorld,
     IconHistory,
     IconWebhook,
-    IconSun,
-    IconMoon,
     IconSearch,
     IconShieldCheck,
     IconTarget,
@@ -37,9 +35,22 @@ import { Spotlight, spotlight } from '@mantine/spotlight';
 import '@mantine/spotlight/styles.css';
 
 function AppLayout({ children }) {
-    const [opened, { toggle }] = useDisclosure();
+    const [opened, { toggle, close: closeNavbar }] = useDisclosure();
+    const [accountMenuOpened, setAccountMenuOpened] = React.useState(false);
+    const isMobile = useMediaQuery('(max-width: 48em)');
+    const { width: viewportWidth } = useViewportSize();
     const { auth, url } = usePage().props;
     const activeRef = React.useRef(null);
+
+    useEffect(() => {
+        setAccountMenuOpened(false);
+    }, [opened, isMobile, viewportWidth]);
+
+    useEffect(() => {
+        if (isMobile) {
+            closeNavbar();
+        }
+    }, [isMobile, closeNavbar]);
 
     useEffect(() => {
         const handleOpenSpotlight = () => {
@@ -249,9 +260,32 @@ function AppLayout({ children }) {
                             <IconSearch size={20} stroke={1.5} />
                         </ActionIcon>
                         {auth.user && (
-                            <Menu shadow="md" width={220} position="bottom-end">
+                            <Menu
+                                key={isMobile ? 'account-menu-mobile' : 'account-menu-desktop'}
+                                shadow="md"
+                                width={220}
+                                position="bottom-end"
+                                withinPortal
+                                zIndex={1000}
+                                trigger="click"
+                                opened={accountMenuOpened}
+                                onChange={setAccountMenuOpened}
+                            >
                                 <Menu.Target>
-                                    <Group style={{ cursor: 'pointer' }} gap="sm" px="sm" py={6}>
+                                    <UnstyledButton
+                                        aria-label="Open account menu"
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: rem(8),
+                                            padding: `${rem(6)} ${rem(8)}`,
+                                            borderRadius: 'var(--mantine-radius-md)',
+                                            minHeight: rem(44),
+                                            minWidth: rem(44),
+                                            flexShrink: 0,
+                                            WebkitTapHighlightColor: 'transparent',
+                                        }}
+                                    >
                                         <Indicator
                                             inline
                                             label={auth.pending_invitations_count}
@@ -263,15 +297,17 @@ function AppLayout({ children }) {
                                                 {auth.user.name.substring(0, 2).toUpperCase()}
                                             </Avatar>
                                         </Indicator>
-                                        <Box style={{ flex: 1 }} visibleFrom="sm">
-                                            <Text size="sm" fw={600} style={{ lineHeight: 1 }}>
-                                                {auth.user.name}
-                                            </Text>
-                                            <Text size="xs" c="dimmed" style={{ lineHeight: 1.4 }}>
-                                                {auth.user.email}
-                                            </Text>
-                                        </Box>
-                                    </Group>
+                                        {!isMobile && (
+                                            <Box>
+                                                <Text size="sm" fw={600} style={{ lineHeight: 1 }}>
+                                                    {auth.user.name}
+                                                </Text>
+                                                <Text size="xs" c="dimmed" style={{ lineHeight: 1.4 }}>
+                                                    {auth.user.email}
+                                                </Text>
+                                            </Box>
+                                        )}
+                                    </UnstyledButton>
                                 </Menu.Target>
 
                                 <Menu.Dropdown>
