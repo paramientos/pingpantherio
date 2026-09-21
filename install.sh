@@ -355,7 +355,19 @@ echo -e "${YELLOW}Removing analytics script for production...${NC}"
 APP_BLADE="$INSTALL_DIR/resources/views/app.blade.php"
 if [ -f "$APP_BLADE" ]; then
     # Remove the entire <script> block containing the analytics loader (nanolytica/umami)
-    perl -0777 -pi -e 's/[ \t]*<script>[^\n]*\n(?:(?!<\/script>).)*?(nanolytica|umami)(?:(?!<\/script>).)*?<\/script>\n?//s' "$APP_BLADE"
+    awk '
+        /<script>/ { buf = $0 ORS; inblock = 1; next }
+        inblock {
+            buf = buf $0 ORS
+            if ($0 ~ /nanolytica|umami/) bad = 1
+            if ($0 ~ /<\/script>/) {
+                if (!bad) printf "%s", buf
+                inblock = 0; bad = 0; buf = ""
+            }
+            next
+        }
+        { print }
+    ' "$APP_BLADE" > "$APP_BLADE.tmp" && mv "$APP_BLADE.tmp" "$APP_BLADE"
 
     echo -e "${GREEN}✓ Analytics script removed${NC}"
 else
