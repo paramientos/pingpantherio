@@ -2,6 +2,29 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
 <head>
+        <script>
+            function loadAnalytics() {
+                @production
+                var nanolytica = document.createElement('script');
+                nanolytica.src = 'https://nanolytica.org/nanolytica.js';
+                nanolytica.defer = true;
+                nanolytica.setAttribute('data-site-id', 'fe3e3575-a042-4ad5-948e-afcf1f82441a');
+                document.head.appendChild(nanolytica);
+                @endproduction
+            }
+
+            if (document.readyState === 'complete') {
+                loadAnalytics();
+            } else {
+                window.addEventListener('load', function () {
+                    if ('requestIdleCallback' in window) {
+                        window.requestIdleCallback(loadAnalytics, { timeout: 2000 });
+                    } else {
+                        setTimeout(loadAnalytics, 0);
+                    }
+                });
+            }
+        </script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -14,10 +37,6 @@
     @routes
     @vite(['resources/css/app.css', 'resources/js/app.jsx'])
     @inertiaHead
-
-    <!-- Umami Analytics -->
-<script defer src="https://cloud.umami.is/script.js" data-website-id="53f58a7e-ec66-4997-afa8-a5564a047be8"></script>
-
 </head>
 
 <body>
